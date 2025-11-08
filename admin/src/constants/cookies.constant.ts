@@ -1,0 +1,1 @@
+export const WAREHOUSE_CURRENT_COOKIE = "x-warehouse-id";

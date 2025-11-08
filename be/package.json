@@ -1,0 +1,50 @@
+{
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "compression": "^1.8.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "joi": "^18.0.1",
+    "jsonwebtoken": "^9.0.2",
+    "knex": "^3.1.0",
+    "lodash.pick": "^4.4.0",
+    "mysql2": "^3.15.3",
+    "nodemailer": "^7.0.10",
+    "reflect-metadata": "^0.2.2",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/compression": "^1.8.1",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/knex": "^0.16.1",
+    "@types/lodash.pick": "^4.4.9",
+    "@types/morgan": "^1.9.10",
+    "@types/nodemailer": "^7.0.3",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.8",
+    "husky": "^9.1.7",
+    "i": "^0.3.7",
+    "lint-staged": "^16.2.6",
+    "morgan": "^1.10.1",
+    "nodemon": "^3.1.10",
+    "npm": "^11.6.2",
+    "prettier": "3.6.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "lint-staged": {
+    "**/*": "prettier --write --ignore-unknown"
+  },
+  "scripts": {
+    "prepare": "husky",
+    "start:dev": "nodemon",
+    "build": "tsc",
+    "dev": "nodemon src/index.ts"
+  }
+}

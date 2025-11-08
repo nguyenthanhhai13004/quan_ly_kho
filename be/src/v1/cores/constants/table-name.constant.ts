@@ -1,0 +1,12 @@
+export const ROLE_TABLE_NAME = "roles";
+export const PERMISSION_TABLE_NAME = "permissions";
+export const ROLE_PERMISSION_TABLE_NAME = "role_permission";
+export const USER_TABLE_NAME = "users";
+export const CATEGORY_TABLE_NAME = "categories";
+export const ASSET_TABLE_NAME = "assets";
+export const WAREHOUSE_TABLE_NAME = "warehouses";
+export const WAREHOUSE_USER_TABLE_NAME = "warehouse_user";
+export const WAREHOUSE_ASSET_TABLE_NAME = "warehouse_asset";
+export const WAREHOUSE_TRANSACTIONS_TABLE_NAME = "warehouse_transactions";
+export const ACTIVITY_LOG_TABLE_NAME = "activity_logs";
+export const ACTIVITY_LOG_DETAIL_TABLE_NAME = "activity_log_details";

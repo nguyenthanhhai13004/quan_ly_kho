@@ -1,0 +1,14 @@
+import express from "express";
+import accessController from "../../controllers/access.controller";
+import { validate } from "../../middlewares/validation.mdw";
+import { LoginSchema } from "../../dtos/auth/login.dto";
+import { asyncHandler } from "../../auths/utils";
+import { authentication } from "../../auths";
+import { UpdateProfileOwnSchema } from "../../dtos/auth/update-profile-own.dto";
+import { ChangePasswordSchema } from "../../dtos/auth/change-password.dto";
+const router = express.Router();
+router.post("/login",validate(LoginSchema),accessController.login);
+router.get("/me",asyncHandler(authentication),accessController.me);
+router.put("/info",validate(UpdateProfileOwnSchema),asyncHandler(authentication),accessController.updateProfileOwn);
+router.post("/change-password",validate(ChangePasswordSchema),asyncHandler(authentication),accessController.changePassword);
+export default router;
