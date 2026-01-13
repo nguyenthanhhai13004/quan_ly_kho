@@ -33,7 +33,7 @@ export default function CustomPagination({
   return (
     <div className="flex text-sm select-none">
       <div
-        className={`w-8 h-8 flex justify-center rounded items-center border mr-1 cursor-pointer
+        className={`hover:bg-gray-100 w-8 h-8 flex justify-center rounded items-center border mr-1 cursor-pointer
         ${currentPage === 1 ? "opacity-40 cursor-not-allowed bg-[#efefef] text-[#777777]" : "bg-white text-[#337ab7]"}`}
         onClick={() => goToPage(1)}
       >
@@ -41,7 +41,7 @@ export default function CustomPagination({
       </div>
 
       <div
-        className={`w-8 h-8 flex justify-center rounded items-center border mr-1 cursor-pointer
+        className={`hover:bg-gray-100 w-8 h-8 flex justify-center rounded items-center border mr-1 cursor-pointer
         ${currentPage === 1 ? "opacity-40 cursor-not-allowed bg-[#efefef] text-[#777777]" : "bg-white text-[#337ab7]"}`}
         onClick={() => goToPage(currentPage - 1)}
       >
@@ -54,7 +54,7 @@ export default function CustomPagination({
           onClick={() => goToPage(page)}
           className={`w-8 h-8 flex justify-center rounded items-center border mr-1 cursor-pointer 
             ${
-              page === currentPage
+              page == currentPage
                 ? "bg-[#337ab7] text-white"
                 : "bg-white text-[#337ab7] hover:bg-gray-100"
             }`}
@@ -70,7 +70,7 @@ export default function CustomPagination({
           </div>
           <div
             onClick={() => goToPage(totalPages)}
-            className="w-8 h-8 flex justify-center items-center border mr-1 cursor-pointer bg-white text-[#337ab7]"
+            className="hover:bg-gray-100 w-8 h-8 flex justify-center items-center border mr-1 cursor-pointer bg-white text-[#337ab7]"
           >
             {totalPages}
           </div>
@@ -78,7 +78,7 @@ export default function CustomPagination({
       )}
 
       <div
-        className={`w-8 h-8 flex justify-center rounded items-center border mr-1 cursor-pointer
+        className={`hover:bg-gray-100 w-8 h-8 flex justify-center rounded items-center border mr-1 cursor-pointer
         ${currentPage === totalPages ? "opacity-40 cursor-not-allowed bg-[#efefef] text-[#777777]" : "bg-white text-[#337ab7]"}`}
         onClick={() => goToPage(currentPage + 1)}
       >
@@ -86,7 +86,7 @@ export default function CustomPagination({
       </div>
 
       <div
-        className={`w-8 h-8 flex justify-center rounded items-center border mr-1 cursor-pointer
+        className={`hover:bg-gray-100 w-8 h-8 flex justify-center rounded items-center border mr-1 cursor-pointer
         ${currentPage === totalPages ? "opacity-40 cursor-not-allowed bg-[#efefef] text-[#777777]" : "bg-white text-[#337ab7]"}`}
         onClick={() => goToPage(totalPages)}
       >

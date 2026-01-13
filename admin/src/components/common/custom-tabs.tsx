@@ -21,16 +21,16 @@ export default function CustomTabs({ tabs, defaultActive }: ICustomTabsProps) {
           <div
             key={tab.key}
             onClick={() => !tab.disabled && setActive(tab.key)}
-            className={`relative px-3 py-2 flex gap-1 cursor-pointer border border-b-0 border-gray-300 text-sm font-medium 
+            className={`relative px-3 py-2 flex gap-1 cursor-pointer border border-b-0 border-gray-200 text-sm
               ${
                 tab.disabled
                   ? "text-gray-400 bg-gray-200 cursor-not-allowed"
                   : active === tab.key
-                    ? "bg-white text-[#2b7dbc] border-t-2 border-t-[#2b7dbc]"
-                    : " text-[#585858] bg-[#f8f8f8]"
+                    ? "bg-white text-[#2F7BFF] font-bold border-t-2 border-t-[#2F7BFF]"
+                    : " text-gray-500 bg-white font-medium"
               }`}
           >
-            <span>{tab.label}</span>
+            <span className="inline-block">{tab.label}</span>
             {active === tab.key && (
               <div className="absolute -bottom-0.5 h-2 left-0 right-0 bg-white"></div>
             )}

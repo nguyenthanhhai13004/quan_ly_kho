@@ -16,7 +16,7 @@ export default class BaseRepository<T> {
 
   async findAllPagination(
     paginationDto: PaginationDto,
-    customFilter?: (query: Knex.QueryBuilder) => void
+    customFilter?: (query: Knex.QueryBuilder) => void,
   ): Promise<ResponsePaginationDto<T>> {
     const { page, size } = paginationDto;
     const offset = (page - 1) * size;
@@ -52,6 +52,11 @@ export default class BaseRepository<T> {
     const [createdId] = await db(this.tableName).insert(data);
     const newData = await db(this.tableName).where("id", createdId).first();
     return newData;
+  }
+
+  async createMany(data: Partial<T>[]): Promise<number[]> {
+    const createdIds = await db(this.tableName).insert(data);
+    return createdIds;
   }
 
   async update(id: number | string, data: Partial<T>): Promise<T | undefined> {

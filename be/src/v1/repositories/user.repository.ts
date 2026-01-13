@@ -63,9 +63,19 @@ class UserRepository {
     return !!user;
   }
 
-  async findUserById(id: number): Promise<User | null> {
+  async findUserById(id: number): Promise<User & {warehouse_ids:number[]} | null> {
     const user = await db<User>(USER_TABLE_NAME).where("id", id).first();
-    return user || null;
+
+    if (!user) return null;
+
+    const warehouseRows = await db("warehouse_user")
+      .where("warehouse_user.user_id", id)
+      .pluck("warehouse_id");
+
+    return {
+      ...user,
+      warehouse_ids: warehouseRows,
+    };
   }
 
   async updateUserById(id: number, data: Partial<User>): Promise<User | null> {
@@ -97,9 +107,11 @@ class UserRepository {
     const user = await db<User>(USER_TABLE_NAME).where({ id }).first();
     return user || null;
   }
-  
-  async userIsActive(userId:number):Promise<boolean>{
-    const user = await db(USER_TABLE_NAME).where({ id:userId }).first("is_active");
+
+  async userIsActive(userId: number): Promise<boolean> {
+    const user = await db(USER_TABLE_NAME)
+      .where({ id: userId })
+      .first("is_active");
     return user?.is_active || false;
   }
 }

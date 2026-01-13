@@ -7,7 +7,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ToastContainer } from "react-toastify";
 import dayjs from "dayjs";
 import "dayjs/locale/vi";
+import customParseFormat from "dayjs/plugin/customParseFormat";
+dayjs.extend(customParseFormat);
 dayjs.locale("vi");
+import "leaflet/dist/leaflet.css";
 const queryClient = new QueryClient();
 
 createRoot(document.getElementById("root")!).render(

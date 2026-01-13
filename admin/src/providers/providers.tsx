@@ -1,6 +1,5 @@
 import React, { type ReactNode } from "react";
 import AppProvider from "./app-providers";
-import ModalProvider from "./modal-provider";
 import UserProvider from "./user-provider";
 
 const combineProviders = (
@@ -16,7 +15,7 @@ const combineProviders = (
     ({ children }: { children: ReactNode }) => <>{children}</>,
   );
 
-const CustomProviders = combineProviders(AppProvider,ModalProvider,UserProvider);
+const CustomProviders = combineProviders(AppProvider,UserProvider);
 
 export default function Providers({ children }: { children: ReactNode }) {
   return <CustomProviders>{children}</CustomProviders>;

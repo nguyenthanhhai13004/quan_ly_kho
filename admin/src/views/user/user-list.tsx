@@ -4,7 +4,6 @@ import UsersTable from "./users-table";
 import CreateUserModal from "./modals/create-user-modal";
 import { useModalProvider } from "../../providers/modal-provider";
 import { ModalEnum } from "../../constants/modals.constant";
-import UpdateUserModal from "./modals/update-user-modal";
 import CustomWrapperPermissions from "../../components/common/custom-wrapper-permissions";
 import { PermissionsEnum } from "../../common/enums/permissons.enum";
 
@@ -31,12 +30,6 @@ export default function UserListView() {
         <CreateUserModal
           onClose={handleClose}
           open={currentModal === ModalEnum.CREATE_USER_MODAL}
-        />
-        <UpdateUserModal
-          onClose={() => {
-            setCurrentModal(ModalEnum.CLOSE_MODAL);
-          }}
-          open={ModalEnum.EDIT_USER_MODAL === currentModal}
         />
       </>
     </>

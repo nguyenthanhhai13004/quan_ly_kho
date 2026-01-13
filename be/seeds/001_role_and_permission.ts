@@ -19,22 +19,24 @@ export async function seed(knex: Knex): Promise<void> {
   const rolePermissions = [];
 
   // SUPER ADMIN
-  for (const perm of PERMISSION_LIST_DEFAULT) {
-    rolePermissions.push({ role_id: 1, permission_id: perm.id });
+  // for (const perm of PERMISSION_LIST_DEFAULT) {
+  //   rolePermissions.push({ role_id: 1, permission_id: perm.id });
+  // }
+
+  // ADMIN
+  const adminPermissions = [1, 18, 19];
+  for (const id of adminPermissions) {
+    rolePermissions.push({ role_id: 1, permission_id: id });
   }
 
-  for (const perm of PERMISSION_LIST_DEFAULT) {
-    rolePermissions.push({ role_id: 2, permission_id: perm.id });
-  }
-
-  const officerPermissions = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16];
+  const officerPermissions = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16,20];
   for (const id of officerPermissions) {
-    rolePermissions.push({ role_id: 3, permission_id: id });
+    rolePermissions.push({ role_id: 2, permission_id: id });
   }
 
-  const userPermissions = [14, 17];
+  const userPermissions = [14];
   for (const id of userPermissions) {
-    rolePermissions.push({ role_id: 4, permission_id: id });
+    rolePermissions.push({ role_id: 3, permission_id: id });
   }
 
   await knex(ROLE_PERMISSION_TABLE_NAME).insert(rolePermissions);

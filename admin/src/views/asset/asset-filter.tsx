@@ -1,50 +1,42 @@
-import { IoIosSearch } from "react-icons/io";
-import CustomButton from "../../components/common/custom-button";
+import { useEffect } from "react";
 import CustomInput from "../../components/common/custom-input";
 import CustomSelect from "../../components/common/custom-select";
-import { useSearchParams } from "react-router-dom";
-import { useState } from "react";
-import { ASSET_STATUS } from "../../constants/asset-status.constant";
-import { useAllCategories } from "../../hooks/category/use-all-assets";
-import { useAssetParams } from "../../hooks/asset/use-asset-params";
 import type { PaginationAssetsDto } from "../../dtos/asset/pagination-assets.dto";
+import { usePaginationParams } from "../../hooks/use-pagination-params";
+import { useAllCategories } from "../../queries/category.query";
+import FilterWrapper from "../filter-wrapper";
 
-export default function AssetFilter() {
-  const [searchParams, setSearchParams] = useSearchParams();
+type AssetFilterProps = {
+  onFiltersChange?: (newFilters: PaginationAssetsDto) => void;
+};
+
+export default function AssetFilter({
+  onFiltersChange,
+}: AssetFilterProps) {
   const { categories } = useAllCategories();
-  const { page, category_id, code, name, status, size } = useAssetParams();
-  const [filters, setFilters] = useState<PaginationAssetsDto>({
-    page,
-    size,
-    category_id,
-    code,
-    name,
-    status,
+  const {
+    filters,
+    handleChange,
+    resetParams,
+    handleSearch,
+    defaultValues,
+    setFilters,
+  } = usePaginationParams<PaginationAssetsDto>({
+    useUrl: onFiltersChange == undefined,
   });
-
-  const handleChange = (
-    key: keyof PaginationAssetsDto,
-    value: string | number,
-  ) => {
-    setFilters((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
-  };
-
-  const handleSearch = () => {
-    const params: Record<string, string> = {};
-    if (filters?.category_id != null)
-      params.category_id = String(filters.category_id);
-    if (filters?.status != null) params.status = String(filters.status);
-    if (filters.name) params.name = filters.name;
-    if (filters.code) params.code = filters.code;
-    params.page = "1";
-    params.size = String(filters.size || 10);
-    setSearchParams(params);
-  };
+  const handleReset = () =>{
+    if (onFiltersChange){
+      onFiltersChange(defaultValues as unknown as PaginationAssetsDto);
+      setFilters(defaultValues as unknown as PaginationAssetsDto);
+      return;
+    }
+    resetParams();
+  }
   return (
-    <>
+    <FilterWrapper
+      onReset={handleReset}
+      onSubmit={onFiltersChange ? () => onFiltersChange(filters) : handleSearch}
+    >
       <CustomSelect
         labelType="top"
         placeholder="Tất cả danh mục"
@@ -55,39 +47,24 @@ export default function AssetFilter() {
             value: c.id,
           })) || []
         }
-        value={filters.category_id}
+        value={filters?.category_id || ""}
         onChange={(e) => handleChange("category_id", e.target.value)}
         label="Danh mục"
       />
 
-      <CustomSelect
-        labelType="top"
-        placeholder="Tất cả tình trạng"
-        className="min-w-[150px]"
-        options={ASSET_STATUS}
-        value={filters.status}
-        onChange={(e) => handleChange("status", e.target.value)}
-        label="Tình trạng"
-      />
-
       <CustomInput
         placeholder="Tên tài sản"
-        value={filters.name || ""}
+        value={filters?.name || ""}
         onChange={(e) => handleChange("name", e.target.value)}
+        className="min-w-[150px]"
       />
 
       <CustomInput
         placeholder="Mã tài sản"
-        value={filters.code || ""}
+        value={filters?.code || ""}
         onChange={(e) => handleChange("code", e.target.value)}
+        className="min-w-[150px]"
       />
-
-      <CustomButton
-        label="Tìm kiếm"
-        className="h-full"
-        onClick={handleSearch}
-        icon={<IoIosSearch size={20} />}
-      />
-    </>
+    </FilterWrapper>
   );
 }

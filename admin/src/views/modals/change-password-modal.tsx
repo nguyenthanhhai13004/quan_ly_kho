@@ -42,7 +42,7 @@ export default function ChangePasswordModal({
   };
 
   return (
-    <CustomModal title="Thông tin tài khoản" onClose={onClose} open={open}>
+    <CustomModal  title="Thông tin tài khoản" onClose={onClose} open={open}>
       <form
         onSubmit={handleSubmit(onSubmit)}
         className="w-[400px] flex flex-col gap-2"

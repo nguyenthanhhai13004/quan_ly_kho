@@ -5,6 +5,7 @@ export async function up(knex: Knex): Promise<void> {
     await knex.schema.createTable(ROLE_TABLE_NAME, (table) => {
     table.increments("id").primary().unique();
     table.string("name").notNullable().unique();
+    table.string("code").notNullable().unique();
     table.string("description");
 
     table.integer("created_by_user_id").nullable().unsigned();

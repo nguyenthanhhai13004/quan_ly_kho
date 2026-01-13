@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { CgClose } from "react-icons/cg";
 import { CiImageOn } from "react-icons/ci";
 
@@ -29,6 +29,10 @@ export default function CustomImageInput({
     if (fileInputRef.current) fileInputRef.current.value = "";
     onChange?.(undefined);
   };
+
+  useEffect(() => {
+    setPreview(defaultImage || null);
+  }, [defaultImage]);
 
   return (
     <div className="flex relative flex-col gap-2 items-start">

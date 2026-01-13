@@ -1,36 +1,16 @@
-import { IoIosSearch } from "react-icons/io";
-import CustomButton from "../../components/common/custom-button";
 import CustomInput from "../../components/common/custom-input";
 import CustomSelect from "../../components/common/custom-select";
-import { useAllRoles } from "../../hooks/rbac/use-all-roles";
-import { useSearchParams } from "react-router-dom";
-import { useState } from "react";
-import { useUserParams } from "../../hooks/user/use-user-params";
+import { usePaginationParams } from "../../hooks/use-pagination-params";
+import type { PaginationUsersDto } from "../../dtos/user/pagination-users.dto";
+import { useAllRoles } from "../../queries/rbac.query";
+import FilterWrapper from "../filter-wrapper";
 
 export default function UserFilter() {
   const { roles } = useAllRoles();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const {keyword,role,active} = useUserParams();
-  const [filters, setFilters] = useState({
-    role,
-    active:active || "",
-    keyword,
-  });
-
-  const handleChange = (key: string, value: string) => {
-    setFilters((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const handleSearch = () => {
-    const params: any = {};
-    if (filters.role) params.role = filters.role;
-    if (filters.active) params.active = filters.active;
-    if (filters.keyword) params.keyword = filters.keyword;
-    params.page = "1";
-    setSearchParams(params);
-  };
+  const {filters, handleChange, resetParams,handleSearch} =
+    usePaginationParams<PaginationUsersDto>();
   return (
-    <>
+    <FilterWrapper onSubmit={handleSearch} onReset={resetParams}>
       <CustomSelect
         labelType="top"
         placeholder="Tất cả"
@@ -43,7 +23,7 @@ export default function UserFilter() {
             };
           }) || []
         }
-        value={filters.role}
+        value={filters?.role || ""}
         onChange={(e) => handleChange("role", e.target.value)}
         label="Loại"
       />
@@ -56,21 +36,15 @@ export default function UserFilter() {
           { label: "Inactive", value: "0" },
         ]}
         label="Trạng thái"
-        value={filters.active}
+        value={filters?.active || ""}
         onChange={(e) => handleChange("active", e.target.value)}
       />
       <CustomInput
         className="min-w-[200px] w-full"
         placeholder="Tìm theo tên hoặc email..."
-        value={filters.keyword}
+        value={filters?.keyword || ""}
         onChange={(e) => handleChange("keyword", e.target.value)}
       />
-      <CustomButton
-        label="Tìm kiếm"
-        className="h-full"
-        onClick={handleSearch}
-        icon={<IoIosSearch size={20} />}
-      />
-    </>
+    </FilterWrapper>
   );
 }

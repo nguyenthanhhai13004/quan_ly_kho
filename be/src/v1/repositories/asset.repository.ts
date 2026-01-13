@@ -20,11 +20,15 @@ class AssetRepository extends BaseRepository<Asset> {
     super(ASSET_TABLE_NAME);
   }
 
+  async findExistedCodes(assetCodes: string[]): Promise<string[]> {
+    if (!assetCodes.length) return [];
+    return db(this.tableName).whereIn("code", assetCodes).pluck("code");
+  }
+
   async findAllPaginationCustom(
-    warehouse_id: number,
     paginationDto: PaginationAssetsDto,
   ): Promise<ResponsePaginationDto<ResponseAssetDto>> {
-    const { page, size } = paginationDto;
+    const { page, size, category_id, code, name } = paginationDto;
     const offset = (page - 1) * size;
 
     const query = db(this.tableName)
@@ -33,43 +37,28 @@ class AssetRepository extends BaseRepository<Asset> {
         `${CATEGORY_TABLE_NAME}.name as category_name`,
         `${CATEGORY_TABLE_NAME}.id as category_id`,
         `${CATEGORY_TABLE_NAME}.description as category_description`,
-        db.raw(
-          `COALESCE(SUM(${WAREHOUSE_ASSET_TABLE_NAME}.quantity), 0) as total_quantity`,
-        ),
       )
       .innerJoin(
         CATEGORY_TABLE_NAME,
         `${this.tableName}.category_id`,
         `${CATEGORY_TABLE_NAME}.id`,
       )
-      .leftJoin(
-        `${WAREHOUSE_ASSET_TABLE_NAME}`,
-        `${this.tableName}.id`,
-        `${WAREHOUSE_ASSET_TABLE_NAME}.asset_id`,
-      )
-      .where(`${WAREHOUSE_ASSET_TABLE_NAME}.warehouse_id`, warehouse_id)
-      .whereNull(`${this.tableName}.deleted_at`)
-      .groupBy(`${this.tableName}.id`, `${CATEGORY_TABLE_NAME}.id`);
+      .whereNull(`${this.tableName}.deleted_at`);
 
-    if (paginationDto.category_id != null) {
-      query.where(`${this.tableName}.category_id`, paginationDto.category_id);
-    }
-    if (paginationDto.code) {
-      query.whereILike(`${this.tableName}.code`, `%${paginationDto.code}%`);
-    }
-    if (paginationDto.name) {
-      query.whereILike(`${this.tableName}.name`, `%${paginationDto.name}%`);
-    }
-    if (paginationDto.status != null) {
-      query.where(`${this.tableName}.status`, paginationDto.status);
-    }
+    if (category_id) query.where(`${this.tableName}.category_id`, category_id);
+    if (code) query.whereILike(`${this.tableName}.code`, `%${code}%`);
+    if (name) query.whereILike(`${this.tableName}.name`, `%${name}%`);
+    const totalQuery = db(this.tableName).whereNull(
+      `${this.tableName}.deleted_at`,
+    );
 
-    const totalQuery = query
-      .clone()
-      .clearSelect()
-      .clearOrder()
-      .countDistinct<{ count: number }[]>(`${this.tableName}.id as count`);
-    const [{ count }] = await totalQuery;
+
+    if (category_id)
+      totalQuery.where(`${this.tableName}.category_id`, category_id);
+    if (code) totalQuery.whereILike(`${this.tableName}.code`, `%${code}%`);
+    if (name) totalQuery.whereILike(`${this.tableName}.name`, `%${name}%`);
+
+    const [{ count } = { count: 0 }] = await totalQuery.count({ count: "*" });
 
     const rows = await query
       .limit(size)
@@ -78,17 +67,7 @@ class AssetRepository extends BaseRepository<Asset> {
 
     const items = rows.map((row) => ({
       ...getInfoData<ResponseAssetDto>({
-        fields: [
-          "id",
-          "code",
-          "cost",
-          "description",
-          "image_url",
-          "import_date",
-          "maintenance_due",
-          "status",
-          "name",
-        ],
+        fields: ["id", "code", "description", "image_url", "name"],
         object: row,
       }),
       category: {
@@ -96,7 +75,6 @@ class AssetRepository extends BaseRepository<Asset> {
         name: row.category_name,
         description: row.category_description,
       },
-      quantity: Number(row.total_quantity),
     })) as ResponseAssetDto[];
 
     return {
@@ -113,7 +91,6 @@ class AssetRepository extends BaseRepository<Asset> {
     dataWarehouseAsset: Partial<WarehouseAsset>,
   ): Promise<Asset> {
     return await db.transaction(async (trx) => {
-      // Tạo asset
       const [assetId] = await trx(this.tableName)
         .insert(dataAsset)
         .returning("id");
@@ -148,17 +125,7 @@ class AssetRepository extends BaseRepository<Asset> {
 
     return {
       ...getInfoData<ResponseAssetDto>({
-        fields: [
-          "id",
-          "code",
-          "cost",
-          "description",
-          "image_url",
-          "import_date",
-          "maintenance_due",
-          "status",
-          "name",
-        ],
+        fields: ["id", "code", "description", "image_url", "name"],
         object: asset,
       }),
       category: {
@@ -168,6 +135,52 @@ class AssetRepository extends BaseRepository<Asset> {
         color: asset.category_color,
       },
     } as ResponseAssetDto;
+  }
+
+  async findDetailByCode(
+    code: string | string,
+  ): Promise<ResponseAssetDto | null> {
+    const asset = await db(this.tableName)
+      .select(
+        `${this.tableName}.*`,
+        "categories.name as category_name",
+        "categories.id as category_id",
+        "categories.description as category_description",
+        "categories.color as category_color",
+      )
+      .innerJoin("categories", `${this.tableName}.category_id`, "categories.id")
+      .where(`${this.tableName}.code`, code)
+      .whereNull(`${this.tableName}.deleted_at`)
+      .first();
+
+    if (!asset) return null;
+
+    return {
+      ...getInfoData<ResponseAssetDto>({
+        fields: ["id", "code", "description", "image_url", "name"],
+        object: asset,
+      }),
+      category: {
+        id: asset.category_id,
+        name: asset.category_name,
+        description: asset.category_description,
+        color: asset.category_color,
+      },
+    } as ResponseAssetDto;
+  }
+
+  async getAssetIdsByCodes(assetCodes: string[]): Promise<Map<string, number>> {
+    const rows = await db(this.tableName)
+      .select("id", "code")
+      .whereIn("code", assetCodes)
+      .whereNull("deleted_at");
+
+    const resultMap = new Map<string, number>();
+    rows.forEach((row) => {
+      resultMap.set(row.code, row.id);
+    });
+
+    return resultMap;
   }
 }
 export default new AssetRepository();

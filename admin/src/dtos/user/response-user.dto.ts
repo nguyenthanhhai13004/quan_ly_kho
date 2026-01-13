@@ -6,5 +6,7 @@ export interface ResponseUserDto extends ResponseItemDto {
   username: string;
   email: string;
   role?: string;
+  roleName?:string;
+  phone_number?:string;
   permissions?:string[]
 }

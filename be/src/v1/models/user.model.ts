@@ -10,5 +10,6 @@ export interface User extends IBaseModelAttributes {
   failed_login_attempts:number;
   last_failed_login_at?:Date|null;
   role_id:number
-  is_active:UserStatusEnum
+  is_active:UserStatusEnum;
+  phone_number?:string;
 }

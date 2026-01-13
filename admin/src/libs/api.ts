@@ -14,7 +14,6 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const tokens = getTokens();
   const warehouse_id = getWarehouseId();
-  console.log("aa",warehouse_id)
   if (tokens) {
     config.headers.Authorization = `${tokens.access_token}`;
   }

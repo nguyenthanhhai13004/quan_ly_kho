@@ -1,9 +1,12 @@
+import { Request } from "express";
+import { ROOT_UPLOADS } from "../cores/constants/app.constant";
 import { ResponsePaginationDto } from "../cores/dtos/response-pagination.dto";
 import {
   BadRequestError,
   InternalServerError,
   NotFoundError,
 } from "../cores/error.response";
+import db from "../databases/init.mysql-v2";
 import { CreateAssetDto } from "../dtos/asset/create-asset.dto";
 import { PaginationAssetsDto } from "../dtos/asset/pagination-assets.dto";
 import ResponseAssetDto from "../dtos/asset/response-asset.dto";
@@ -14,73 +17,35 @@ import categoryRepository from "../repositories/category.repository";
 import warehouseAssetRepository from "../repositories/warehouse-asset.repository";
 import warehouseUserRepository from "../repositories/warehouse-user.repository";
 import warehouseRepository from "../repositories/warehouse.repository";
+import KQNLogService from "./log.service";
+import { LogAction, LogController } from "../cores/enums/logs.enum";
+import { getRequestInfo } from "../utils/request-info";
+import { getDiffChangesArray } from "../utils/get-diff-changes";
 
 class AssetService {
   static async getAllAssets(
-    warehouse_id: number,
     paginationAssetsDto: PaginationAssetsDto,
   ): Promise<ResponsePaginationDto<ResponseAssetDto>> {
-    return await assetRepository.findAllPaginationCustom(
-      warehouse_id,
-      paginationAssetsDto,
-    );
+    return await assetRepository.findAllPaginationCustom(paginationAssetsDto);
   }
 
   static async addNewAsset(
     userId: number,
     createAssetDto: CreateAssetDto,
-  ): Promise<Asset> {
-    const {
-      category_id,
-      code,
-      name,
-      quantity,
-      description,
-      image,
-      maintenance_due,
-      status,
-      cost,
-      warehouse_id,
-    } = createAssetDto;
+  ): Promise<ResponseAssetDto> {
+    const { category_id, code, name, description, file } = createAssetDto;
 
-    const [warehouseFound, userHasWarehouse, categoryFound, assetFound] =
-      await Promise.all([
-        warehouseRepository.findOneByCondition({ id: warehouse_id }),
-        warehouseUserRepository.findOneByCondition({
-          user_id: userId,
-          warehouse_id,
-        }),
-        categoryRepository.findOneByCondition({ id: category_id }),
-        assetRepository.findOneByCondition({ code }),
-      ]);
-
-    if (!warehouseFound) {
-      throw new BadRequestError("Kho không tồn tại");
-    }
-
-    if (!userHasWarehouse) {
-      throw new BadRequestError("Người dùng không có quyền với kho này");
-    }
+    const [categoryFound, assetFound] = await Promise.all([
+      categoryRepository.findOneByCondition({ id: category_id }),
+      assetRepository.findOneByCondition({ code }),
+    ]);
 
     if (!categoryFound) {
       throw new BadRequestError("Danh mục không tồn tại");
     }
 
     if (assetFound) {
-      const assetExitInWH = await warehouseAssetRepository.findOneByCondition({
-        asset_id: assetFound.id,
-        warehouse_id,
-      });
-      if (assetExitInWH){
-        throw new BadRequestError("Mã tài sản đã tồn tại");
-      }
-
-      await warehouseAssetRepository.addQuantityAssetToWarehouse({
-        asset_id:assetFound.id,
-        quantity,
-        warehouse_id
-      })
-      return assetFound;
+      throw new BadRequestError("Mã tài sản đã tồn tại");
     }
 
     const dataAsset = {
@@ -88,97 +53,148 @@ class AssetService {
       category_id,
       name,
       description,
-      image_url: image,
-      cost,
-      status,
-    };
-    const dataWarehouseAsset = {
-      warehouse_id,
-      quantity,
+      image_url: file ? `/${ROOT_UPLOADS}/${file.filename}` : "",
     };
 
-    const assetStore = await assetRepository.createWithWarehouse(
-      dataAsset,
-      dataWarehouseAsset,
-    );
+    const assetStore = await assetRepository.create({
+      ...dataAsset,
+      created_by_user_id: userId,
+    });
 
     if (!assetStore) {
       throw new InternalServerError();
     }
 
-    return assetStore;
+    return {
+      ...assetStore,
+      category: categoryFound,
+    };
   }
 
   static async updateAsset(
     userId: number,
     assetId: number,
+    warehouseId: number,
     updateAssetDto: UpdateAssetDto,
-  ): Promise<Asset> {
-    const {
-      category_id,
-      name,
-      description,
-      image,
-      maintenance_due,
-      status,
-      cost,
-      warehouse_id,
-    } = updateAssetDto;
-    const [warehouseFound, userHasWarehouse, categoryFound, assetFound] =
-      await Promise.all([
-        warehouseRepository.findOneByCondition({ id: warehouse_id }),
-        warehouseUserRepository.findOneByCondition({
-          user_id: userId,
-          warehouse_id,
-        }),
-        categoryRepository.findOneByCondition({ id: category_id }),
-        assetRepository.findOneByCondition({ id: assetId }),
-      ]);
-    if (!warehouseFound) {
-      throw new BadRequestError("Kho không tồn tại");
-    }
+    req: Request,
+  ): Promise<ResponseAssetDto> {
+    const { category_id, name, description, file } = updateAssetDto;
 
-    if (!userHasWarehouse) {
-      throw new BadRequestError("Người dùng không có quyền với kho này");
-    }
-
-    if (!categoryFound) {
-      throw new BadRequestError("Danh mục không tồn tại");
-    }
-
-    if (!assetFound) {
-      throw new BadRequestError("tài sản không tồn tại");
-    }
+    const [categoryFound, assetFound] = await Promise.all([
+      categoryRepository.findOneByCondition({ id: category_id }),
+      assetRepository.findOneByCondition({ id: assetId }),
+    ]);
+    if (!categoryFound) throw new BadRequestError("Danh mục không tồn tại");
+    if (!assetFound) throw new BadRequestError("Tài sản không tồn tại");
 
     const updated = await assetRepository.update(assetId, {
       category_id,
-      cost,
       description,
-      image_url: image,
-      maintenance_due,
-      status,
+      image_url: file
+        ? `/${ROOT_UPLOADS}/${file.filename}`
+        : assetFound.image_url,
       name,
     });
 
-    if (!updated) {
-      throw new InternalServerError("có lỗi xảy ra, thử lại sau.");
+
+    if (!updated) throw new InternalServerError("Có lỗi xảy ra, thử lại sau.");
+
+    const edit_changes = getDiffChangesArray(
+      {
+        category_id: assetFound.category_id,
+        name: assetFound.name,
+        description: assetFound.description,
+        image_url: assetFound.image_url,
+      },
+      {
+        category_id,
+        name,
+        description,
+        image_url: file
+          ? `/${ROOT_UPLOADS}/${file.filename}`
+          : assetFound.image_url,
+      },
+    );
+
+    const { ip, url } = getRequestInfo(req);
+    await KQNLogService.createLog({
+      action_code: LogAction.EDIT,
+      controller_code: LogController.ASSET,
+      username: req.user.username,
+      data: req.body,
+      ip,
+      url,
+      edit_changes,
+    });
+
+    return {
+      ...updated,
+      category: categoryFound,
+    };
+  }
+
+  static async deleteAsset(assetId: number, warehouseId: number) {
+    // throw new BadRequestError(
+    //   "Không thể xóa vì tài sản còn ghi nhận. Kiểm tra lịch cấp phát, xuất kho, bảo trì.",
+    // );
+    // const hasAsset = await db("warehouse_asset")
+    //   .where({
+    //     asset_id: assetId,
+    //     warehouse_id: warehouseId,
+    //   })
+    //   .first();
+
+    // if (!hasAsset) {
+    //   throw new BadRequestError(
+    //     "Không thể xoá tài sản không thuộc quyền kho của bạn.",
+    //   );
+    // }
+
+    const inTransaction =
+      await warehouseAssetRepository.isAssetInAnyTransaction(assetId);
+
+    if (inTransaction) {
+      throw new BadRequestError(
+        "Không thể xóa vì tài sản đang ghi nhận trong giao dịch (cấp phát, xuất kho hoặc bảo trì).",
+      );
     }
 
-    return updated;
+    await assetRepository.softDelete(assetId);
+    return 1;
   }
 
-  static async deleteAsset() {
-    throw new BadRequestError(
-      "Không thể xóa vì tài sản còn ghi nhận. Kiểm tra lịch cấp phát, xuất kho, bảo trì.",
-    );
-  }
-
-  static async getAssetDetail(assetId: number): Promise<ResponseAssetDto> {
-    const assetFound = await assetRepository.findDetailById(assetId);
+  static async getAssetDetail(assetCode: string): Promise<ResponseAssetDto> {
+    const assetFound = await assetRepository.findDetailByCode(assetCode);
     if (!assetFound) {
       throw new NotFoundError("không tìm thấy tài sản");
     }
     return assetFound;
+  }
+
+  static async generateCode({
+    category_id,
+  }: {
+    category_id: number;
+  }): Promise<string> {
+    const category = await categoryRepository.findById(category_id);
+    if (!category) {
+      throw new NotFoundError("Category không tồn tại");
+    }
+
+    const prefix = category.code;
+    const latestAsset = await db<Asset>("assets")
+      .where("code", "like", `${prefix}-%`)
+      .orderBy("code", "desc")
+      .first();
+    let nextNumber = 1;
+    if (latestAsset && latestAsset.code) {
+      const match = latestAsset.code.match(/-(\d+)$/);
+      if (match) {
+        nextNumber = parseInt(match[1], 10) + 1;
+      }
+    }
+    const codeNumber = String(nextNumber).padStart(4, "0");
+    return `${prefix}-${codeNumber}`;
   }
 }
 

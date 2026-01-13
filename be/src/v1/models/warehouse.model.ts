@@ -4,4 +4,5 @@ export interface Warehouse extends IBaseModelAttributes {
   id: number;
   name: string;
   code: string;
+  address_id: number | null;
 }

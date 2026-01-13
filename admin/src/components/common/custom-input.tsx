@@ -1,11 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import type { UseFormRegisterReturn } from "react-hook-form";
+import { IoCalendarOutline } from "react-icons/io5";
+import dayjs from "dayjs";
 
 interface CustomInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   placeholder?: string;
   type?: string;
-  value?: string;
+  value?: string | number;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   className?: string;
   required?: boolean;
@@ -13,7 +15,11 @@ interface CustomInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   register?: UseFormRegisterReturn;
   error?: string;
   labelType?: "normal" | "top";
-  disabled?:boolean
+  disabled?: boolean;
+  width?: string | number;
+  height?: string | number;
+  containerClassName?: string;
+  style?: React.CSSProperties;
 }
 
 export default function CustomInput({
@@ -29,13 +35,18 @@ export default function CustomInput({
   error,
   labelType = "normal",
   disabled,
+  width,
+  height,
+  containerClassName = "",
+  style,
   ...rest
 }: CustomInputProps) {
+  const isDate = type === "date";
   return (
-    <div>
+    <div className={containerClassName}>
       <div className="flex items-center gap-1 relative">
         {label &&
-          (labelType == "top" ? (
+          (labelType === "top" ? (
             <label className="inline-block rounded-2xl absolute text-xs bg-[#F5F4F9] text-gray-700 top-[-25%] px-2 z-10 left-0">
               {label}
               {required && (
@@ -50,21 +61,32 @@ export default function CustomInput({
               )}
             </label>
           ))}
-        <div className="border border-gray-300 bg-[#F5F4F9] flex items-center w-full relative rounded-2xl">
+
+        <div
+          className="border  border-gray-300 bg-[#F5F4F9] flex items-center relative rounded-2xl w-full"
+          style={{
+            width,
+            height,
+            ...style,
+          }}
+        >
           <input
             type={type}
-            placeholder={placeholder}
+            placeholder={isDate ? "dd/mm/yyyy" : placeholder}
             value={value}
+            lang="vi"
             onChange={onChange}
-            className={`w-full p-2 outline-none text-black text-sm
-                   focus:border-[#ffb752] hover:border-gray-400 ${disabled && "text-gray-400"} ${className}`}
+            className={`w-full p-2 outline-none text-black text-sm rounded-2xl
+              ${disabled ? "text-gray-400" : ""}
+              ${className}
+            `}
             disabled={disabled}
             {...register}
             {...rest}
           />
-          {icon && <div className="ml-2 text-[#585858] pr-2">{icon}</div>}
         </div>
       </div>
+
       {error && <span className="text-xs text-red-400 ml-1">{error}</span>}
     </div>
   );

@@ -1,29 +1,19 @@
-import { PiPlus } from "react-icons/pi";
 import CustomButton from "../../components/common/custom-button";
-import WarehouseTable from "./warehouse-table";
-import { FaFileExcel } from "react-icons/fa";
+import { ModalEnum } from "../../constants/modals.constant";
+import { useModalProvider } from "../../providers/modal-provider";
+import ViewHeader from "../view-header";
+import CreateWarehouseModal from "./modals/create-warehouse-modal";
+import WarehousesTable from "./warehouse-tables";
 
 export default function WarehouseListView() {
+  const {currentModal, setCurrentModal} = useModalProvider();
   return (
     <>
-       <div className="flex justify-between items-center mb-3">
-          <h2 className="text-3xl font-semibold py-3">Lịch sử xuất nhập</h2>
-          <div className="flex gap-2">
-            <CustomButton label="Import" icon={<PiPlus size={20} />} />
-            <CustomButton
-              variant="success"
-              label="Import từ Excel"
-              icon={<FaFileExcel size={16} />}
-            />
-            <CustomButton
-              variant="success"
-              label="Export"
-              icon={<FaFileExcel size={16} />}
-            />
-          </div>
-        </div>
-        <WarehouseTable />
-        
+      <ViewHeader title="Danh sách kho" actions={[
+        <CustomButton key="create-warehouse" label="Tạo kho"  onClick={()=>setCurrentModal(ModalEnum.CREATE_WAREHOUSE_MODAL)}/>
+      ]}/>
+      <WarehousesTable/>
+      <CreateWarehouseModal open={currentModal === ModalEnum.CREATE_WAREHOUSE_MODAL} onClose={() => setCurrentModal(ModalEnum.CLOSE_MODAL)}/>
     </>
   );
 }

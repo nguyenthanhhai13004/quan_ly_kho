@@ -5,9 +5,16 @@ import SidebarItemCollapsed from "./sidebar-item-collapsed";
 import { FiSidebar } from "react-icons/fi";
 import { SIDEBAR_ITEMS } from "../constants/sidebar-items.constant";
 import CustomWrapperPermissions from "../components/common/custom-wrapper-permissions";
+import Cookies from "js-cookie";
+import { useEffect } from "react";
+import { useAppStore } from "../stores/app-store";
 
 export default function Sidebar() {
-  const { setToggle, toggle } = useAppProvider();
+  const { setToggle, toggle} = useAppProvider();
+  const {warehouseSelectedName,setWarehouseSelectedName} = useAppStore();
+  useEffect(()=>{
+    setWarehouseSelectedName(Cookies.get("wh-selected-name")||"")
+  },[])
   return (
     <div
       className={`${
@@ -17,10 +24,17 @@ export default function Sidebar() {
       <div className="flex gap-3 items-center justify-between mb-5">
         {!toggle && (
           <div className="flex gap-2 items-center">
-            <div className="w-10 h-10 bg-white rounded flex items-center justify-center text-black">
-              <AiOutlineAppstore size={24} />
+            <div className="w-8 h-8 bg-white rounded flex items-center justify-center text-black">
+              <AiOutlineAppstore size={20} />
             </div>
-            <h4 className="font-semibold text-sm">ASoftware</h4>
+            <div>
+              <h4 className="font-semibold text-sm">ASoftware</h4>
+              {
+                warehouseSelectedName && <span className="inline-block text-xs">
+                {warehouseSelectedName}
+              </span>
+              }
+            </div>
           </div>
         )}
         <div
@@ -41,6 +55,7 @@ export default function Sidebar() {
                 path={item.path}
                 icon={item.icon}
                 key={index}
+                children={item.children}
               />
             </CustomWrapperPermissions>
           );
@@ -54,6 +69,7 @@ export default function Sidebar() {
               path={item.path}
               icon={item.icon}
               key={index}
+              children={item.children}
             />
           </CustomWrapperPermissions>
         );

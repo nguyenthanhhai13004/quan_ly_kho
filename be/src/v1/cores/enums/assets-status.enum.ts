@@ -1,7 +1,8 @@
 enum AssetStatusEnum {
-  IN_ACTIVE = 0,
-  ACTIVE = 1,
-  MAINTENANCE = 2,
-  BROKEN = 3,
+  GOOD = 1,        
+  BROKEN = 2,      
+  MAINTENANCE = 3, 
+  EXPIRED = 4,
 }
+
 export default AssetStatusEnum;

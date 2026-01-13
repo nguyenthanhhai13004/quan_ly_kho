@@ -8,6 +8,7 @@ export interface CustomModalProps {
   title?: string;
   children?: ReactNode;
   width?: string;
+  height?: string;
 }
 
 export default function CustomModal({
@@ -16,17 +17,15 @@ export default function CustomModal({
   title,
   children,
   width = "max-w-md",
+  height = "max-h-[70vh]",
 }: CustomModalProps) {
   useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    document.body.style.overflow = open ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
   }, [open]);
+
   return (
     <AnimatePresence>
       {open && (
@@ -45,22 +44,30 @@ export default function CustomModal({
           />
 
           <motion.div
-            className={`relative bg-white rounded-2xl shadow-xl z-10 w-full ${width} p-6`}
+            className={`relative bg-white rounded-2xl shadow-xl z-10 ${width} p-6 flex flex-col`}
             initial={{ y: 40, opacity: 0, scale: 0.95 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 40, opacity: 0, scale: 0.95 }}
             transition={{ type: "spring", damping: 20, stiffness: 250 }}
           >
             {title && (
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-4 border-b pb-2">
                 <h2 className="text-lg font-semibold">{title}</h2>
-               <CgClose className="cursor-pointer" onClick={onClose} size={20}/>
+                <CgClose
+                  className="cursor-pointer hover:text-red-500"
+                  onClick={onClose}
+                  size={20}
+                />
               </div>
             )}
 
-           {
-            children && ( <div className="max-h-[70vh] overflow-y-auto hidden-scrollbar">{children}</div>)
-           }
+            {children && (
+              <div
+                className={`overflow-y-auto hidden-scrollbar ${height}`}
+              >
+                {children}
+              </div>
+            )}
           </motion.div>
         </motion.div>
       )}

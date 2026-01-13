@@ -8,6 +8,7 @@ import { UpdateProfileOwnSchema } from "../../dtos/auth/update-profile-own.dto";
 import { ChangePasswordSchema } from "../../dtos/auth/change-password.dto";
 const router = express.Router();
 router.post("/login",validate(LoginSchema),accessController.login);
+router.post("/reset-pw",accessController.resetPW);
 router.get("/me",asyncHandler(authentication),accessController.me);
 router.put("/info",validate(UpdateProfileOwnSchema),asyncHandler(authentication),accessController.updateProfileOwn);
 router.post("/change-password",validate(ChangePasswordSchema),asyncHandler(authentication),accessController.changePassword);

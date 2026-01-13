@@ -10,7 +10,7 @@ class WarehouseAssetRepository extends BaseRepository<WarehouseAsset> {
 
   async addQuantityAssetToWarehouse(
     data: Partial<WarehouseAsset>,
-  ): Promise<boolean> {
+  ): Promise<number> {
     const { asset_id, quantity, warehouse_id } = data;
     return await db.transaction(async (trx) => {
       const existing = await trx(this.tableName)
@@ -19,23 +19,52 @@ class WarehouseAssetRepository extends BaseRepository<WarehouseAsset> {
         .first();
 
       if (existing) {
-        const updated = await trx(this.tableName)
-          .where({ id: existing.id })
-          .update({
-            quantity: existing.quantity + quantity,
-            updated_at: db.fn.now(),
-          });
+        const newQuantity = existing.quantity + quantity;
 
-        return updated > 0;
+        await trx(this.tableName).where({ id: existing.id }).update({
+          quantity: newQuantity,
+          updated_at: db.fn.now(),
+        });
+
+        return newQuantity;
       } else {
         const [createdId] = await trx(this.tableName).insert({
           asset_id,
           warehouse_id,
           quantity,
         });
-        return !!createdId;
+        return quantity;
       }
     });
+  }
+  async findExistedBatchCodes(batchCodes: string[]): Promise<string[]> {
+    const rows = await db(this.tableName)
+      .select("batch_code")
+      .whereIn("batch_code", batchCodes)
+      .whereNull("deleted_at");
+    return rows.map((row) => row.batch_code);
+  }
+
+  async findExistedBatchCodesInWH(
+    batchCodes: string[],
+    warehouse_id: number,
+  ): Promise<string[]> {
+    const rows = await db(this.tableName)
+      .select("batch_code")
+      .where("warehouse_id", warehouse_id)
+      .whereIn("batch_code", batchCodes)
+      .whereNull("deleted_at");
+    return rows.map((row) => row.batch_code);
+  }
+
+  async isAssetInAnyTransaction(assetId: number): Promise<boolean> {
+    const result = await db("asset_transaction_items as ati")
+      .join("warehouse_asset as wa", "ati.warehouse_asset_id", "wa.id")
+      .where("wa.asset_id", assetId)
+      .whereNull("ati.deleted_at")
+      .first("ati.id");
+
+    return !!result;
   }
 }
 export default new WarehouseAssetRepository();

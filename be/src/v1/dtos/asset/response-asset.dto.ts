@@ -7,10 +7,5 @@ export default interface ResponseAssetDto {
   description?: string;
   code: string;
   image_url?: string;
-  cost: number;
   category: Category;
-  status: number;
-  import_date: Date;
-  maintenance_due: Date;
-  quantity?:number;
 }

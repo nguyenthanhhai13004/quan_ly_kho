@@ -15,6 +15,11 @@ export const CreateUserSchema = Joi.object({
   role_id: Joi.required(),
   fullname: Joi.string().required(),
   email: Joi.string().required().email(),
+  phone_number: Joi.string().optional(),
+  warehouse_ids: Joi.array().items(Joi.number()).optional().messages({
+    "array.base": "warehouse_ids phải là một mảng",
+    "array.includes": "warehouse_ids chỉ chứa giá trị dạng số",
+  }),
 });
 
 export interface CreateUserDto {
@@ -22,4 +27,6 @@ export interface CreateUserDto {
   email: string;
   fullname: string;
   role_id: number;
+  warehouse_ids?: number[];
+  phone_number?:string;
 }

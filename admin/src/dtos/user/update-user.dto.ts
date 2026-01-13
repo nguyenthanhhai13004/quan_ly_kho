@@ -12,7 +12,11 @@ export const UpdateUserSchema = z.object({
 
   fullname: z.string().nonempty("Họ tên không được để trống"),
   active: z.number(),
-   role_id: z.number(),
+  role_id: z.number(),
+  phone_number: z
+  .string()
+  .regex(/^(0|\+84)(\d{9})$/, "Số điện thoại không hợp lệ")
+  .optional(),
 });
 
 export type UpdateUserData = z.infer<typeof UpdateUserSchema>;
@@ -21,4 +25,6 @@ export interface UpdateUserDto {
   email: string;
   fullname: string;
   active:number;
+  phone_number?:string;
+  warehouse_ids?:number[];
 }

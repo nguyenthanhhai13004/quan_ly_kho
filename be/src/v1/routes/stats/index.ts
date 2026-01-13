@@ -1,0 +1,10 @@
+import express from "express";
+import { authentication } from "../../auths";
+import statsController from "../../controllers/stats.controller";
+const router = express.Router();
+router.use(authentication);
+router.get("/import-export", statsController.getStatsImportExportWHOwn);
+router.get("/assets/by-category", statsController.getStatsByCategory);
+router.get("/assets/by-status", statsController.getStatsAssetStatus);
+router.get("/assets/statistics", statsController.getStatsAssetInWH);
+export default router;

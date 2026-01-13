@@ -1,7 +1,7 @@
 import { BiUser } from "react-icons/bi";
 import CustomInfoTable from "../../../components/common/custom-info-table";
-import { useMe } from "../../../hooks/auth/use-me";
 import CustomButton from "../../../components/common/custom-button";
+import { useMe } from "../../../queries/auth.query";
 
 export default function ProfileInfoContent() {
   const { user, isLoading } = useMe();

@@ -1,26 +1,26 @@
-import { useMe } from "../../hooks/auth/use-me";
 import { IoPower } from "react-icons/io5";
 import { BiUser } from "react-icons/bi";
-import { useLogout } from "../../hooks/auth/use-logout";
 import { BsReverseLayoutTextSidebarReverse } from "react-icons/bs";
 import NavbarDrawer from "../../views/drawers/navbar-drawer";
-import { useState } from "react";
 import InfoModal from "../../views/modals/info-modal";
 import { useModalProvider } from "../../providers/modal-provider";
 import { ModalEnum } from "../../constants/modals.constant";
 import ChangePasswordModal from "../../views/modals/change-password-modal";
 import { PiPassword } from "react-icons/pi";
+import { useLogout, useMe } from "../../queries/auth.query";
+import { useAppStore } from "../../stores/app-store";
 
 
 export default function CustomHeader() {
   const { user } = useMe();
   const { logout } = useLogout();
-  const [isOpenDrawer,setIsOpenDrawer] = useState(false);
   const {currentModal,setCurrentModal} = useModalProvider();
+  const { openDrawer, setOpenDrawer } = useAppStore();
+
   return (
     <div className="w-full mb-5 flex">
       <div>
-        <BsReverseLayoutTextSidebarReverse onClick={()=>setIsOpenDrawer(true)} className="cursor-pointer lg:hidden" size={20}/>
+        <BsReverseLayoutTextSidebarReverse onClick={()=>setOpenDrawer(true)} className="cursor-pointer lg:hidden" size={20}/>
       </div>
       {user && (
         <div
@@ -58,7 +58,7 @@ export default function CustomHeader() {
           </div>
         </div>
       )}
-      <NavbarDrawer onClose={()=>setIsOpenDrawer(false)} open={isOpenDrawer}/>
+      <NavbarDrawer onClose={()=>setOpenDrawer(false)} open={openDrawer}/>
       <InfoModal open={currentModal === ModalEnum.PROFILE_MODAL} onClose={()=>setCurrentModal(ModalEnum.CLOSE_MODAL)}/>
       <ChangePasswordModal open={currentModal === ModalEnum.CHANGE_PASSWORD} onClose={()=>setCurrentModal(ModalEnum.CLOSE_MODAL)}/>
     </div>

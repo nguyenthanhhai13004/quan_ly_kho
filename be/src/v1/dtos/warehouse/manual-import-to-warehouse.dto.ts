@@ -2,10 +2,10 @@
 
 
 export interface ManualImportToWarehouseDto {
-  asset_id: number;
+  asset_code: string;
   quantity: number;
   import_date: Date;
   reason: string;
   note: string;
-  warehouse_id: number;
+  location_code?:string;
 }

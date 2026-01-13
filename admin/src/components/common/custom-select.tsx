@@ -36,7 +36,7 @@ export default function CustomSelect({
     <div className={`flex items-center relative gap-1 ${className}`}>
       {label &&
         (labelType == "top" ? (
-          <label className="inline-block absolute text-xs bg-[#F5F4F9] text-black top-[-25%] px-1 z-10 left-1 rounded-t">
+          <label className="inline-block absolute text-xs bg-[#F5F4F9] text-black top-[-10px] px-1 z-10 left-1 rounded-t">
             {label}
             {required && (
               <span className="text-[#d15b47] inline-block ml-1">(*)</span>

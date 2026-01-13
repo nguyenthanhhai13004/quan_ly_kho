@@ -64,5 +64,18 @@ class AuthApi {
       throw new Error("error");
     }
   }
+
+  static async resetPw({email,username}:{email:string,username:string}){
+     try {
+      const response = await api.post(`/v1/auth/reset-pw`,{email,username});
+      return {
+        data: response.data.data,
+        message: response.data.message,
+        status: response.status,
+      };
+    } catch (error) {
+      throw new Error("error");
+    }
+  }
 }
 export default AuthApi;

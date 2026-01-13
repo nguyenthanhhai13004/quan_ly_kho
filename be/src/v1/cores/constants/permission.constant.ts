@@ -37,8 +37,18 @@ export const PERMISSION_LIST_DEFAULT = [
     id: 16,
   },
   {
-    code: PermissionsEnum.MAINTENANCE_VIEW_OWN,
-    name: "Xem lịch bảo trì của mình",
-    id: 17,
+    code: PermissionsEnum.LOGS_VIEW,
+    name: "Xem nhật ký",
+    id: 18,
+  },
+  {
+    code: PermissionsEnum.WAREHOUSE_LIST_VIEW,
+    name: "Xem danh sách kho",
+    id: 19,
+  },
+  {
+    code: PermissionsEnum.DASHBOARD_VIEW,
+    name: "Xem dashboard",
+    id: 20,
   },
 ];

@@ -11,6 +11,16 @@ export const CreateCategorySchema = Joi.object({
       "string.max": "Tên danh mục không được vượt quá 50 ký tự",
     }),
 
+  code: Joi.string()
+    .min(2)
+    .max(10)
+    .required()
+    .messages({
+      "string.empty": "Mã danh mục là bắt buộc",
+      "string.min": "Mã danh mục phải có ít nhất 2 ký tự",
+      "string.max": "Mã danh mục không được vượt quá 10 ký tự",
+    }),
+
   description: Joi.string()
     .allow(null, "")
     .max(255)
@@ -31,4 +41,5 @@ export interface CreateCategoryDto {
   name: string;
   description?: string;
   color: string;
+  code:string;
 }

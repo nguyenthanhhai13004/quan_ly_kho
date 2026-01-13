@@ -17,6 +17,8 @@ type User = {
   modified_by_user_id: number | null;
   deleted_by_user_id: number | null;
   created_by_user_id: number | null;
+  warehouse_ids?:number[];
+  phone_number?:string;
 };
 
 class UserApi {

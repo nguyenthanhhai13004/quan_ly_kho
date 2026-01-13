@@ -5,4 +5,5 @@ export interface Category extends IBaseModelAttributes {
   name: string;
   description?: string;
   color: string;
+  code:string;
 }

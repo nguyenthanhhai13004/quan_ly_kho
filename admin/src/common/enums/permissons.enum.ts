@@ -23,6 +23,9 @@ export const PermissionsEnum = {
 
   MAINTENANCE_VIEW_ALL : "MAINTENANCE_VIEW_ALL", // Xem tất cả lịch bảo trì
   MAINTENANCE_VIEW_OWN : "MAINTENANCE_VIEW_OWN", // Xem lịch bảo trì của mình
+  LOGS_VIEW : "LOGS_VIEW",
+  WAREHOUSE_LIST_VIEW : "WAREHOUSE_LIST_VIEW",
+  DASHBOARD_VIEW : "DASHBOARD_VIEW",
 } as const;
 
 export type PermissionsEnum = typeof PermissionsEnum[keyof typeof PermissionsEnum];

@@ -6,7 +6,7 @@ import { useModalProvider } from "../../providers/modal-provider";
 import { ModalEnum } from "../../constants/modals.constant";
 
 export default function AssetListView() {
-  const { currentModal, setCurrentModal } = useModalProvider();
+  const { currentModal, setCurrentModal,handleCloseDetailModal } = useModalProvider();
   return (
     <>
       <div className="flex justify-between items-center mb-3">
@@ -23,7 +23,7 @@ export default function AssetListView() {
       <>
         <CreateAssetModal
           open={ModalEnum.CREATE_ASSET_MODAL === currentModal}
-          onClose={() => setCurrentModal(ModalEnum.CLOSE_MODAL)}
+          onClose={handleCloseDetailModal}
         />
       </>
     </>

@@ -6,7 +6,9 @@ interface CustomIconProps {
   label: string;
   className?: string;
   variant?: Variant;
-  onClick?:(e: React.MouseEvent<HTMLButtonElement>) => void;
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  disabled?: boolean;
+  type?: "button" | "submit" | "reset";
 }
 
 export default function CustomIcon({
@@ -14,29 +16,41 @@ export default function CustomIcon({
   icon,
   label,
   className = "",
-  variant = "default"
+  variant = "default",
+  disabled = false,
+  type = "button",
 }: CustomIconProps) {
   const variantMap: Record<Variant, string> = {
     info: "text-[#2F7BFF]",
     warming: "text-[#FFAE43]",
     danger: "text-[#FF414B]",
     success: "text-[#4BD670]",
-    default:"text-[#AAADAD]"
+    default: "text-[#AAADAD]",
   };
+
   return (
     <div
-      className={`relative group inline-flex flex-col items-center ${variantMap[variant]} ${className}`}
+      className={`relative group inline-flex flex-col items-center ${variantMap[variant]} ${className} ${
+        disabled ? "opacity-50 cursor-not-allowed" : ""
+      }`}
     >
-      <button onClick={onClick} className="p-2 rounded-full hover:bg-gray-100 transition-colors duration-200 cursor-pointer">
+      <button
+        onClick={onClick}
+        disabled={disabled}
+        type={type}
+        className={`p-2 rounded-full transition-colors duration-200 ${
+          disabled ? "" : "hover:bg-gray-100 cursor-pointer"
+        }`}
+      >
         {icon}
       </button>
 
       <div
-        className="
+        className={`
           absolute top-full mt-1 px-2 py-1 text-xs text-white bg-gray-800 rounded-md 
           opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 
           transition-all duration-200 pointer-events-none z-100 whitespace-nowrap
-        "
+        `}
       >
         {label}
       </div>

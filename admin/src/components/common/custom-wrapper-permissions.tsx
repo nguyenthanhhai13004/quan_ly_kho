@@ -1,5 +1,5 @@
 import { PermissionsEnum } from "../../common/enums/permissons.enum";
-import { useMe } from "../../hooks/auth/use-me";
+import { useMe } from "../../queries/auth.query";
 
 type CustomWrapperPermissionsProps = {
   permissionsRequired: PermissionsEnum[];

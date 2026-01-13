@@ -1,3 +1,4 @@
+import { Request } from "express";
 import { hashPassword } from "../auths/utils";
 import { RESET_PASSWORD_USER_DEFAULT } from "../cores/constants/app.constant";
 import {
@@ -5,6 +6,7 @@ import {
   RESET_PASSWORD_USER_FROM_ADMIN_EMAIL_TEMPLATE,
 } from "../cores/constants/email-template.constant";
 import { ResponsePaginationDto } from "../cores/dtos/response-pagination.dto";
+import { LogAction, LogController } from "../cores/enums/logs.enum";
 import {
   BadRequestError,
   InternalServerError,
@@ -18,10 +20,14 @@ import { UpdatedUserDto } from "../dtos/user/update-user.dto";
 import { User } from "../models/user.model";
 import roleRepository from "../repositories/role.repository";
 import userRepository from "../repositories/user.repository";
+import warehouseUserRepository from "../repositories/warehouse-user.repository";
 import { generateRandomPassword } from "../utils/generate-random-password";
 import { getInfoData } from "../utils/get-info-data";
 import { replacePlaceHolder } from "../utils/replace-placeholder";
 import EmailService from "./email.service";
+import KQNLogService from "./log.service";
+import { getRequestInfo } from "../utils/request-info";
+import { getDiffChangesArray } from "../utils/get-diff-changes";
 
 class UserService {
   static async createUser(
@@ -46,14 +52,26 @@ class UserService {
 
     const password = generateRandomPassword();
     const passwordHash = await hashPassword(password);
-    const userCreateData = {
+    const { warehouse_ids, ...userCreateData } = {
       ...createUserDto,
       password: passwordHash,
     };
     const userStore = await userRepository.store(userCreateData);
-
     if (!userStore) {
       throw new InternalServerError("có lỗi xảy ra, vui lòng thử lại.");
+    }
+
+    // store warehouses for user
+    if (
+      createUserDto.warehouse_ids !== undefined &&
+      createUserDto.warehouse_ids.length > 0
+    ) {
+      await warehouseUserRepository.createMany(
+        createUserDto.warehouse_ids.map((w) => ({
+          user_id: userStore.id,
+          warehouse_id: w,
+        })),
+      );
     }
 
     // send email
@@ -73,12 +91,13 @@ class UserService {
     });
 
     return getInfoData<ResponseUserDto>({
-      fields: ["id", "fullname", "username", "email","is_active"],
+      fields: ["id", "fullname", "username", "email", "is_active"],
       object: userStore,
     });
   }
   static async updateUser(
     updateUserDto: UpdatedUserDto,
+    req: Request,
   ): Promise<ResponseUserDto> {
     const userFound = await userRepository.findUserById(updateUserDto.id);
 
@@ -98,11 +117,49 @@ class UserService {
       email: updateUserDto.email,
       is_active: updateUserDto.active,
       fullname: updateUserDto.fullname,
+      phone_number: updateUserDto.phone_number || "",
     });
 
     if (!updated) {
       throw new InternalServerError("có lỗi xảy ra, thử lại sau.");
     }
+
+    // update warehouse
+    if (updateUserDto.warehouse_ids !== undefined) {
+      // remove all
+      await warehouseUserRepository.deleteAllByUserId(updated.id);
+      if (updateUserDto.warehouse_ids.length > 0) {
+        await warehouseUserRepository.createMany(
+          updateUserDto.warehouse_ids.map((w) => ({
+            user_id: updated.id,
+            warehouse_id: w,
+          })),
+        );
+      }
+    }
+
+    const { ip, url } = getRequestInfo(req);
+    const edit_changes = getDiffChangesArray(
+      {
+        email: userFound.email,
+        is_active: userFound.is_active,
+        fullname: userFound.fullname,
+      },
+      {
+        email: updateUserDto.email,
+        is_active: updateUserDto.active,
+        fullname: updateUserDto.fullname,
+      },
+    );
+    await KQNLogService.createLog({
+      action_code: LogAction.EDIT,
+      controller_code: LogController.USER,
+      username: req.user.username,
+      data: req.body,
+      ip,
+      url,
+      edit_changes,
+    });
 
     return getInfoData<ResponseUserDto>({
       fields: ["id", "fullname", "username", "email", "is_active"],
@@ -130,10 +187,19 @@ class UserService {
     }
 
     return getInfoData<ResponseUserDto>({
-      fields: ["id", "fullname", "username", "email","is_active","role"],
+      fields: [
+        "id",
+        "fullname",
+        "username",
+        "email",
+        "is_active",
+        "role",
+        "warehouse_ids",
+        "phone_number",
+      ],
       object: {
         ...userFound,
-        role:userFound.role_id
+        role: userFound.role_id,
       },
     });
   }

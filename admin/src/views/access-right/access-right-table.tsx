@@ -1,7 +1,6 @@
 import CustomCheckbox from "../../components/common/custom-checkbox";
 import CustomTable from "../../components/common/custom-table";
-import { useAllPermissions } from "../../hooks/rbac/use-all-permissions";
-import { useAllRoles } from "../../hooks/rbac/use-all-roles";
+import { useAllPermissions, useAllRoles } from "../../queries/rbac.query";
 
 export default function AccessRightTable(){
     const {roles} = useAllRoles();

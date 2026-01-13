@@ -1,7 +1,7 @@
 import express, { Application, NextFunction, Request, Response } from "express";
 import dotenv from "dotenv";
 import APIV1 from "./v1/routes";
-import { DEFAULT_PORT } from "./v1/cores/constants/app.constant";
+import { DEFAULT_PORT, ROOT_UPLOADS } from "./v1/cores/constants/app.constant";
 const PORT = process.env.PORT || DEFAULT_PORT;
 import compression from "compression";
 import cors from "cors";
@@ -14,6 +14,8 @@ import StatusCode from "./v1/cores/constants/status-code.constant";
 import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./v1/configs/swagger";
 import { CreateKeyPairType } from "./v1/auths";
+
+import path from "path";
 dotenv.config();
 declare global {
   namespace Express {
@@ -42,7 +44,11 @@ app.use(
     credentials: true,
   }),
 );
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false,
+  }),
+);
 if (NODE_ENV === NodeEnvEnum.DEV) {
   app.use(morgan("dev"));
   app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
@@ -50,6 +56,17 @@ if (NODE_ENV === NodeEnvEnum.DEV) {
 app.use(compression());
 /* MIDDLEWARES END*/
 
+/**
+ * PUBLIC UPLOADS
+ */
+app.use(
+  "/api/uploads",
+  express.static(path.join(__dirname, `../${ROOT_UPLOADS}`)),
+);
+app.use(
+  "/api/assets",
+  express.static(path.join(__dirname, `../assets`)),
+);
 app.use("/api/v1", APIV1);
 
 app.use((req: Request, res: Response, next: NextFunction) => {
@@ -60,8 +77,9 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 app.use((err: HttpError, req: Request, res: Response, next: NextFunction) => {
   res.status(err.status || StatusCode.INTERNAL_SERVER_ERROR).json({
-    message: err.message || ReasonStatusCode.INTERNAL_SERVER_ERROR,
+    message: (err.status == 500 || !err.status)  ? ReasonStatusCode.INTERNAL_SERVER_ERROR : (err.message || ReasonStatusCode.INTERNAL_SERVER_ERROR),
     status: err.status,
+    stack:err.stack
   });
 });
 export { app, PORT };

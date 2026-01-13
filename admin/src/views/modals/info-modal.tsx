@@ -4,7 +4,6 @@ import CustomInput from "../../components/common/custom-input";
 import CustomModal, {
   type CustomModalProps,
 } from "../../components/common/custom-modal";
-import { useMe } from "../../hooks/auth/use-me";
 import { useForm } from "react-hook-form";
 import {
   ProfileUpdateSchema,
@@ -13,6 +12,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "react-toastify";
 import AuthApi from "../../api/auth-api";
+import { useMe } from "../../queries/auth.query";
 
 export default function InfoModal({ open, onClose }: CustomModalProps) {
   const { user } = useMe();
@@ -27,6 +27,7 @@ export default function InfoModal({ open, onClose }: CustomModalProps) {
     defaultValues: {
       email: user?.email,
       fullname: user?.fullname,
+      phone_number:user?.phone_number
     },
   });
 
@@ -43,10 +44,9 @@ export default function InfoModal({ open, onClose }: CustomModalProps) {
       reset(data);
     }
   };
-
   if (!user) return;
   return (
-    <CustomModal title="Thông tin tài khoản" onClose={onClose} open={open}>
+    <CustomModal width="w-xl" title="Thông tin tài khoản" onClose={onClose} open={open}>
       <form onSubmit={handleSubmit(onSubmit)} className="pt-3">
         <div className="mb-5">
           <CustomInput
@@ -76,8 +76,17 @@ export default function InfoModal({ open, onClose }: CustomModalProps) {
         </div>
         <div className="mb-5">
           <CustomInput
+            disabled={!isEdit}
+            labelType="top"
+            label="Số điện thoại"
+            {...register("phone_number")}
+            error={errors.phone_number?.message}
+          />
+        </div>
+        <div className="mb-5">
+          <CustomInput
             disabled
-            value={user.role}
+            value={user.roleName}
             labelType="top"
             label="Vai trò"
           />

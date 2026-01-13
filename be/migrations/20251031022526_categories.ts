@@ -6,6 +6,7 @@ export async function up(knex: Knex): Promise<void> {
     return knex.schema.createTable(CATEGORY_TABLE_NAME, (table) => {
     table.increments("id").primary().unique();
     table.string("name").notNullable();
+    table.string("code").notNullable();
     table.string("description").nullable();
     table.string("color").notNullable();
 

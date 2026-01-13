@@ -12,6 +12,10 @@ export const CreateUserSchema = z.object({
     .email("Email không hợp lệ"),
 
   fullname: z.string().nonempty("Họ tên không được để trống"),
+  phone_number: z
+  .string()
+  .regex(/^(0|\+84)(\d{9})$/, "Số điện thoại không hợp lệ")
+  .optional(),
   role_id: z.number(),
 });
 
@@ -22,4 +26,6 @@ export interface CreateUserDto {
   email: string;
   fullname: string;
   role_id: number;
+  warehouse_ids?:number[];
+  phone_number?:string;
 }

@@ -2,9 +2,12 @@ import StatusCode from "./constants/status-code.constant";
 import ReasonStatusCode from "./constants/reason-status-code.constant";
 class ErrorResponse extends Error {
   status: number;
+  now:Date;
   constructor(message: string, status: number) {
     super(message);
     this.status = status;
+    this.now = new Date();
+    Object.setPrototypeOf(this, ErrorResponse.prototype);
   }
 }
 
