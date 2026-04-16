@@ -11,10 +11,10 @@ interface IDBConfig {
 
 const development: IDBConfig = {
   host: process.env.DEV_DB_HOST || "localhost",
-  port: Number(process.env.DEV_DB_PORT) || 3306,
-  name: process.env.DEV_DB_NAME || "devdb",
+  port: Number(process.env.DEV_DB_PORT) || 3307,
+  name: process.env.DEV_DB_NAME || "dbkho",
   username: process.env.DEV_DB_USERNAME || "root",
-  pass: process.env.DEV_DB_PASS || "",
+  pass: process.env.DEV_DB_PASS || "123456",
 };
 
 const production: IDBConfig = {
