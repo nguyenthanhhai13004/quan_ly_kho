@@ -82,6 +82,7 @@ class AssetService {
 
     const [categoryFound, assetFound] = await Promise.all([
       categoryRepository.findOneByCondition({ id: category_id }),
+      // Update phải tìm theo assetId (khóa chính, ổn định); code là mã nghiệp vụ có thể thay đổi.
       assetRepository.findOneByCondition({ id: assetId }),
     ]);
     if (!categoryFound) throw new BadRequestError("Danh mục không tồn tại");

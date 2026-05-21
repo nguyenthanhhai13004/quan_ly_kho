@@ -1,3 +1,4 @@
+// Prefix + Ngày + Số tăng dần (CHUẨN DOANH NGHIỆP) cho mã đơn
 function generateTransactionCode(): string {
   const prefix = "KQN";
   let randomNumber = "";
