@@ -48,25 +48,17 @@ class AssetRepository extends BaseRepository<Asset> {
     if (category_id) query.where(`${this.tableName}.category_id`, category_id);
     if (code) query.whereILike(`${this.tableName}.code`, `%${code}%`);
     if (name) query.whereILike(`${this.tableName}.name`, `%${name}%`);
-    
-    // chưa phù hơp
-    // const totalQuery = db(this.tableName).whereNull(
-    //   `${this.tableName}.deleted_at`,
-    // );
+    const totalQuery = db(this.tableName).whereNull(
+      `${this.tableName}.deleted_at`,
+    );
 
 
-    // if (category_id)
-    //   totalQuery.where(`${this.tableName}.category_id`, category_id);
-    // if (code) totalQuery.whereILike(`${this.tableName}.code`, `%${code}%`);
-    // if (name) totalQuery.whereILike(`${this.tableName}.name`, `%${name}%`);
+    if (category_id)
+      totalQuery.where(`${this.tableName}.category_id`, category_id);
+    if (code) totalQuery.whereILike(`${this.tableName}.code`, `%${code}%`);
+    if (name) totalQuery.whereILike(`${this.tableName}.name`, `%${name}%`);
 
-    // const [{ count } = { count: 0 }] = await totalQuery.count({ count: "*" });
-
-    // Clone query để đếm — giữ lại JOIN + WHERE + filter, chỉ đếm không cần SELECT
-    const [{ count } = { count: 0 }] = await query
-      .clone()
-      .clearSelect()
-      .count({ count: "*" });
+    const [{ count } = { count: 0 }] = await totalQuery.count({ count: "*" });
 
     const rows = await query
       .limit(size)

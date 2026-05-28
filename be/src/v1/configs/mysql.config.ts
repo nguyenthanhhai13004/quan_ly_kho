@@ -14,7 +14,7 @@ const development: IDBConfig = {
   port: Number(process.env.DEV_DB_PORT) || 3307,
   name: process.env.DEV_DB_NAME || "dbkho",
   username: process.env.DEV_DB_USERNAME || "root",
-  pass: process.env.DEV_DB_PASS || "123456",
+  pass: process.env.DEV_DB_PASS || "",
 };
 
 const production: IDBConfig = {

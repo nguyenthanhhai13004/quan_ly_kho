@@ -186,9 +186,12 @@ class WarehouseService {
   }
 
   static async getAllAssetsInWarehouseOwn(
-    { page, size, category_id, code, name }: PaginationAssetsDto,
+    { page, size, category_id, code, name, status }: PaginationAssetsDto & { status?: number },
     warehouse_id: number,
   ) {
+
+
+
     const offset = (page - 1) * size;
 
     let assetQuery = db("assets as a")
@@ -213,6 +216,37 @@ class WarehouseService {
 
     if (category_id) {
       assetQuery = assetQuery.where("a.category_id", category_id);
+    }
+
+    if (status) {
+      /**
+       const statusMap: Record<
+    string,
+    {
+      label: string;
+      color: "success" | "warning" | "error" | "default";
+    }
+  > = {
+    1: { label: "Tốt", color: "success" },
+    3: { label: "Cần bảo trì", color: "warning" },
+    4: { label: "Hết hạn", color: "default" },
+    2: { label: "Lỗi", color: "error" },
+  };
+       */
+      // console.log("status", status)
+      const now = new Date();
+      if (status == 1) {
+        assetQuery = assetQuery.where("wa.status", AssetStatusEnum.GOOD);
+      } else if (status == 3) {
+        // assetQuery = assetQuery.where("wa.status", AssetStatusEnum.MAINTENANCE);
+        assetQuery = assetQuery
+        .whereNotNull("wa.maintenance_due")
+        .where("wa.maintenance_due", "<=", now);
+      } else if (status == 4) {
+        assetQuery = assetQuery.where("wa.expiration_date", "<", now);
+      } else if (status == 2) {
+        assetQuery = assetQuery.where("wa.status", AssetStatusEnum.BROKEN);
+      }
     }
 
     assetQuery = assetQuery.groupBy("a.id").limit(size).offset(offset);
@@ -248,6 +282,10 @@ class WarehouseService {
     for (const row of statusRows) {
       const finalStatus = resolveStatus(row);
       const qty = Number(row.quantity);
+
+      if (status && finalStatus !== Number(status)) {
+        continue;
+      }
 
       if (!statusMap.has(row.asset_id)) {
         statusMap.set(row.asset_id, []);
@@ -294,13 +332,29 @@ class WarehouseService {
       totalQuery = totalQuery.where("a.category_id", category_id);
     }
 
+    if (status){
+      const now = new Date();
+      if (status == 1) {
+        totalQuery = totalQuery.where("wa.status", AssetStatusEnum.GOOD);
+      } else if (status == 3) {
+        // assetQuery = assetQuery.where("wa.status", AssetStatusEnum.MAINTENANCE);
+        totalQuery = totalQuery
+        .whereNotNull("wa.maintenance_due")
+        .where("wa.maintenance_due", "<=", now);
+      } else if (status == 4) {
+        totalQuery = totalQuery.where("wa.expiration_date", "<", now);
+      } else if (status == 2) {
+        totalQuery = totalQuery.where("wa.status", AssetStatusEnum.BROKEN);
+      }
+    }
+
     const total = await totalQuery
       .countDistinct("a.id as count")
       .first()
       .then((res) => Number(res?.count || 0));
 
     return {
-      items,
+      items:items.filter((i)=>i.status.length>0),
       page,
       size,
       total,
@@ -371,10 +425,26 @@ class WarehouseService {
       )?.total || 0,
     );
 
+    // lấy tổng tài sản sắp hết hạn
+    const next10Days = new Date();
+    next10Days.setDate(today.getDate() + 30);
+    const totalExpiringSoon = Number(
+      (
+        await db("warehouse_asset")
+          .where("warehouse_id", warehouse_id)
+          .whereNotNull("expiration_date")
+          .whereNot("status", AssetStatusEnum.EXPIRED)
+          .whereBetween("expiration_date", [today, next10Days])
+          .sum({ total: "quantity" })
+          .first()
+      )?.total || 0,
+    );
+
     return {
       total_assets_in_warehouse: totalAssetsInWarehouse,
       total_allocated: totalAllocated,
       total_need_maintenance: totalNeedMaintenance,
+      total_expiring_soon: totalExpiringSoon,
     };
   }
 

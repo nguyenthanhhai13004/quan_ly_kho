@@ -75,7 +75,8 @@ class WarehouseController {
       category_id: req.query.category_id,
       code: req.query.code,
       name: req.query.name,
-    } as PaginationAssetsDto;
+      status: req.query?.status,
+    } as PaginationAssetsDto & {status?:any};
     return new OK({
       message: "danh sách tài sản trong kho",
       data: await WarehouseService.getAllAssetsInWarehouseOwn(
