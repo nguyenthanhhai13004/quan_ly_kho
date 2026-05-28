@@ -5,13 +5,16 @@ import type { PaginationAssetsDto } from "../../dtos/asset/pagination-assets.dto
 import { usePaginationParams } from "../../hooks/use-pagination-params";
 import { useAllCategories } from "../../queries/category.query";
 import FilterWrapper from "../filter-wrapper";
+import { statusMap } from "../warehouse/asset-status-badges";
 
 type AssetFilterProps = {
   onFiltersChange?: (newFilters: PaginationAssetsDto) => void;
+  inModal?: boolean;
 };
 
 export default function AssetFilter({
   onFiltersChange,
+  inModal
 }: AssetFilterProps) {
   const { categories } = useAllCategories();
   const {
@@ -51,6 +54,25 @@ export default function AssetFilter({
         onChange={(e) => handleChange("category_id", e.target.value)}
         label="Danh mục"
       />
+
+      {
+        !inModal && (
+          <CustomSelect
+        labelType="top"
+        placeholder="Tất cả tình trạng"
+        className="min-w-[150px]"
+        options={
+          Object.entries(statusMap).map(([key, value]) => ({
+            label: value.label,
+            value: key,
+          })) || []
+        }
+        value={filters?.status || ""}
+        onChange={(e) => handleChange("status", e.target.value)}
+        label="Tình trạng"
+      />
+        )
+      }
 
       <CustomInput
         placeholder="Tên tài sản"

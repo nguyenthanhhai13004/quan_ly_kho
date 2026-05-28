@@ -21,6 +21,7 @@ export type TAssetStats = {
   total_assets_in_warehouse: number;
   total_allocated: number;
   total_need_maintenance: number;
+  total_expiring_soon:number;
 };
 
 class StatsApi {

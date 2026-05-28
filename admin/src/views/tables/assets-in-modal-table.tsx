@@ -18,7 +18,7 @@ import CustomBadge from "../../components/common/custom-badge";
 import { getAssetBadgeProps } from "../../utils/get-asset-badge-props";
 import dayjs from "dayjs";
 
-export default function AssetInModalTable() {
+export default function AssetInModalTable({inModal=false}: {inModal?: boolean}) {
   const { setFilters, filters, setPageFilter } =
     usePaginationParams<PaginationAssetsDto>({
       useUrl: false,
@@ -34,7 +34,7 @@ export default function AssetInModalTable() {
       <CustomTable
         columns={columns}
         checkboxHeader={"Chọn tài sản"}
-        filter={<AssetFilter onFiltersChange={setFilters} />}
+        filter={<AssetFilter onFiltersChange={setFilters} inModal={inModal} />}
         title="D/s tài sản"
         totalPages={assets?.totalPages}
         currentPage={filters.page}

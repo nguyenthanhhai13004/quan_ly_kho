@@ -19,6 +19,8 @@ import { useModalProvider } from "../../providers/modal-provider";
 import { MdOutlineMotionPhotosAuto } from "react-icons/md";
 import CustomIcon from "../../components/common/custom-icon";
 import generateTransactionCode from "../../utils/generate-transaction-code";
+import { useNavigate } from "react-router-dom";
+import dayjs from "dayjs";
 export default function ImportExcelView() {
   const columns = [
     "Mã lô",
@@ -49,6 +51,7 @@ export default function ImportExcelView() {
     }
   });
   const { openConfirmModal } = useModalProvider();
+  const navigate = useNavigate();
   const handleFile = async (file: File) => {
     setCurrentFile(null);
     setErrors([]);
@@ -112,6 +115,7 @@ export default function ImportExcelView() {
               setCurrentFile(null);
               setData([]);
               setValue("code",generateTransactionCode())
+              navigate(0);
             },
           },
         );
@@ -214,9 +218,13 @@ export default function ImportExcelView() {
                   item.name,
                   item.quantity,
                   item.cost,
-                  excelToJsDate(item.manufactureDate)?.toLocaleString(),
-                  excelToJsDate(item.maintenanceDue)?.toLocaleString(),
-                  excelToJsDate(item.expirationDate)?.toLocaleString(),
+                  dayjs(excelToJsDate(item.manufactureDate)).format(
+                    "DD/MM/YYYY",
+                  ),
+                  dayjs(excelToJsDate(item.maintenanceDue)).format("DD/MM/YYYY"),
+                  dayjs(excelToJsDate(item.expirationDate)).format(
+                    "DD/MM/YYYY",
+                  ),
                 ]) || []
               }
             />

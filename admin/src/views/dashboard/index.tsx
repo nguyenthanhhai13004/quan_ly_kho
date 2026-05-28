@@ -16,10 +16,11 @@ export default function DashboardView() {
   const {assetsTotal} = useStatsAssets();
   return (
     <div className="p-6 grid gap-6">
-      <div className="gap-4 grid-cols-3 grid">
+      <div className="gap-4 grid-cols-4 grid">
           <StatsCard label={"Tổng tài sản"} value={assetsTotal?.total_assets_in_warehouse || 0}/>
           <StatsCard label={"Đang cấp phát"} value={assetsTotal?.total_allocated || 0}/>
           <StatsCard label={"Cần bảo trì"} value={assetsTotal?.total_need_maintenance || 0}/>
+          <StatsCard label={"Sắp hết hạn (< 10 ngày)"} value={assetsTotal?.total_expiring_soon || 0}/>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

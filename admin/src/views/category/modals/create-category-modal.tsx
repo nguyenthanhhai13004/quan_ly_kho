@@ -70,9 +70,9 @@ export default function CreateCategoryModal({
     >
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="pb-1 border-b mb-2 border-gray-300 pt-3">
-          <div className="grid grid-cols-2 gap-3 mb-3">
+          <div className="gap-3 mb-3">
             <div>
-              <div className="mb-5">
+              <div className="mb-5 w-[300px]">
                 <CustomInput
                   {...register("code")}
                   labelType="top"
@@ -107,12 +107,12 @@ export default function CreateCategoryModal({
                 />
               </div>
             </div>
-            <div className="relative">
+            {/* <div className="relative">
               <span className="inline-block rounded-2xl absolute text-xs bg-[#F5F4F9] text-gray-700 top-[-5%] px-2 z-10 left-0">
                 Chọn màu
               </span>
               <HexColorPicker color={color} onChange={setColor} />
-            </div>
+            </div> */}
           </div>
         </div>
         <div className="text-right">

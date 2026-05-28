@@ -18,6 +18,7 @@ import CustomSelect from "../../components/common/custom-select";
 import { useCreateAllocationsTransaction } from "../../queries/transaction.query";
 import generateTransactionCode from "../../utils/generate-transaction-code";
 import { MdOutlineMotionPhotosAuto } from "react-icons/md";
+import { useNavigate } from "react-router-dom";
 
 export default function AllocationAssetForm() {
   const columns = ["Hành động", "Mã lô hàng", "Tên tài sản", "Số lượng"];
@@ -45,6 +46,7 @@ export default function AllocationAssetForm() {
   });
   const { mutate } = useCreateAllocationsTransaction();
   const { openConfirmModal } = useModalProvider();
+  const navigate = useNavigate();
   const onSubmit = (data: CreateAllocationData) => {
     if (selectedBatches.length === 0) {
       toast.error("Danh sách lô hàng phải có ít nhất 1");
@@ -83,6 +85,7 @@ export default function AllocationAssetForm() {
               reset();
               resetBatchState();
               generateTransactionCode()
+              navigate(0)
             },
           },
         );

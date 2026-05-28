@@ -18,7 +18,7 @@ export const ImportManualSchema = z.object({
   sender_location: z.string("sender_location is required").nonempty("Nơi nhận là bắt buộc"),
   items: z
     .array(ImportManualItemSchema)
-    .nonempty("At least one item is required"),
+    .nonempty("At least one item is required"), //phiếu nhập phải có ít nhất 1 item
 }).extend(CreateTransactionSchema.shape);
 
 export type ImportManualItemData = z.infer<typeof ImportManualItemSchema>;

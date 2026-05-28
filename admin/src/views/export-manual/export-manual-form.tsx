@@ -16,6 +16,7 @@ import { useModalProvider } from "../../providers/modal-provider";
 import { toast } from "react-toastify";
 import generateTransactionCode from "../../utils/generate-transaction-code";
 import { MdOutlineMotionPhotosAuto } from "react-icons/md";
+import { useNavigate } from "react-router-dom";
 
 export default function ExportManualForm() {
   const columns = ["Hành động", "Mã lô hàng", "Tên tài sản", "Số lượng"];
@@ -42,6 +43,7 @@ export default function ExportManualForm() {
   });
   const { mutate } = useExportManualTransaction();
   const { openConfirmModal } = useModalProvider();
+  const navigate = useNavigate();
   const onSubmit = async (data: ExportManualData) => {
     if (selectedBatches.length === 0) {
       toast.error("Danh sách lô hàng phải có ít nhất 1");
@@ -80,6 +82,7 @@ export default function ExportManualForm() {
               reset();
               resetBatchState();
               setValue("code", generateTransactionCode());
+              navigate(0);
             },
           },
         );

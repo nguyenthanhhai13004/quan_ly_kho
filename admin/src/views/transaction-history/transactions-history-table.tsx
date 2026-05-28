@@ -74,7 +74,7 @@ export default function TransactionsHistoryTable() {
               ))}
             </div>,
             <h5 className="text-[#2b7dbc]">{t.created_by_user}</h5>,
-            dayjs(t.created_at).format("DD/MM/YYYY HH:mm"),
+           dayjs(t.created_at).format("HH:mm DD/MM/YYYY"),
             <p className="text-gray-500">{t.note}</p>,
             <CustomIcon
               onClick={() => {

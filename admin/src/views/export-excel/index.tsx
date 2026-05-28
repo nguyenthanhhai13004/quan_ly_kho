@@ -19,6 +19,7 @@ import { useExportExcelTransaction } from "../../queries/transaction.query";
 import generateTransactionCode from "../../utils/generate-transaction-code";
 import CustomIcon from "../../components/common/custom-icon";
 import { MdOutlineMotionPhotosAuto } from "react-icons/md";
+import { useNavigate } from "react-router-dom";
 export default function ExportExcelView() {
   const columns = ["Mã lô", "Tên tài sản", "Số lượng"];
   const [errors, setErrors] = useState<{ reasons: string[]; index: number }[]>(
@@ -40,6 +41,7 @@ export default function ExportExcelView() {
   });
   const { mutate } = useExportExcelTransaction();
   const { openConfirmModal } = useModalProvider();
+  const navigate = useNavigate();
   const handleFile = async (file: File) => {
     setCurrentFile(null);
     setErrors([]);
@@ -98,6 +100,7 @@ export default function ExportExcelView() {
               reset();
               setCurrentFile(null);
               setValue("code", generateTransactionCode());
+              navigate(0);
             },
           },
         );

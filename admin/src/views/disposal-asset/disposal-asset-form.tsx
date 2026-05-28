@@ -16,6 +16,7 @@ import { useCreateDisposalTransaction } from "../../queries/transaction.query";
 import { toast } from "react-toastify";
 import generateTransactionCode from "../../utils/generate-transaction-code";
 import { MdOutlineMotionPhotosAuto } from "react-icons/md";
+import { useNavigate } from "react-router-dom";
 
 export default function DisposalAssetForm() {
   const columns = [
@@ -48,6 +49,7 @@ export default function DisposalAssetForm() {
   });
   const { openConfirmModal } = useModalProvider();
   const { mutate } = useCreateDisposalTransaction();
+  const navigate = useNavigate();
   const onSubmit = (data: CreateDisposalData) => {
     if (selectedBatches.length === 0) {
       toast.error("Danh sách lô hàng phải có ít nhất 1");
@@ -89,6 +91,7 @@ export default function DisposalAssetForm() {
               reset();
               resetBatchState();
               setValue("code", generateTransactionCode());
+              navigate(0);
             },
           },
         );

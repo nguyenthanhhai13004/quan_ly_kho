@@ -17,6 +17,7 @@ import TransactionApi from "../../api/transactions-api";
 import { toast } from "react-toastify";
 import generateTransactionCode from "../../utils/generate-transaction-code";
 import { MdOutlineMotionPhotosAuto } from "react-icons/md";
+import { redirect, useNavigate } from "react-router-dom";
 
 export default function ImportManualForm() {
   const columns = [
@@ -59,6 +60,7 @@ export default function ImportManualForm() {
   });
   const { openConfirmModal } = useModalProvider();
   const { mutate } = useImportManualTransaction();
+  const navigate = useNavigate();
   const onSubmit = (data: ImportManualData) => {
     if (importManualState.selectedAssets.length === 0) {
       toast.error("Danh sách nhập kho phải >= 1");
@@ -101,6 +103,9 @@ export default function ImportManualForm() {
               reset();
               resetImportManualState();
               setValue("code",generateTransactionCode())
+              // close the form
+              // redirect("/Warehouse/Assets");
+              // navigate(0);
             },
           },
         );

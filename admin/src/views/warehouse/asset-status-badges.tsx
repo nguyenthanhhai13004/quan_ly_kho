@@ -7,25 +7,39 @@ interface Props {
   statuses: AssetStatusSummary[];
 }
 
-const AssetStatusBadges: React.FC<Props> = ({ statuses }) => {
-  const statusMap: Record<string, { label: string; color: "success" | "warning" | "error"|"default" }> = {
+// eslint-disable-next-line react-refresh/only-export-components
+export const statusMap: Record<
+    string,
+    {
+      label: string;
+      color: "success" | "warning" | "error" | "default";
+    }
+  > = {
     1: { label: "Tốt", color: "success" },
     3: { label: "Cần bảo trì", color: "warning" },
     4: { label: "Hết hạn", color: "default" },
     2: { label: "Lỗi", color: "error" },
   };
+
+const AssetStatusBadges: React.FC<Props> = ({ statuses }) => {
+
   return (
     <div className="flex flex-wrap gap-2 w-[220px]">
-      {statuses.map((item) => {
-        const mapItem = statusMap[item.status];
-        return (
-          <CustomBadge
-            key={item.status}
-            label={`${mapItem.label} ${item.quantity}`}
-            status={mapItem.color}
-          />
-        );
-      })}
+      {statuses
+        .filter((item) => item.quantity > 0)
+        .map((item) => {
+          const mapItem = statusMap[item.status];
+
+          if (!mapItem) return null;
+
+          return (
+            <CustomBadge
+              key={item.status}
+              label={`${mapItem.label} ${item.quantity}`}
+              status={mapItem.color}
+            />
+          );
+        })}
     </div>
   );
 };

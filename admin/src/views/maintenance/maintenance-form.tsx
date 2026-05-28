@@ -16,6 +16,7 @@ import { useModalProvider } from "../../providers/modal-provider";
 import { toast } from "react-toastify";
 import generateTransactionCode from "../../utils/generate-transaction-code";
 import { MdOutlineMotionPhotosAuto } from "react-icons/md";
+import { useNavigate } from "react-router-dom";
 
 export default function MaintenanceForm() {
   const columns = [
@@ -49,6 +50,7 @@ export default function MaintenanceForm() {
   });
   const { mutate } = useCreateMaintenanceTransaction();
   const { openConfirmModal } = useModalProvider();
+  const navigate = useNavigate();
   const onSubmit = (data: CreateMaintenanceData) => {
     if (selectedBatches.length === 0) {
       toast.error("Danh sách lô hàng phải có ít nhất 1");
@@ -88,6 +90,7 @@ export default function MaintenanceForm() {
               reset();
               resetBatchState();
               setValue("code", generateTransactionCode());
+              navigate(0);
             },
           },
         );
