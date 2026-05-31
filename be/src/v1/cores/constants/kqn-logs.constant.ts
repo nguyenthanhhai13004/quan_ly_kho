@@ -52,7 +52,7 @@ export const LOG_CONTROLLERS_DEFAULT = [
   {
     name: "AssetController",
     code: LogController.ASSET,
-    description: "Quản lý tài sản",
+    description: "Danh mục tài sản",
   },
   {
     name: "AccessController",

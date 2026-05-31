@@ -130,7 +130,7 @@ const routesAsset : RouteType[] = [
     element: AssetListPage,
     layout: MainLayout,
     seo:{
-      title:"Quản lý tài sản"
+      title:"Danh mục tài sản"
     }
   },
   {
@@ -149,7 +149,7 @@ const routesWarehouse : RouteType[] = [
     element: WarehouseAssetsPage,
     layout: MainLayout,
     seo:{
-      title:"Quản lý lô hàng"
+      title:"Tình trạng tồn kho"
     }
   },
    {

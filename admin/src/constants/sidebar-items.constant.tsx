@@ -34,7 +34,7 @@ export const SIDEBAR_ITEMS = [
   },
   {
     icon: <MdOutlineWebAsset size={20} />,
-    label: "Quản lý tài sản",
+    label: "Danh mục tài sản",
     path: "/Asset/List",
     permissions: [PermissionsEnum.ASSET_VIEW_ALL],
     children: [],
@@ -60,7 +60,7 @@ export const SIDEBAR_ITEMS = [
     ],
     children: [
       {
-        label: "Tài sản trong kho",
+        label: "Tình trạng tồn kho",
         path: "/Warehouse/Assets",
       },
       {

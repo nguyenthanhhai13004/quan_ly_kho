@@ -26,7 +26,7 @@ export default function AssetInWarehouseView() {
   return (
     <>
       <ViewHeader
-        title="Quản lý tài sản trong kho"
+        title="Tình trạng tồn kho"
         actions={[
           <CustomButton
             onClick={() => setModal(ModalEnum.IMPORT_MANUAL)}
