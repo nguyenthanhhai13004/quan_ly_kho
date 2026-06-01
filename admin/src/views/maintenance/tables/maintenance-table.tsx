@@ -69,7 +69,7 @@ export default function MaintenanceTable({ assetCode,isInModal}: MaintenanceTabl
                 }
                 variant="success"
                 icon={<TbPhoneDone size={20} />}
-                label="Ghi nhận hoàn thành"
+                label="Cập nhật trạng thái bảo trì"
               />
             </>,
             t.code,

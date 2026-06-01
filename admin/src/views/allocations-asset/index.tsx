@@ -20,7 +20,7 @@ export default function AllocationsAssetView() {
   return (
     <>
       <ViewHeader
-        title="Quản lý cấp phát tài sản"
+        title="Cấp phát - Thu hồi tài sản"
         actions={[
           <CustomButton
             variant="info"

@@ -102,7 +102,7 @@ export default function UpdateMaintenanceModal({
   return (
     <CustomModal
       width="w-4xl"
-      title="Thu hồi tài sản"
+      title="Cập nhật trạng thái bảo trì"
       onClose={onClose}
       open={open}
     >
