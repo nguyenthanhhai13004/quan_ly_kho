@@ -1,15 +1,16 @@
 import { BsEye } from "react-icons/bs";
+import { useState } from "react";
 import CustomIcon from "../../../components/common/custom-icon";
 import CustomTable from "../../../components/common/custom-table";
 import CustomBadge from "../../../components/common/custom-badge";
 import { useModalProvider } from "../../../providers/modal-provider";
-import { ModalEnum } from "../../../constants/modals.constant";
+
 import { MdRecycling } from "react-icons/md";
 import { useAllAllocationReturnTrx } from "../../../queries/transaction.query";
 import { usePaginationParams } from "../../../hooks/use-pagination-params";
 import type { PaginationTransactionsDto } from "../../../dtos/transaction/pagination-transactions.dto";
 import AssetReturnsModal from "../modals/asset-returns-modal";
-import { useState } from "react";
+
 import AssetTransactionDetailModal from "../../warehouse/modals/asset-transaction-detail-modal";
 import dayjs from "dayjs";
 import TransactionFilter from "../../transaction/transaction-filter";
@@ -32,7 +33,7 @@ type AllocationsAssetTableProps = {
 export default function AllocationsAssetTable({
   assetCode,
 }: AllocationsAssetTableProps) {
-  const { currentModal, setCurrentModal, closeModal } = useModalProvider();
+  const { openModal } = useModalProvider();
   const { params, setPage } = usePaginationParams<PaginationTransactionsDto>({
     defaultValues: {
       asset_code: assetCode
@@ -77,8 +78,7 @@ export default function AllocationsAssetTable({
             <div>
               <CustomIcon
                 onClick={() => {
-                  setSelected(t.code);
-                  setCurrentModal(ModalEnum.ALLOCATIONS_ASSETS_DETAIL_MODAL);
+                  openModal(AssetTransactionDetailModal, { transactionCode: t.code });
                 }}
                 icon={<BsEye size={20} />}
                 label="Xem chi tiết"
@@ -89,8 +89,7 @@ export default function AllocationsAssetTable({
                 icon={<MdRecycling size={20} />}
                 label="Thu hồi"
                 onClick={() => {
-                  setSelected(t.code);
-                  setCurrentModal(ModalEnum.RETURNS_ASSETS_MODAL);
+                  openModal(AssetReturnsModal, { transactionCode: t.code });
                 }}
                 variant="danger"
               />
@@ -118,22 +117,7 @@ export default function AllocationsAssetTable({
           ]) || []
         }
       />
-      <AssetTransactionDetailModal
-        onClose={() => {
-          closeModal();
-          setSelected(null);
-        }}
-        open={currentModal === ModalEnum.ALLOCATIONS_ASSETS_DETAIL_MODAL}
-        transactionCode={selected}
-      />
-      <AssetReturnsModal
-        transactionCode={selected}
-        onClose={() => {
-          closeModal();
-          setSelected(null);
-        }}
-        open={currentModal === ModalEnum.RETURNS_ASSETS_MODAL}
-      />
+
     </>
   );
 }

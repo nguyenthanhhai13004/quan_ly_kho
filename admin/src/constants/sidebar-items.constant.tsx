@@ -1,14 +1,15 @@
 import { AiFillDashboard } from "react-icons/ai";
 import { FaUser, FaWarehouse } from "react-icons/fa";
 import { GrHostMaintenance, GrTransaction } from "react-icons/gr";
-import { HiOutlineDocumentReport } from "react-icons/hi";
+import { HiAcademicCap, HiOutlineDocumentReport } from "react-icons/hi";
+import { SiGoogleclassroom } from "react-icons/si";
 import {
   MdCategory,
   MdOutlineMoveDown,
   MdOutlineWebAsset,
   MdWorkHistory,
 } from "react-icons/md";
-import { PiWarehouseBold } from "react-icons/pi";
+import { PiStudent, PiWarehouseBold, PiUsersThree, PiGitPullRequest } from "react-icons/pi";
 import { PermissionsEnum } from "../common/enums/permissons.enum";
 
 export const SIDEBAR_ITEMS = [
@@ -33,8 +34,50 @@ export const SIDEBAR_ITEMS = [
     permissions: [PermissionsEnum.MANAGE_USER],
   },
   {
+    icon: <HiAcademicCap size={20} />,
+    label: "Hệ đào tạo",
+    path: "/Major/List",
+    permissions: [PermissionsEnum.MANAGE_USER],
+  },
+  {
+    icon: <SiGoogleclassroom size={20} />,
+    label: "Lớp học",
+    path: "/Class/List",
+    permissions: [PermissionsEnum.MANAGE_USER],
+  },
+  {
+    icon: <PiStudent size={20} />,
+    label: "Học viên",
+    path: "/Student/List",
+    permissions: [PermissionsEnum.MANAGE_USER],
+  },
+  {
+    icon: <PiUsersThree size={20} />,
+    label: "Học viên lớp quản lý",
+    path: "/Commander/Students",
+    permissions: [PermissionsEnum.COMMANDER_STUDENTS_VIEW],
+  },
+  {
+    icon: <PiGitPullRequest size={20} />,
+    label: "Yêu cầu cấp phát & thu hồi",
+    path: "/Commander/Requests",
+    permissions: [PermissionsEnum.COMMANDER_REQUESTS_MANAGE],
+  },
+  {
+    icon: <MdOutlineMoveDown size={20} />,
+    label: "Tài sản đang sở hữu",
+    path: "/Asset/Own",
+    permissions: [PermissionsEnum.COMMANDER_REQUESTS_MANAGE],
+  },
+  {
+    icon: <PiGitPullRequest size={20} />,
+    label: "Duyệt yêu cầu Chỉ huy",
+    path: "/Officer/Requests",
+    permissions: [PermissionsEnum.WAREHOUSE_OFFICER_REQUESTS_VIEW],
+  },
+  {
     icon: <MdOutlineWebAsset size={20} />,
-    label: "Danh mục tài sản",
+    label: "Quản lý tài sản",
     path: "/Asset/List",
     permissions: [PermissionsEnum.ASSET_VIEW_ALL],
     children: [],
@@ -60,7 +103,7 @@ export const SIDEBAR_ITEMS = [
     ],
     children: [
       {
-        label: "Tình trạng tồn kho",
+        label: "Tài sản trong kho",
         path: "/Warehouse/Assets",
       },
       {

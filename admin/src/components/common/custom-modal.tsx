@@ -44,7 +44,7 @@ export default function CustomModal({
           />
 
           <motion.div
-            className={`relative bg-white rounded-2xl shadow-xl z-10 ${width} p-6 flex flex-col`}
+            className={`relative bg-white rounded-2xl shadow-xl z-10 w-full ${width} p-6 flex flex-col`}
             initial={{ y: 40, opacity: 0, scale: 0.95 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 40, opacity: 0, scale: 0.95 }}

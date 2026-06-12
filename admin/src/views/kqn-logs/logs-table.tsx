@@ -8,9 +8,7 @@ import { BsEye } from "react-icons/bs";
 import { LogAction } from "../../constants/logs.constant";
 import LogEditChangeDetailModal from "./log-edit-change-detail-modal";
 import { useModalProvider } from "../../providers/modal-provider";
-import { ModalEnum } from "../../constants/modals.constant";
-import { useState } from "react";
-import type { LogItem } from "../../types/log.type";
+
 import LogsFilter from "./logs-filter";
 
 export default function LogsTable() {
@@ -26,8 +24,7 @@ export default function LogsTable() {
   ];
   const { params,setPage } = usePaginationParams<PaginationLogsDto>();
   const { logs } = useAllLogs(params);
-  const { currentModal, setCurrentModal } = useModalProvider();
-  const [selectedLog, setSelectedLog] = useState<LogItem | null>(null);
+  const { openModal } = useModalProvider();
   return (
     <>
       <CustomTable
@@ -51,10 +48,8 @@ export default function LogsTable() {
               <CustomIcon
                 onClick={() =>
                  {
-                  setSelectedLog(log);
-                  setCurrentModal(ModalEnum.LOG_EDIT_CHANGES_MODAL)
-                 }
-                }
+                  openModal(LogEditChangeDetailModal, { edit_changes: log.edit_changes });
+                }}
                 label="Chi tiết thay đổi"
                 icon={<BsEye size={20} />}
               />
@@ -62,14 +57,7 @@ export default function LogsTable() {
           ]) || []
         }
       />
-      <LogEditChangeDetailModal
-        edit_changes={selectedLog?.edit_changes || null}
-        open={currentModal === ModalEnum.LOG_EDIT_CHANGES_MODAL}
-        onClose={() => {
-          setCurrentModal(ModalEnum.CLOSE_MODAL)
-          setSelectedLog(null);
-        }}
-      />
+
     </>
   );
 }

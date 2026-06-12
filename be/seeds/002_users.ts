@@ -7,68 +7,45 @@ export async function seed(knex: Knex): Promise<void> {
   await knex(USER_TABLE_NAME).del();
   const DEFAULT_PASSWORD = "12345678";
   const DEFAULT_PASSWORD_HASH = await hashPassword(DEFAULT_PASSWORD);
-  // const testManyUsers = 1000;
-  // const users = [];
-  // for (let i = 0; i < testManyUsers; i++) {
-  //   // await knex(USER_TABLE_NAME).insert({
-  //   //   id: i + 5,
-  //   //   fullname: `Test User ${i + 1}`,
-  //   //   email: `testuser${i+1}@example.com`,
-  //   //   username: `testuser${i+1}`,
-  //   //   password: DEFAULT_PASSWORD_HASH,
-  //   //   role_id: 3,
-  //   //   phone_number:"0999999996"
-  //   // });
-  //   users.push({
-  //     id: i + 5,
-  //     fullname: `Test User ${i + 1}`,
-  //     email: `testuser${i+1}@example.com`,
-  //     username: `testuser${i+1}`,
-  //     password: DEFAULT_PASSWORD_HASH,
-  //     role_id: 3,
-  //     phone_number:"0999999996"
-  //   });
-  // }
 
-  // await knex(USER_TABLE_NAME).insert(users);
-
-  // Inserts seed entries
+  // Seed admin + cán bộ kho (no role 3/user anymore)
   await knex(USER_TABLE_NAME).insert([
     {
       id: 1,
-      fullname: "Admin",
-      email: "admin@gmail.com",
+      fullname: "Admin Hệ Thống",
+      email: "admin@quannhu.vn",
       username: "admin",
       password: DEFAULT_PASSWORD_HASH,
       role_id: 1,
-      phone_number:"0912345678"
+      phone_number: "0999999999",
     },
     {
       id: 2,
-      fullname: "Nguyễn Thanh Hải",
-      email: "nguyenthanhhai@gmail.com",
+      fullname: "Nguyễn Văn Kho",
+      email: "canbokho1@quannhu.vn",
       username: "canbokho1",
       password: DEFAULT_PASSWORD_HASH,
-      role_id:2,
-      phone_number:"0923456789"
+      role_id: 2,
+      phone_number: "0999999998",
     },
     {
       id: 3,
-      fullname: "Lê Thị Hương",
-      email: "lethihuong@gmail.com",
+      fullname: "Trần Thị Kho",
+      email: "canbokho2@quannhu.vn",
       username: "canbokho2",
       password: DEFAULT_PASSWORD_HASH,
-      role_id:2,
-      phone_number:"0934567890"
+      role_id: 2,
+      phone_number: "0999999997",
     },
     {
       id: 4,
-      fullname: "Phạm Minh Tuấn",
-      email: "phamminhtuan@gmail.com",
-      username: "user",
+      fullname: "Chỉ Huy Trưởng K48",
+      email: "chihuyk48@quannhu.vn",
+      username: "chihuyk48",
       password: DEFAULT_PASSWORD_HASH,
-      role_id:3,
-      phone_number:"0945678901"
+      role_id: 3,
+      class_id: 1,
+      phone_number: "0999999996",
     },
   ]);
 }

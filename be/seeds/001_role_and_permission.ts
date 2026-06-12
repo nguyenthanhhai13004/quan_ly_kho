@@ -29,13 +29,14 @@ export async function seed(knex: Knex): Promise<void> {
     rolePermissions.push({ role_id: 1, permission_id: id });
   }
 
-  const officerPermissions = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16,20];
+  const officerPermissions = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 20, 23, 24];
   for (const id of officerPermissions) {
     rolePermissions.push({ role_id: 2, permission_id: id });
   }
 
-  const userPermissions = [14];
-  for (const id of userPermissions) {
+  // COMMANDER
+  const commanderPermissions = [20, 21, 22];
+  for (const id of commanderPermissions) {
     rolePermissions.push({ role_id: 3, permission_id: id });
   }
 

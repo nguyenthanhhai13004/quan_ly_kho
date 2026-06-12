@@ -3,6 +3,8 @@ import AssetApi from "../api/asset-api";
 import type { PaginationAssetsDto } from "../dtos/asset/pagination-assets.dto";
 import type { CreateAssetDto } from "../dtos/asset/create-asset.dto";
 import type { UpdateAssetDto } from "../dtos/asset/update-asset.dto";
+import api from "../libs/api";
+
 export function useAllAssets(paginationDto?: PaginationAssetsDto) {
   const query = useQuery({
     queryKey: ["assets", paginationDto],
@@ -19,6 +21,22 @@ export function useAllAssets(paginationDto?: PaginationAssetsDto) {
     isError: query.isError,
     error: query.error,
     refetch: query.refetch,
+  };
+}
+
+export function useAssetListAll(params: any = {}) {
+  const query = useQuery({
+    queryKey: ["assets-list-all", params],
+    queryFn: async () => {
+      const res = await api.get("/v1/assets/list-all", { params: { size: 10, page: 1, ...params } });
+      return res.data;
+    },
+    retry: 1,
+  });
+  
+  return {
+    assets: query.data?.data,
+    isLoading: query.isLoading,
   };
 }
 

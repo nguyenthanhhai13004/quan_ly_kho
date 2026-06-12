@@ -6,8 +6,7 @@ import CustomModal, {
 import { zodResolver } from "@hookform/resolvers/zod";
 import CustomSelect from "../../../components/common/custom-select";
 import CustomButton from "../../../components/common/custom-button";
-import { useModalProvider } from "../../../providers/modal-provider";
-import { ModalEnum } from "../../../constants/modals.constant";
+
 import { useEffect, useState } from "react";
 import {
   UpdateUserSchema,
@@ -19,6 +18,7 @@ import type { PaginationUsersDto } from "../../../dtos/user/pagination-users.dto
 import { useAllRoles } from "../../../queries/rbac.query";
 import { IoMdSearch } from "react-icons/io";
 import { useWarehouseAny } from "../../../queries/warehouse.query";
+import { useAllClasses } from "../../../queries/class.query";
 import CustomCheckbox from "../../../components/common/custom-checkbox";
 
 interface UpdateUserModalProps extends CustomModalProps {
@@ -48,12 +48,13 @@ export default function UpdateUserModal({
   const [inputKeyword, setInputKeyword] = useState("");
   const [searchKeyword, setSearchKeyword] = useState("");
   const { warehouses } = useWarehouseAny(searchKeyword);
-  const { setCurrentModal } = useModalProvider();
+
   const toggleWarehouse = (id: number) => {
     setWarehousesSelected((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
   };
+  const { classes } = useAllClasses();
   const onSubmit = (data: UpdateUserData) => {
     if (!userId) return;
     mutate(
@@ -65,12 +66,13 @@ export default function UpdateUserModal({
           fullname: data.fullname,
           phone_number:data.phone_number,
           warehouse_ids: warehousesSelected,
+          class_id: data.role_id === 3 ? data.class_id : null,
         },
         paginationDto: params,
       },
       {
         onSuccess: () => {
-          setCurrentModal(ModalEnum.CLOSE_MODAL);
+          onClose();
         },
       },
     );
@@ -84,7 +86,8 @@ export default function UpdateUserModal({
         username: user.username || "",
         role_id: user.role,
         active: user.is_active,
-        phone_number:user.phone_number || ""
+        phone_number:user.phone_number || "",
+        class_id: user.class_id,
       });
       setWarehousesSelected(user.warehouse_ids || []);
     }
@@ -155,6 +158,23 @@ export default function UpdateUserModal({
             </div>
           </div>
         </div>
+        {watch("role_id") == 3 && (
+          <div className="mb-5">
+            <h4 className="font-bold mb-3">Chọn lớp quản lý</h4>
+            <div className="w-[300px]">
+              <CustomSelect
+                register={register("class_id", {
+                  valueAsNumber: true,
+                })}
+                labelType="top"
+                label="Lớp học"
+                options={
+                  classes?.map((c) => ({ label: c.name, value: c.id })) || []
+                }
+              />
+            </div>
+          </div>
+        )}
         {watch("role_id") == 2 && (
           <div className="mb-5">
             <h4 className="font-bold mb-3">Chọn kho quản lý</h4>

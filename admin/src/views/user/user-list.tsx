@@ -3,14 +3,13 @@ import CustomButton from "../../components/common/custom-button";
 import UsersTable from "./users-table";
 import CreateUserModal from "./modals/create-user-modal";
 import { useModalProvider } from "../../providers/modal-provider";
-import { ModalEnum } from "../../constants/modals.constant";
+
 import CustomWrapperPermissions from "../../components/common/custom-wrapper-permissions";
 import { PermissionsEnum } from "../../common/enums/permissons.enum";
 
 export default function UserListView() {
-  const { currentModal, setCurrentModal } = useModalProvider();
-  const handleClose = () => setCurrentModal(ModalEnum.CLOSE_MODAL);
-  const openCreateModal = () => setCurrentModal(ModalEnum.CREATE_USER_MODAL);
+  const { openModal } = useModalProvider();
+  const openCreateModal = () => openModal(CreateUserModal);
   return (
     <>
       <div className="flex justify-between items-center mb-3">
@@ -26,12 +25,6 @@ export default function UserListView() {
         </CustomWrapperPermissions>
       </div>
       <UsersTable />
-      <>
-        <CreateUserModal
-          onClose={handleClose}
-          open={currentModal === ModalEnum.CREATE_USER_MODAL}
-        />
-      </>
     </>
   );
 }

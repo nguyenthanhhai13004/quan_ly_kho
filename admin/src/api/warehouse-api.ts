@@ -82,6 +82,15 @@ class WarehouseApi {
       status: response.status,
     };
   }
+
+  static async getAssetsOwn(): Promise<ApiResponseDto<any>> {
+    const response = await api.get("/v1/warehouses/assets-own");
+    return {
+      data: response.data.data,
+      message: response.data.message,
+      status: response.status,
+    };
+  }
 }
 
 export default WarehouseApi;

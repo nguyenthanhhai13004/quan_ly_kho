@@ -4,6 +4,7 @@ import { HEADERS } from "../cores/constants/headers.constants";
 import { UnauthorizedError } from "../cores/error.response";
 import { NextFunction, Request, Response } from "express";
 import userRepository from "../repositories/user.repository";
+import db from "../databases/init.mysql-v2";
 const ACCESS_TOKEN_EXPIRESIN = "2 days";
 const REFRESH_TOKEN_EXPIRESIN = "7 days";
 export type CreateKeyPairType = {
@@ -14,6 +15,7 @@ export type CreateKeyPairType = {
   role_id:number;
   fullname: string;
   warehouse_ids?:number[];
+  class_id?:number|null;
 };
 export type TokensType = {
   access_token: string;
@@ -50,8 +52,14 @@ export const authentication = async (
       JWT_SECURE_KEY,
     ) as CreateKeyPairType;
 
-    // check status user
-    const isActive = await userRepository.userIsActive(decoded.id);
+    // check status user or student
+    let isActive = false;
+    if (decoded.role_name === "student") {
+      const student = await db("students").where({ id: decoded.id }).first("is_active");
+      isActive = !!student?.is_active;
+    } else {
+      isActive = await userRepository.userIsActive(decoded.id);
+    }
 
     if (!isActive){
       throw new UnauthorizedError("expired")

@@ -5,7 +5,6 @@ import {
 } from "../../common/enums/transaction-type.enums";
 import CustomIcon from "../../components/common/custom-icon";
 import CustomTable from "../../components/common/custom-table";
-import { ModalEnum } from "../../constants/modals.constant";
 import { useModalProvider } from "../../providers/modal-provider";
 import AssetTransactionDetailModal from "../warehouse/modals/asset-transaction-detail-modal";
 import {
@@ -14,7 +13,7 @@ import {
 } from "../../queries/transaction.query";
 import { usePaginationParams } from "../../hooks/use-pagination-params";
 import type { PaginationTransactionsDto } from "../../dtos/transaction/pagination-transactions.dto";
-import { useState } from "react";
+
 import dayjs from "dayjs";
 import TransactionHistoryFilter from "./transaction-history-filter";
 
@@ -29,10 +28,10 @@ export default function TransactionsHistoryTable() {
     "Ghi chú",
     "Hoạt động",
   ];
-  const { currentModal, setCurrentModal } = useModalProvider();
+  const { openModal } = useModalProvider();
   const { params, setPage } = usePaginationParams<PaginationTransactionsDto>();
   const { transactions } = useAllTransactions(params);
-  const [selected, setSelected] = useState<string | null>(null);
+
   return (
     <>
       <CustomTable
@@ -78,8 +77,7 @@ export default function TransactionsHistoryTable() {
             <p className="text-gray-500">{t.note}</p>,
             <CustomIcon
               onClick={() => {
-                setSelected(t.code);
-                setCurrentModal(ModalEnum.ASSET_TRANSACTION_DETAIL);
+                openModal(AssetTransactionDetailModal, { transactionCode: t.code });
               }}
               icon={<BsEye size={20} />}
               label="Xem chi tiết"
@@ -87,13 +85,7 @@ export default function TransactionsHistoryTable() {
           ]) || []
         }
       />
-      <AssetTransactionDetailModal
-        transactionCode={selected}
-        onClose={() => {
-          setCurrentModal(ModalEnum.CLOSE_MODAL);
-        }}
-        open={currentModal === ModalEnum.ASSET_TRANSACTION_DETAIL}
-      />
+
     </>
   );
 }

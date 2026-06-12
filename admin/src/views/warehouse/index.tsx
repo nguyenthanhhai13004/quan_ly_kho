@@ -7,13 +7,13 @@ import ExportExcelModal from "./modals/export-excel-modal";
 import ExportManualModal from "./modals/export-manual-modal";
 import ImportExcelModal from "./modals/import-excel-modal";
 import ImportManualModal from "./modals/import-manual-modal";
-import { ModalEnum, type ModalEnumType } from "../../constants/modals.constant";
+import { useModalProvider } from "../../providers/modal-provider";
 import { useEffect, useRef, useState } from "react";
 import { useTransactionStore } from "../../stores/transactions-store";
 import AssetInWHDetailModal from "./modals/asset-in-wh-detail-modal";
 
 export default function AssetInWarehouseView() {
-  const [modal, setModal] = useState<ModalEnumType>(ModalEnum.CLOSE_MODAL);
+  const { openModal } = useModalProvider();
   const { resetBatchState,resetImportManualState } = useTransactionStore();
   const hasResetRef = useRef(false);
   useEffect(() => {
@@ -26,49 +26,34 @@ export default function AssetInWarehouseView() {
   return (
     <>
       <ViewHeader
-        title="Tình trạng tồn kho"
+        title="Quản lý tài sản trong kho"
         actions={[
           <CustomButton
-            onClick={() => setModal(ModalEnum.IMPORT_MANUAL)}
+            onClick={() => openModal(ImportManualModal)}
             label="Nhập kho"
             icon={<BiImport size={20} />}
           />,
           <CustomButton
             variant="success"
             label="Nhập kho từ Excel"
-            onClick={() => setModal(ModalEnum.IMPORT_EXCEL)}
+            onClick={() => openModal(ImportExcelModal)}
             icon={<FaFileExcel size={16} />}
           />,
           <CustomButton
-            onClick={() => setModal(ModalEnum.EXPORT_MANUAL)}
+            onClick={() => openModal(ExportManualModal)}
             label="Xuất kho"
             icon={<BiExport size={16} />}
           />,
           <CustomButton
             variant="success"
             label="Xuất kho từ Excel"
-            onClick={() => setModal(ModalEnum.EXPORT_EXCEL)}
+            onClick={() => openModal(ExportExcelModal)}
             icon={<FaFileExcel size={16} />}
           />,
         ]}
       />
       <AssetInWarehouseTable />
-      <ImportManualModal
-        onClose={() => setModal(ModalEnum.CLOSE_MODAL)}
-        open={modal == ModalEnum.IMPORT_MANUAL}
-      />
-      <ImportExcelModal
-        onClose={() => setModal(ModalEnum.CLOSE_MODAL)}
-        open={modal == ModalEnum.IMPORT_EXCEL}
-      />
-      <ExportManualModal
-        onClose={() => setModal(ModalEnum.CLOSE_MODAL)}
-        open={modal == ModalEnum.EXPORT_MANUAL}
-      />
-      <ExportExcelModal
-        onClose={() => setModal(ModalEnum.CLOSE_MODAL)}
-        open={modal == ModalEnum.EXPORT_EXCEL}
-      />
+
       {/* <AssetInWHDetailModal/> */}
     </>
   );

@@ -12,6 +12,11 @@ import statsRouter from "./stats";
 import reportsRouter from "./reports";
 import administrativeRouter from "./administrative";
 import logsRouter from "./kqn-logs";
+import majorRouter from "./major.route";
+import classRouter from "./class.route";
+import studentRouter from "./student.route";
+import studentAuthRouter from "./student-auth.route";
+import advisorRequestRouter from "./advisor-request.route";
 const router = express.Router();
 
 /**
@@ -56,4 +61,9 @@ router.use("/stats",statsRouter);
 router.use("/reports",reportsRouter);
 router.use("/administrative",administrativeRouter);
 router.use("/logs",logsRouter);
+router.use("/majors",majorRouter);
+router.use("/classes",classRouter);
+router.use("/students",studentRouter);
+router.use("/auth/student",studentAuthRouter);
+router.use("/advisor-requests", advisorRequestRouter);
 export default router;

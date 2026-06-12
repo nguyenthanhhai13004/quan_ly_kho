@@ -52,7 +52,7 @@ export const LOG_CONTROLLERS_DEFAULT = [
   {
     name: "AssetController",
     code: LogController.ASSET,
-    description: "Danh mục tài sản",
+    description: "Quản lý tài sản",
   },
   {
     name: "AccessController",
@@ -68,5 +68,20 @@ export const LOG_CONTROLLERS_DEFAULT = [
     name: "WarehouseController",
     code: LogController.WAREHOUSE,
     description: "Quản lý",
+  },
+  {
+    name: "MajorController",
+    code: LogController.MAJOR,
+    description: "Quản lý hệ",
+  },
+  {
+    name: "ClassController",
+    code: LogController.CLASS,
+    description: "Quản lý lớp",
+  },
+  {
+    name: "StudentController",
+    code: LogController.STUDENT,
+    description: "Quản lý học viên",
   },
 ];

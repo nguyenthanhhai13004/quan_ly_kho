@@ -12,4 +12,5 @@ export interface User extends IBaseModelAttributes {
   role_id:number
   is_active:UserStatusEnum;
   phone_number?:string;
+  class_id?:number|null;
 }

@@ -6,6 +6,6 @@ export interface AssetTransactions extends IBaseModelAttributes {
   code: string;
   warehouse_id: number;
   type:number;
-  note:string|null;
-  reason:string|null;
+  note?:string|null;
+  reason?:string|null;
 }

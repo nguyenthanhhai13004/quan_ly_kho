@@ -17,6 +17,7 @@ export const UpdateUserSchema = z.object({
   .string()
   .regex(/^(0|\+84)(\d{9})$/, "Số điện thoại không hợp lệ")
   .optional(),
+  class_id: z.number().nullable().optional(),
 });
 
 export type UpdateUserData = z.infer<typeof UpdateUserSchema>;
@@ -27,4 +28,5 @@ export interface UpdateUserDto {
   active:number;
   phone_number?:string;
   warehouse_ids?:number[];
+  class_id?:number|null;
 }

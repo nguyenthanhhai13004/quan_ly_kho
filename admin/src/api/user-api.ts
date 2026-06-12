@@ -19,6 +19,7 @@ type User = {
   created_by_user_id: number | null;
   warehouse_ids?:number[];
   phone_number?:string;
+  class_id?:number|null;
 };
 
 class UserApi {

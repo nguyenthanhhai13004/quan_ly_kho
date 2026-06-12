@@ -28,14 +28,10 @@ export default function AssetsTable({
     });
   const { assets } = useAllAssets(isInModal ? filters : params);
   const { closeModal } = useModalProvider();
-  const [seleted, setSeleted] = useState<{
-    assetId: number | null;
-    assetCode: string | null;
-  } | null>(null);
+
   const columns = ["STT", "Mã", "Tên", "Ảnh", "Danh mục", "Hoạt động"];
   const { addRowImport } = useTransactionStore();
-  const { setCurrentModal, currentModal, openConfirmModal } =
-    useModalProvider();
+  const { openModal, openConfirmModal } = useModalProvider();
   const { mutate } = useDeleteAsset();
   const handleDelete = (assetId: number) => {
     openConfirmModal({
@@ -91,10 +87,7 @@ export default function AssetsTable({
             <>
               <CustomIcon
                 onClick={() =>
-                  setSeleted({
-                    assetCode: asset.code,
-                    assetId: asset.id,
-                  })
+                  openModal(UpdateAssetModal, { assetCode: asset.code, assetId: asset.id })
                 }
                 variant="info"
                 icon={<BiEdit size={20} />}
@@ -125,15 +118,7 @@ export default function AssetsTable({
           ]) || []
         }
       />
-      <UpdateAssetModal
-        assetCode={seleted?.assetCode || null}
-        assetId={seleted?.assetId || null}
-        open={seleted != null}
-        onClose={() => {
-          setSeleted(null);
-          closeModal();
-        }}
-      />
+
     </>
   );
 }

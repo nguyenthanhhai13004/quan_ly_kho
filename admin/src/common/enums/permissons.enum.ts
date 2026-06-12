@@ -23,9 +23,16 @@ export const PermissionsEnum = {
 
   MAINTENANCE_VIEW_ALL : "MAINTENANCE_VIEW_ALL", // Xem tất cả lịch bảo trì
   MAINTENANCE_VIEW_OWN : "MAINTENANCE_VIEW_OWN", // Xem lịch bảo trì của mình
-  LOGS_VIEW : "LOGS_VIEW",
-  WAREHOUSE_LIST_VIEW : "WAREHOUSE_LIST_VIEW",
-  DASHBOARD_VIEW : "DASHBOARD_VIEW",
+  
+  LOGS_VIEW: "LOGS_VIEW",                       // Xem nhật ký hoạt động hệ thống
+  WAREHOUSE_LIST_VIEW: "WAREHOUSE_LIST_VIEW",   // Xem danh sách kho
+  DASHBOARD_VIEW: "DASHBOARD_VIEW",             // Xem trang tổng quan (Dashboard)
+  
+  COMMANDER_STUDENTS_VIEW: "COMMANDER_STUDENTS_VIEW",       // Cố vấn xem danh sách sinh viên
+  COMMANDER_REQUESTS_MANAGE: "COMMANDER_REQUESTS_MANAGE",   // Cố vấn quản lý yêu cầu tài sản
+
+  WAREHOUSE_OFFICER_REQUESTS_VIEW: "WAREHOUSE_OFFICER_REQUESTS_VIEW",       // Cán bộ kho xem yêu cầu tài sản
+  WAREHOUSE_OFFICER_REQUESTS_APPROVE: "WAREHOUSE_OFFICER_REQUESTS_APPROVE", // Cán bộ kho duyệt yêu cầu tài sản
 } as const;
 
 export type PermissionsEnum = typeof PermissionsEnum[keyof typeof PermissionsEnum];

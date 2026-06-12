@@ -5,10 +5,19 @@ import { MdOutlineBatchPrediction } from "react-icons/md";
 import AllocationAssetForm from "../allocation-asset-form";
 import AssetInWarehouseTable from "../../warehouse/asset-in-warehouse-table";
 
+export type AllocationsAssetModalProps = CustomModalProps & {
+  requestId?: number;
+  requestQuantity?: number;
+  defaultReceiverId?: number;
+};
+
 export default function AllocationsAssetModal({
   onClose,
   open,
-}: CustomModalProps) {
+  requestId,
+  requestQuantity,
+  defaultReceiverId,
+}: AllocationsAssetModalProps) {
   return (
     <CustomModal
       title="Cấp phát tài sản"
@@ -24,10 +33,15 @@ export default function AllocationsAssetModal({
             <MdOutlineBatchPrediction size={20} className="text-blue-500" />
             <p> để xem và chọn danh sách lô hàng cần cấp phát</p>
           </div>
-          <AssetInWarehouseTable isInModal showButtonBatches/>
+          <AssetInWarehouseTable isInModal showButtonBatches />
         </div>
         <div className="col-span-1 bg-gray-200 p-4 pt-5 rounded-2xl">
-          <AllocationAssetForm/>
+          <AllocationAssetForm
+            onClose={onClose}
+            requestId={requestId}
+            requestQuantity={requestQuantity}
+            defaultReceiverId={defaultReceiverId}
+          />
         </div>
       </div>
     </CustomModal>

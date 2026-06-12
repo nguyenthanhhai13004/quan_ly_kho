@@ -9,9 +9,9 @@ import { MdBlock } from "react-icons/md";
 import type { UpdateUserDto } from "../../dtos/user/update-user.dto";
 import { BiEdit } from "react-icons/bi";
 import { useModalProvider } from "../../providers/modal-provider";
-import { ModalEnum } from "../../constants/modals.constant";
+
 import UpdateUserModal from "./modals/update-user-modal";
-import { useState } from "react";
+
 import { usePaginationParams } from "../../hooks/use-pagination-params";
 import type { PaginationUsersDto } from "../../dtos/user/pagination-users.dto";
 import { useDrawer } from "../../hooks/use-drawer";
@@ -28,8 +28,7 @@ const columns = [
 ];
 export default function UsersTable() {
   const { mutate } = useUpdateUser();
-  const { setCurrentModal,currentModal } = useModalProvider();
-  const [selected, setSelected] = useState<number | null>(null);
+  const { openModal } = useModalProvider();
   const {params,setParams} = usePaginationParams<PaginationUsersDto>();
   const { users } = useUsers(params);
   const {toggleFilterDrawer,drawer} = useDrawer();
@@ -96,8 +95,7 @@ export default function UsersTable() {
               <>
                 <CustomIcon
                   onClick={() => {
-                    setCurrentModal(ModalEnum.EDIT_USER_MODAL);
-                    setSelected(s.id);
+                    openModal(UpdateUserModal, { userId: s.id });
                   }}
                   label="Chỉnh sửa thông tin"
                   icon={<BiEdit size={20} />}
@@ -107,14 +105,7 @@ export default function UsersTable() {
           ]) || []
         }
       />
-      <UpdateUserModal
-        userId={selected}
-        onClose={() => {
-          setSelected(null);
-          setCurrentModal(ModalEnum.CLOSE_MODAL);
-        }}
-        open={currentModal === ModalEnum.EDIT_USER_MODAL}
-      />
+
     </>
   );
 }

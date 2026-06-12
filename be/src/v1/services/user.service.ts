@@ -91,7 +91,7 @@ class UserService {
     });
 
     return getInfoData<ResponseUserDto>({
-      fields: ["id", "fullname", "username", "email", "is_active"],
+      fields: ["id", "fullname", "username", "email", "is_active", "class_id"],
       object: userStore,
     });
   }
@@ -118,6 +118,7 @@ class UserService {
       is_active: updateUserDto.active,
       fullname: updateUserDto.fullname,
       phone_number: updateUserDto.phone_number || "",
+      class_id: userFound.role_id === 3 ? updateUserDto.class_id : null,
     });
 
     if (!updated) {
@@ -162,7 +163,7 @@ class UserService {
     });
 
     return getInfoData<ResponseUserDto>({
-      fields: ["id", "fullname", "username", "email", "is_active"],
+      fields: ["id", "fullname", "username", "email", "is_active", "class_id"],
       object: updated,
     });
   }
@@ -174,7 +175,7 @@ class UserService {
       ...result,
       items: result.items.map((u) =>
         getInfoData({
-          fields: ["id", "fullname", "username", "email", "is_active"],
+          fields: ["id", "fullname", "username", "email", "is_active", "class_id"],
           object: u,
         }),
       ),
@@ -196,6 +197,7 @@ class UserService {
         "role",
         "warehouse_ids",
         "phone_number",
+        "class_id",
       ],
       object: {
         ...userFound,

@@ -12,6 +12,7 @@ import CustomInput from "../../components/common/custom-input";
 import CustomTextarea from "../../components/common/custom-textarea";
 import CustomButton from "../../components/common/custom-button";
 import { useImportManualTransaction } from "../../queries/transaction.query";
+import { useFulfillRecallRequest } from "../../queries/advisor-request.query";
 import { useModalProvider } from "../../providers/modal-provider";
 import TransactionApi from "../../api/transactions-api";
 import { toast } from "react-toastify";
@@ -19,7 +20,15 @@ import generateTransactionCode from "../../utils/generate-transaction-code";
 import { MdOutlineMotionPhotosAuto } from "react-icons/md";
 import { redirect, useNavigate } from "react-router-dom";
 
-export default function ImportManualForm() {
+export type ImportManualFormProps = {
+  onClose?: () => void;
+  requestId?: number;
+};
+
+export default function ImportManualForm({
+  onClose,
+  requestId,
+}: ImportManualFormProps = {}) {
   const columns = [
     "Hành động",
     "Mã lô hàng",
@@ -59,7 +68,8 @@ export default function ImportManualForm() {
     },
   });
   const { openConfirmModal } = useModalProvider();
-  const { mutate } = useImportManualTransaction();
+  const { mutate: importManual } = useImportManualTransaction();
+  const { mutate: fulfillRecall } = useFulfillRecallRequest();
   const navigate = useNavigate();
   const onSubmit = (data: ImportManualData) => {
     if (importManualState.selectedAssets.length === 0) {
@@ -87,28 +97,44 @@ export default function ImportManualForm() {
     toast.error("Danh sách tài sản không hợp lệ");
     return;
   }
+
+    const payload = {
+      ...data,
+      items: syncedItems,
+    };
+
     openConfirmModal({
-      title: "Xác nhận nhập kho",
-      message: "Bạn có chắc chắn muốn nhập kho các tài sản này không?",
+      title: requestId ? "Xác nhận thu hồi" : "Xác nhận nhập kho",
+      message: requestId
+        ? "Bạn có chắc chắn muốn thu hồi tài sản này không?"
+        : "Bạn có chắc chắn muốn nhập kho các tài sản này không?",
       confirmText: "Xác nhận",
       cancelText: "Hủy",
       onConfirm: () => {
-        mutate(
-          { importManualData:{
-            ...data,
-            items:syncedItems
-          } },
-          {
-            onSuccess: () => {
-              reset();
-              resetImportManualState();
-              setValue("code",generateTransactionCode())
-              // close the form
-              // redirect("/Warehouse/Assets");
-              // navigate(0);
+        if (requestId) {
+          fulfillRecall(
+            { id: requestId, data: { import_data: payload } },
+            {
+              onSuccess: () => {
+                reset();
+                resetImportManualState();
+                if (onClose) onClose();
+              },
+            }
+          );
+        } else {
+          importManual(
+            { importManualData: payload },
+            {
+              onSuccess: () => {
+                reset();
+                resetImportManualState();
+                setValue("code", generateTransactionCode());
+                navigate(0);
+              },
             },
-          },
-        );
+          );
+        }
       },
     });
   };

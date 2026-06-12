@@ -13,3 +13,7 @@ export const ASSET_EXPORTS_TABLE_NAME = "asset_exports";
 export const ASSET_TRANSACTION_ITEMS_TABLE_NAME = "asset_transaction_items";
 export const ASSET_LIFECYCLE_TABLE_NAME = "asset_lifecycle";
 export const ASSET_MAINTENANCES_TABLE_NAME = "asset_maintenances";
+export const MAJORS_TABLE_NAME = "majors";
+export const CLASSES_TABLE_NAME = "classes";
+export const STUDENTS_TABLE_NAME = "students";
+export const ADVISOR_REQUESTS_TABLE_NAME = "advisor_requests";

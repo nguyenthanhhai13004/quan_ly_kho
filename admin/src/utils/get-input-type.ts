@@ -1,10 +1,8 @@
-import type { SettingValue } from "../models/setting.model";
-
 export function getInputType({
   value,
   unit,
 }: {
-  value: SettingValue;
+  value: any;
   unit: string;
 }): string {
   if (typeof value === "boolean") {

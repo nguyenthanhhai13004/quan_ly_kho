@@ -114,5 +114,15 @@ class WarehouseController {
     }).send(res);
   };
 
+  getAssetsAllocationOwn = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    return new OK({
+      message: "Danh sách tài sản đang sở hữu",
+      data: await WarehouseService.getAssetsAllcationOwn(req.user.id),
+    }).send(res);
+  };
 }
 export default new WarehouseController();

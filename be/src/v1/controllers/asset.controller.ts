@@ -24,8 +24,6 @@ class AssetController {
     }).send(res);
   };
 
-  // tại sao lại cho tạo log trước khi thực hiện action, vì nếu action thất bại sẽ không có log, còn nếu tạo log sau khi thực hiện action thì dù action thất bại hay thành công cũng sẽ có log, điều này
-
   createAsset = async (req: Request, res: Response, next: NextFunction) => {
     const { ip, url } = getRequestInfo(req);
     await KQNLogService.createLog({

@@ -3,12 +3,12 @@ import { BiEdit, BiTrash } from "react-icons/bi";
 import CustomIcon from "../../components/common/custom-icon";
 import { useModalProvider } from "../../providers/modal-provider";
 import UpdateCategoryModal from "./modals/update-category-modal";
-import { ModalEnum } from "../../constants/modals.constant";
+
 import {
   useAllCategories,
   useDeleteCategory,
 } from "../../queries/category.query";
-import { useState } from "react";
+
 import type { TCategory } from "../../types/category.type";
 import { toast } from "react-toastify";
 import CategoryFilter from "./category-filter";
@@ -23,9 +23,7 @@ export default function CategoriesTable() {
       setPage
     } = usePaginationParams<PaginationDto & { keyword: string }>({});
   const { categories } = useAllCategories(params);
-  const { setCurrentModal, currentModal, openConfirmModal } =
-    useModalProvider();
-  const [selected, setSelected] = useState<TCategory | null>(null);
+  const { openModal, openConfirmModal } = useModalProvider();
   const { mutate } = useDeleteCategory();
   const handleDelete = (categoryId: number) => {
     openConfirmModal({
@@ -76,8 +74,7 @@ export default function CategoriesTable() {
             <>
               <CustomIcon
                 onClick={() => {
-                  setCurrentModal(ModalEnum.UPDATE_CATEGORY_MODAL);
-                  setSelected(category);
+                  openModal(UpdateCategoryModal, { category });
                 }}
                 variant="info"
                 icon={<BiEdit size={20} />}
@@ -93,14 +90,7 @@ export default function CategoriesTable() {
           ]) || []
         }
       />
-      <UpdateCategoryModal
-        category={selected}
-        onClose={() => {
-          setCurrentModal(ModalEnum.CLOSE_MODAL);
-          setSelected(null);
-        }}
-        open={currentModal === ModalEnum.UPDATE_CATEGORY_MODAL}
-      />
+
     </>
   );
 }

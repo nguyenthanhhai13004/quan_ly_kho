@@ -1,7 +1,11 @@
-import React, { createContext, useContext, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import { ModalEnum, type ModalEnumType } from "../constants/modals.constant";
+import React, { createContext, useContext, useState, type ReactNode } from "react";
 import ConfirmModal from "../views/modals/confirm-modal";
+
+interface DynamicModal {
+  id: string;
+  component: React.ComponentType<any>;
+  props: any;
+}
 
 interface ConfirmModalState {
   open: boolean;
@@ -14,47 +18,45 @@ interface ConfirmModalState {
 }
 
 interface ModalContextType {
-  currentModal: ModalEnumType;
-  setCurrentModal: React.Dispatch<React.SetStateAction<ModalEnumType>>;
-  handleCloseDetailModal: () => void;
-  handleOpenDetailModal: (id: number, modal: ModalEnumType) => void;
+  openModal: <T extends Record<string, any>>(
+    component: React.ComponentType<T>,
+    props?: Omit<T, "open" | "onClose">
+  ) => void;
+  closeModal: () => void;
+  closeAllModals: () => void;
   openConfirmModal: (options: Omit<ConfirmModalState, "open">) => void;
   closeConfirmModal: () => void;
-  closeModal: () => void;
 }
 
 const ModalContext = createContext<ModalContextType | undefined>(undefined);
 
-export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
-  const [currentModal, setCurrentModal] = useState<ModalEnumType>(
-    ModalEnum.CLOSE_MODAL,
-  );
+export const ModalProvider = ({ children }: { children: ReactNode }) => {
+  const [modals, setModals] = useState<DynamicModal[]>([]);
   const [confirmModal, setConfirmModal] = useState<ConfirmModalState>({
     open: false,
   });
 
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  const handleCloseDetailModal = () => {
-    const newParams = new URLSearchParams(searchParams);
-    newParams.delete("id");
-
-    const query = newParams.toString();
-    setSearchParams(query ? newParams : undefined);
-
-    setCurrentModal(ModalEnum.CLOSE_MODAL);
-  };
-
-  const handleOpenDetailModal = (id: number, modal: ModalEnumType) => {
-    const newParams = new URLSearchParams(searchParams);
-    newParams.set("id", String(id));
-    setSearchParams(newParams);
-    setCurrentModal(modal);
+  const openModal = <T extends Record<string, any>>(
+    component: React.ComponentType<T>,
+    props?: Omit<T, "open" | "onClose">
+  ) => {
+    setModals((prev) => [
+      ...prev,
+      {
+        id: Math.random().toString(36).substring(7),
+        component,
+        props: props || {},
+      },
+    ]);
   };
 
   const closeModal = () => {
-    setCurrentModal(ModalEnum.CLOSE_MODAL);
-  }
+    setModals((prev) => prev.slice(0, -1));
+  };
+
+  const closeAllModals = () => {
+    setModals([]);
+  };
 
   const openConfirmModal = (options: Omit<ConfirmModalState, "open">) => {
     setConfirmModal({ open: true, ...options });
@@ -67,16 +69,28 @@ export const ModalProvider = ({ children }: { children: React.ReactNode }) => {
   return (
     <ModalContext.Provider
       value={{
-        currentModal,
+        openModal,
         closeModal,
-        setCurrentModal,
-        handleCloseDetailModal,
-        handleOpenDetailModal,
+        closeAllModals,
         openConfirmModal,
         closeConfirmModal,
       }}
     >
       {children}
+      
+      {/* Dynamic Modals Stack */}
+      {modals.map((modal, index) => {
+        const Component = modal.component;
+        return (
+          <Component
+            key={modal.id}
+            {...modal.props}
+            open={true}
+            onClose={closeModal}
+          />
+        );
+      })}
+
       <ConfirmModal
         open={confirmModal.open}
         title={confirmModal.title}

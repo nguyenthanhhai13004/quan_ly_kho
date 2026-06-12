@@ -13,8 +13,8 @@ export const ROLE_LIST_DEFAULT = [
   },
   {
     id: 3,
-    name: "Người dùng",
-    code:"user",
-    description: "người dùng",
-  },
+    name: "Chỉ huy",
+    code: "commander",
+    description: "Cố vấn học tập/Chỉ huy quản lý lớp",
+  }
 ];

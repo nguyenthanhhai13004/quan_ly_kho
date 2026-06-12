@@ -11,6 +11,7 @@ import { cleanupUpload } from "../../middlewares/cleanup-upload.mdw";
 const router = express.Router();
 router.use(asyncHandler(authentication));
 router.get("/own",assetController.getAllAssetsAllocation)
+router.get("/list-all",assetController.getAllAssets) // read-only listing for Commander
 router.use(asyncHandler(WarehouseMdw));
 router.get("",assetController.getAllAssets)
 router.post("",uploadDisk.single("file"),validate(CreateAssetSchema),cleanupUpload,assetController.createAsset)

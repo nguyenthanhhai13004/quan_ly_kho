@@ -7,9 +7,9 @@ import { usePaginationParams } from "../../../hooks/use-pagination-params";
 import type { PaginationTransactionsDto } from "../../../dtos/transaction/pagination-transactions.dto";
 import { calculateTotalCost } from "../../../utils/calculate-total-cost";
 import AssetTransactionDetailModal from "../../warehouse/modals/asset-transaction-detail-modal";
-import { ModalEnum, type ModalEnumType } from "../../../constants/modals.constant";
+
 import { useModalProvider } from "../../../providers/modal-provider";
-import { useState } from "react";
+
 import { TbPhoneDone } from "react-icons/tb";
 import UpdateMaintenanceModal from "../modals/update-maintenance-modal";
 import { MaintenanceStatusEnum } from "../../../common/enums/maintenance-status";
@@ -38,9 +38,7 @@ export default function MaintenanceTable({ assetCode,isInModal}: MaintenanceTabl
     useUrl:!isInModal
   });
   const { transactions } = useAllMaintenancesTrx(isInModal ? filters : params);
-  const { currentModal, setCurrentModal, closeModal } = useModalProvider();
-  const [selected, setSelected] = useState<string | null>(null);
-   const [modal, setModal] = useState<ModalEnumType>(ModalEnum.CLOSE_MODAL);
+  const { openModal } = useModalProvider();
   return (
     <>
       <CustomTable
@@ -53,23 +51,21 @@ export default function MaintenanceTable({ assetCode,isInModal}: MaintenanceTabl
             <>
               <CustomIcon
                 onClick={() => {
-                  setSelected(t.code);
-                  setModal(ModalEnum.TRANSACTION_DETAIL_MODAL);
+                  openModal(AssetTransactionDetailModal, { transactionCode: t.code });
                 }}
                 icon={<BsEye size={20} />}
                 label="Xem chi tiết"
               />
               <CustomIcon
                 onClick={() => {
-                  setSelected(t.code);
-                  setCurrentModal(ModalEnum.MAINTENANCE_UPDATE_MODAL);
+                  openModal(UpdateMaintenanceModal, { transactionCode: t.code });
                 }}
                 disabled={
                   t?.maintenance_status === MaintenanceStatusEnum.COMPLETED
                 }
                 variant="success"
                 icon={<TbPhoneDone size={20} />}
-                label="Cập nhật trạng thái bảo trì"
+                label="Ghi nhận hoàn thành"
               />
             </>,
             t.code,
@@ -98,22 +94,7 @@ export default function MaintenanceTable({ assetCode,isInModal}: MaintenanceTabl
         }
       />
 
-      <AssetTransactionDetailModal
-        onClose={() => {
-          setSelected(null);
-          setModal(ModalEnum.CLOSE_MODAL);
-        }}
-        open={modal == ModalEnum.TRANSACTION_DETAIL_MODAL}
-        transactionCode={selected}
-      />
-      <UpdateMaintenanceModal
-        onClose={() => {
-          closeModal();
-          setSelected(null);
-        }}
-        open={currentModal == ModalEnum.MAINTENANCE_UPDATE_MODAL}
-        transactionCode={selected}
-      />
+
     </>
   );
 }

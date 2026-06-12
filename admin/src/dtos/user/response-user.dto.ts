@@ -8,5 +8,6 @@ export interface ResponseUserDto extends ResponseItemDto {
   role?: string;
   roleName?:string;
   phone_number?:string;
-  permissions?:string[]
+  permissions?:string[];
+  class_id?:number | null;
 }

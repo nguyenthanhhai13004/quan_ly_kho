@@ -10,14 +10,15 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import CustomSelect from "../../../components/common/custom-select";
 import CustomButton from "../../../components/common/custom-button";
-import { useModalProvider } from "../../../providers/modal-provider";
-import { ModalEnum } from "../../../constants/modals.constant";
+
 import { usePaginationParams } from "../../../hooks/use-pagination-params";
+import { useModalProvider } from "../../../providers/modal-provider";
 import type { PaginationUsersDto } from "../../../dtos/user/pagination-users.dto";
 import { useState } from "react";
 import { useCreateUser } from "../../../queries/user.query";
 import { useWarehouseAny } from "../../../queries/warehouse.query";
 import { useAllRoles } from "../../../queries/rbac.query";
+import { useAllClasses } from "../../../queries/class.query";
 import CustomCheckbox from "../../../components/common/custom-checkbox";
 import { IoMdSearch } from "react-icons/io";
 export default function CreateUserModal({ open, onClose }: CustomModalProps) {
@@ -31,8 +32,9 @@ export default function CreateUserModal({ open, onClose }: CustomModalProps) {
     resolver: zodResolver(CreateUserSchema),
   });
   const { roles } = useAllRoles();
+  const { classes } = useAllClasses();
   const { mutate } = useCreateUser();
-  const { setCurrentModal } = useModalProvider();
+
   const { params } = usePaginationParams<PaginationUsersDto>();
   const [warehousesSelected, setWarehousesSelected] = useState<number[]>([]);
   const [inputKeyword, setInputKeyword] = useState("");
@@ -52,6 +54,7 @@ export default function CreateUserModal({ open, onClose }: CustomModalProps) {
       role_id: data.role_id,
       warehouse_ids: warehousesSelected,
       phone_number: data.phone_number,
+      class_id: data.role_id === 3 ? data.class_id : null,
     };
     mutate(
       {
@@ -60,7 +63,7 @@ export default function CreateUserModal({ open, onClose }: CustomModalProps) {
       },
       {
         onSuccess: () => {
-          setCurrentModal(ModalEnum.CLOSE_MODAL);
+          onClose();
           setWarehousesSelected([]);
           reset();
         },
@@ -131,6 +134,23 @@ export default function CreateUserModal({ open, onClose }: CustomModalProps) {
             </div>
           </div>
         </div>
+        {watch("role_id") == 3 && (
+          <div className="mb-5">
+            <h4 className="font-bold mb-3">Chọn lớp quản lý</h4>
+            <div className="w-[300px]">
+              <CustomSelect
+                register={register("class_id", {
+                  valueAsNumber: true,
+                })}
+                labelType="top"
+                label="Lớp học"
+                options={
+                  classes?.map((c) => ({ label: c.name, value: c.id })) || []
+                }
+              />
+            </div>
+          </div>
+        )}
         {watch("role_id") == 2 && (
           <div className="mb-5">
             <h4 className="font-bold mb-3">Chọn kho quản lý</h4>

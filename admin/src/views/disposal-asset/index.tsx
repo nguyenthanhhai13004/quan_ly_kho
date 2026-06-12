@@ -2,13 +2,13 @@ import { TbCubeSend } from "react-icons/tb";
 import CustomButton from "../../components/common/custom-button";
 import ViewHeader from "../view-header";
 import { useEffect, useRef, useState } from "react";
-import { ModalEnum, type ModalEnumType } from "../../constants/modals.constant";
+import { useModalProvider } from "../../providers/modal-provider";
 import DisposalAssetTable from "./tables/disposal-assets-table";
 import DisposalAssetsModal from "./modals/disposal-assets-modal";
 import { useTransactionStore } from "../../stores/transactions-store";
 
 export default function DisposalAssetView() {
-  const [modal, setModal] = useState<ModalEnumType>(ModalEnum.CLOSE_MODAL);
+  const { openModal } = useModalProvider();
   const { resetBatchState } = useTransactionStore();
   const hasResetRef = useRef(false);
   useEffect(() => {
@@ -24,17 +24,14 @@ export default function DisposalAssetView() {
         actions={[
           <CustomButton
             variant="info"
-            onClick={() => setModal(ModalEnum.DISPOSAL_ASSETS_MODAL)}
+            onClick={() => openModal(DisposalAssetsModal)}
             label="Tạo đơn mới"
             icon={<TbCubeSend size={20} />}
           />,
         ]}
       />
       <DisposalAssetTable />
-      <DisposalAssetsModal
-        onClose={() => setModal(ModalEnum.CLOSE_MODAL)}
-        open={modal == ModalEnum.DISPOSAL_ASSETS_MODAL}
-      />
+
     </>
   );
 }

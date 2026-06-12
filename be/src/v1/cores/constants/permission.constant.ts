@@ -51,4 +51,24 @@ export const PERMISSION_LIST_DEFAULT = [
     name: "Xem dashboard",
     id: 20,
   },
+  {
+    code: PermissionsEnum.COMMANDER_STUDENTS_VIEW,
+    name: "Xem danh sách học viên của lớp",
+    id: 21,
+  },
+  {
+    code: PermissionsEnum.COMMANDER_REQUESTS_MANAGE,
+    name: "Quản lý yêu cầu cấp phát, thu hồi",
+    id: 22,
+  },
+  {
+    code: PermissionsEnum.WAREHOUSE_OFFICER_REQUESTS_VIEW,
+    name: "Xem yêu cầu từ chỉ huy",
+    id: 23,
+  },
+  {
+    code: PermissionsEnum.WAREHOUSE_OFFICER_REQUESTS_APPROVE,
+    name: "Phê duyệt/từ chối yêu cầu của chỉ huy",
+    id: 24,
+  },
 ];

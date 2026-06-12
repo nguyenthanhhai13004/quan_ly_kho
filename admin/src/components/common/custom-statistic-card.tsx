@@ -22,6 +22,7 @@ export default function CustomStatisticCard({
     warming: "#ffb752",
     danger: "#d15b47",
     success: "#87b87f",
+    default: "#abbac3",
   };
   return (
     <div className="border border-dashed border-gray-300 px-3 py-2">

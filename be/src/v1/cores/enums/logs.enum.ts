@@ -15,5 +15,8 @@ export enum LogController {
   CATEGORY = "CATEGORY",
   ASSET = "ASSET",
   WAREHOUSE = "WAREHOUSE",
-  ACCESS = "ACCESS"
+  ACCESS = "ACCESS",
+  MAJOR = "MAJOR",
+  CLASS = "CLASS",
+  STUDENT = "STUDENT"
 }

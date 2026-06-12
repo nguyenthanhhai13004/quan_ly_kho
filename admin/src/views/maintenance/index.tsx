@@ -3,12 +3,12 @@ import CustomButton from "../../components/common/custom-button";
 import ViewHeader from "../view-header";
 import CreateMaintenanceModal from "./modals/create-maintenance-modal";
 import { useEffect, useRef, useState } from "react";
-import { ModalEnum, type ModalEnumType } from "../../constants/modals.constant";
+import { useModalProvider } from "../../providers/modal-provider";
 import MaintenanceTable from "./tables/maintenance-table";
 import { useTransactionStore } from "../../stores/transactions-store";
 
 export default function MaintenanceView() {
-  const [modal, setModal] = useState<ModalEnumType>(ModalEnum.CLOSE_MODAL);
+  const { openModal } = useModalProvider();
   const { resetBatchState } = useTransactionStore();
   const hasResetRef = useRef(false);
   useEffect(() => {
@@ -23,17 +23,14 @@ export default function MaintenanceView() {
         title="Quản lý bảo trì"
         actions={[
           <CustomButton
-            onClick={() => setModal(ModalEnum.CREATE_MAINTENANCE_MODAL)}
+            onClick={() => openModal(CreateMaintenanceModal)}
             label="Lên lịch bảo trì"
             icon={<BiCalendar size={20} />}
           />,
         ]}
       />
       <MaintenanceTable />
-      <CreateMaintenanceModal
-        onClose={() => setModal(ModalEnum.CLOSE_MODAL)}
-        open={modal === ModalEnum.CREATE_MAINTENANCE_MODAL}
-      />
+
     </>
   );
 }

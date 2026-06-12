@@ -7,7 +7,6 @@ interface Props {
   statuses: AssetStatusSummary[];
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const statusMap: Record<
     string,
     {

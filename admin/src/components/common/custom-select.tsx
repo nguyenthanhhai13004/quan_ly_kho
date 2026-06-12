@@ -33,7 +33,7 @@ export default function CustomSelect({
   ...rest
 }: CustomSelectProps) {
   return (
-    <div className={`flex items-center relative gap-1 ${className}`}>
+    <div className="flex items-center relative gap-1 w-full">
       {label &&
         (labelType == "top" ? (
           <label className="inline-block absolute text-xs bg-[#F5F4F9] text-black top-[-10px] px-1 z-10 left-1 rounded-t">
@@ -57,7 +57,7 @@ export default function CustomSelect({
         multiple={multiple}
         onChange={onChange}
         required={required}
-        className={` border border-gray-300 bg-[#F5F4F9] p-2 outline-none text-sm text-black cursor-pointer rounded
+        className={`w-full border border-gray-300 bg-[#F5F4F9] p-2 outline-none text-sm text-black cursor-pointer rounded-2xl
                    focus:border-[#2F7BFF] hover:border-gray-400 ${disabled ? "text-gray-300":""} ${className}`}
         {...register}
         {...rest}

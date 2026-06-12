@@ -19,18 +19,33 @@ interface LogInput {
 
 export class KQNLogService {
   static async createLog(input: LogInput) {
-    const action = await db("log_actions")
+    let action = await db("log_actions")
       .where("code", input.action_code)
       .first();
-    if (!action) throw new InternalServerError();
+    if (!action) {
+      const [insertedId] = await db("log_actions").insert({
+        name: input.action_code,
+        code: input.action_code,
+        description: `Auto-generated for action: ${input.action_code}`,
+      });
+      action = { id: insertedId };
+    }
 
     let controller_id: number | null = null;
     if (input.controller_code) {
       const controller = await db("log_controllers")
         .where("code", input.controller_code)
         .first();
-      if (!controller) throw new InternalServerError();
-      controller_id = controller.id;
+      if (!controller) {
+        const [insertedId] = await db("log_controllers").insert({
+          name: `${input.controller_code}Controller`,
+          code: input.controller_code,
+          description: `Auto-generated for controller: ${input.controller_code}`,
+        });
+        controller_id = insertedId;
+      } else {
+        controller_id = controller.id;
+      }
     }
 
     const [id] = await db("kqn_logs")

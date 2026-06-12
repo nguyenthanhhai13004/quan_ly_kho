@@ -17,6 +17,7 @@ export const CreateUserSchema = z.object({
   .regex(/^(0|\+84)(\d{9})$/, "Số điện thoại không hợp lệ")
   .optional(),
   role_id: z.number(),
+  class_id: z.number().nullable().optional(),
 });
 
 export type CreateUserData = z.infer<typeof CreateUserSchema>;
@@ -28,4 +29,5 @@ export interface CreateUserDto {
   role_id: number;
   warehouse_ids?:number[];
   phone_number?:string;
+  class_id?:number|null;
 }

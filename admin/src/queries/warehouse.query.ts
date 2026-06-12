@@ -65,3 +65,21 @@ export function useCreateWarehouse() {
     }
   });
 }
+
+export function useAssetsOwn() {
+  const query = useQuery({
+    queryKey: ["assets-own"],
+    queryFn: async () => {
+      const res = await WarehouseApi.getAssetsOwn();
+      return res.data;
+    },
+  });
+
+  return {
+    assets: query.data,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error,
+    refetch: query.refetch,
+  };
+}

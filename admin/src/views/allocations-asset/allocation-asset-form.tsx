@@ -16,11 +16,25 @@ import {
 import { useUsers } from "../../queries/user.query";
 import CustomSelect from "../../components/common/custom-select";
 import { useCreateAllocationsTransaction } from "../../queries/transaction.query";
+import { useFulfillAllocationRequest } from "../../queries/advisor-request.query";
 import generateTransactionCode from "../../utils/generate-transaction-code";
 import { MdOutlineMotionPhotosAuto } from "react-icons/md";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
-export default function AllocationAssetForm() {
+export type AllocationAssetFormProps = {
+  onClose?: () => void;
+  requestId?: number;
+  requestQuantity?: number;
+  defaultReceiverId?: number;
+};
+
+export default function AllocationAssetForm({
+  onClose,
+  requestId,
+  requestQuantity,
+  defaultReceiverId,
+}: AllocationAssetFormProps) {
   const columns = ["Hành động", "Mã lô hàng", "Tên tài sản", "Số lượng"];
   const { users } = useUsers();
   const {
@@ -41,18 +55,28 @@ export default function AllocationAssetForm() {
       items: selectedBatches.map((batch) => ({
         batch_code: batch.batchCode,
       })),
-      code:generateTransactionCode()
+      code: generateTransactionCode(),
+      receiver_id: defaultReceiverId,
     },
   });
-  const { mutate } = useCreateAllocationsTransaction();
+
+  const { mutate: createAllocation } = useCreateAllocationsTransaction();
+  const { mutate: fulfillAllocation } = useFulfillAllocationRequest();
   const { openConfirmModal } = useModalProvider();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (defaultReceiverId) {
+      setValue("receiver_id", defaultReceiverId);
+    }
+  }, [defaultReceiverId, setValue]);
+
   const onSubmit = (data: CreateAllocationData) => {
     if (selectedBatches.length === 0) {
       toast.error("Danh sách lô hàng phải có ít nhất 1");
       return;
     }
-     const formItems = getValues("items") || [];
+    const formItems = getValues("items") || [];
     const syncedItems = selectedBatches.map((batch) => {
       const existedItem = formItems.find(
         (i) => i.batch_code === batch.batchCode,
@@ -67,28 +91,50 @@ export default function AllocationAssetForm() {
       toast.error("Danh sách vật tư không hợp lệ");
       return;
     }
+
+    if (requestQuantity) {
+      const totalQuantity = syncedItems.reduce((acc, curr) => acc + curr.quantity, 0);
+      if (totalQuantity !== requestQuantity) {
+        toast.error(`Số lượng xuất (${totalQuantity}) không khớp yêu cầu (${requestQuantity})`);
+        return;
+      }
+    }
+
+    const payload = {
+      ...data,
+      items: syncedItems,
+    };
+
     openConfirmModal({
       title: "Xác nhận cấp phát",
       message: "Bạn có chắc chắn muốn cấp phát lô hàng này không?",
       confirmText: "Xác nhận",
       cancelText: "Hủy",
       onConfirm: () => {
-        mutate(
-          {
-            data:{
-              ...data,
-              items:syncedItems
+        if (requestId) {
+          fulfillAllocation(
+            { id: requestId, data: { allocation_data: payload } },
+            {
+              onSuccess: () => {
+                reset();
+                resetBatchState();
+                if (onClose) onClose();
+              },
             }
-          },
-          {
-            onSuccess: () => {
-              reset();
-              resetBatchState();
-              generateTransactionCode()
-              navigate(0)
-            },
-          },
-        );
+          );
+        } else {
+          createAllocation(
+            { data: payload },
+            {
+              onSuccess: () => {
+                reset();
+                resetBatchState();
+                setValue("code", generateTransactionCode());
+                navigate(0);
+              },
+            }
+          );
+        }
       },
     });
   };
@@ -192,6 +238,8 @@ export default function AllocationAssetForm() {
             valueAsNumber: true,
           })}
           required
+          // Khi cấp phát theo yêu cầu: khóa người nhận = chỉ huy đã gửi yêu cầu
+          disabled={!!requestId}
           error={errors.receiver_id?.message}
           labelType="top"
           label="Người / Đơn vị nhận"

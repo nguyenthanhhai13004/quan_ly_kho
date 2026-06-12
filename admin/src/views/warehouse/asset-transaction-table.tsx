@@ -2,10 +2,10 @@ import CustomTable from "../../components/common/custom-table";
 import CustomIcon from "../../components/common/custom-icon";
 import AssetTransactionFilter from "./asset-transaction-filter";
 import { BsEye } from "react-icons/bs";
-import AssetTransactionDetailModal from "./modals/asset-transaction-detail-modal";
-import { useModalProvider } from "../../providers/modal-provider";
-import { ModalEnum } from "../../constants/modals.constant";
+
 import { useAllTransactions } from "../../queries/transaction.query";
+import { useModalProvider } from "../../providers/modal-provider";
+import AssetTransactionDetailModal from "./modals/asset-transaction-detail-modal";
 
 const columns = [
   "STT",
@@ -19,8 +19,8 @@ const columns = [
 ];
 
 export default function AssetTransactionTable() {
-  const { currentModal, setCurrentModal } = useModalProvider();
-  const { transactions } = useAllTransactions("3,4");
+  const { openModal } = useModalProvider();
+  const { transactions } = useAllTransactions({ type: "3,4" } as any);
   return (
     <>
       <CustomTable
@@ -43,20 +43,13 @@ export default function AssetTransactionTable() {
           t.created_at,
           <p className="text-gray-500">{t.note}</p>,
           <CustomIcon
-            onClick={() => setCurrentModal(ModalEnum.ASSET_TRANSACTION_DETAIL)}
+            onClick={() => openModal(AssetTransactionDetailModal, { transactionCode: "1" })}
             icon={<BsEye size={20} />}
             label="Xem chi tiết"
           />,
         ])|| []}
       />
-      <AssetTransactionDetailModal
-        type="export"
-        transactionId={1}
-        onClose={() => {
-          setCurrentModal(ModalEnum.CLOSE_MODAL);
-        }}
-        open={currentModal === ModalEnum.ASSET_TRANSACTION_DETAIL}
-      />
+
     </>
   );
 }

@@ -10,11 +10,10 @@ import { usePaginationParams } from "../../hooks/use-pagination-params";
 import { type PaginationAssetsDto } from "../../dtos/asset/pagination-assets.dto";
 import { useAllAssetsInWH } from "../../queries/warehouse.query";
 import { MdOutlineBatchPrediction } from "react-icons/md";
-import { useState } from "react";
 import { useModalProvider } from "../../providers/modal-provider";
 import AssetBatchesModal from "../asset-batches/asset-batches-modal";
-import { ModalEnum } from "../../constants/modals.constant";
 import AssetInWHDetailModal from "./modals/asset-in-wh-detail-modal";
+
 
 type AssetInWarehouseTableProps = {
   showButtonBatches?: boolean;
@@ -31,11 +30,8 @@ export default function AssetInWarehouseTable({
     });
   const { assets } = useAllAssetsInWH(isInModal ? filters : params);
   const { toggleFilterDrawer, drawer } = useDrawer();
-  const [seleted, setSelected] = useState<{
-    assetCode: string;
-    assetName: string;
-  } | null>(null);
-  const { currentModal, setCurrentModal, closeModal } = useModalProvider();
+
+  const { openModal } = useModalProvider();
   const columns = [
     "STT",
     "Mã",
@@ -77,11 +73,7 @@ export default function AssetInWarehouseTable({
                 icon={<BsEye size={20} />}
                 label="Xem chi tiết"
                 onClick={() => {
-                  setSelected({
-                    assetCode: asset?.asset_code,
-                    assetName: asset?.asset_name,
-                  });
-                  setCurrentModal(ModalEnum.ASSET_IN_WH_DETAIL);
+                  openModal(AssetInWHDetailModal, { assetCode: asset?.asset_code });
                 }}
               />
 
@@ -91,11 +83,7 @@ export default function AssetInWarehouseTable({
                   icon={<MdOutlineBatchPrediction size={20} />}
                   label="Xem ds lô hàng"
                   onClick={() => {
-                    setSelected({
-                      assetCode: asset?.asset_code,
-                      assetName: asset?.asset_name,
-                    });
-                    setCurrentModal(ModalEnum.ASSET_DETAIL_BATCHES);
+                    openModal(AssetBatchesModal, { assetCode: asset?.asset_code, assetName: asset?.asset_name });
                   }}
                 />
               )}
@@ -103,23 +91,7 @@ export default function AssetInWarehouseTable({
           ]) || []
         }
       />
-      <AssetInWHDetailModal
-        open={ModalEnum.ASSET_IN_WH_DETAIL === currentModal}
-        onClose={() => {
-          setSelected(null);
-          closeModal();
-        }}
-        assetCode={seleted?.assetCode || null}
-      />
-      <AssetBatchesModal
-        assetName={seleted?.assetName}
-        assetCode={seleted?.assetCode || null}
-        open={ModalEnum.ASSET_DETAIL_BATCHES === currentModal}
-        onClose={() => {
-          setSelected(null);
-          closeModal();
-        }}
-      />
+
     </>
   );
 }

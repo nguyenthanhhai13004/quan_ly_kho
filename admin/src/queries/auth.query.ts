@@ -19,6 +19,9 @@ export function useLogin() {
       }
       else if (user.role == RolesEnum.USER){
          navigate("/Asset/Own", { replace: true });
+      }
+      else if (user.role == RolesEnum.COMMANDER){
+         navigate("/Commander/Students", { replace: true });
       }else{
          navigate("/", { replace: true });
       }

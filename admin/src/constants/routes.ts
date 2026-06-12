@@ -23,6 +23,12 @@ import AssetOwnPage from "../pages/asset/asset-own-page";
 import WarehouseListPage from "../pages/warehouse/warehouse-list-page";
 import LogPage from "../pages/log-page";
 import ResetPwPage from "../pages/reset-pw-page";
+import MajorPage from "../pages/major-page";
+import ClassPage from "../pages/class-page";
+import StudentPage from "../pages/student-page";
+import CommanderStudentsPage from "../pages/commander/commander-students-page";
+import CommanderRequestsPage from "../pages/commander/commander-requests-page";
+import OfficerRequestsPage from "../pages/commander/officer-requests-page";
 
 type RouteType = {
   path: string;
@@ -74,6 +80,27 @@ const routesUser: RouteType[] = [
     seo:{
       title:"Quản lý người dùng"
     }
+  },
+  {
+    path: "/Major/List",
+    element: MajorPage,
+    layout: MainLayout,
+    permissions:[PermissionsEnum.MANAGE_USER],
+    seo:{ title: "Quản lý hệ" }
+  },
+  {
+    path: "/Class/List",
+    element: ClassPage,
+    layout: MainLayout,
+    permissions:[PermissionsEnum.MANAGE_USER],
+    seo:{ title: "Quản lý lớp" }
+  },
+  {
+    path: "/Student/List",
+    element: StudentPage,
+    layout: MainLayout,
+    permissions:[PermissionsEnum.MANAGE_USER],
+    seo:{ title: "Quản lý học viên" }
   }
 ];
 
@@ -130,7 +157,7 @@ const routesAsset : RouteType[] = [
     element: AssetListPage,
     layout: MainLayout,
     seo:{
-      title:"Danh mục tài sản"
+      title:"Quản lý tài sản"
     }
   },
   {
@@ -149,7 +176,7 @@ const routesWarehouse : RouteType[] = [
     element: WarehouseAssetsPage,
     layout: MainLayout,
     seo:{
-      title:"Tình trạng tồn kho"
+      title:"Quản lý lô hàng"
     }
   },
    {
@@ -177,6 +204,30 @@ const routesSystem : RouteType[] = [
     element: AccessRightPage,
     layout: MainLayout,
   }
+];
+
+const routesCommander: RouteType[] = [
+  {
+    path: "/Commander/Students",
+    element: CommanderStudentsPage,
+    layout: MainLayout,
+    permissions: [PermissionsEnum.COMMANDER_STUDENTS_VIEW],
+    seo: { title: "Học viên lớp quản lý" },
+  },
+  {
+    path: "/Commander/Requests",
+    element: CommanderRequestsPage,
+    layout: MainLayout,
+    permissions: [PermissionsEnum.COMMANDER_REQUESTS_MANAGE],
+    seo: { title: "Yêu cầu cấp phát & thu hồi" },
+  },
+  {
+    path: "/Officer/Requests",
+    element: OfficerRequestsPage,
+    layout: MainLayout,
+    permissions: [PermissionsEnum.WAREHOUSE_OFFICER_REQUESTS_VIEW],
+    seo: { title: "Duyệt yêu cầu Chỉ huy" },
+  },
 ];
 
 const routeTransaction : RouteType[] = [
@@ -253,5 +304,7 @@ export const privateRoutes: RouteType[] = [
   // routes warehouse
   ...routesWarehouse,
   // routes systems
-  ...routesSystem
+  ...routesSystem,
+  // routes commander
+  ...routesCommander,
 ];

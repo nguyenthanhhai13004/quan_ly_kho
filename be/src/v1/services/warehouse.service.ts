@@ -454,6 +454,7 @@ class WarehouseService {
         "al.id as lifecycle_id",
         "al.receiver_id",
         "al.transaction_id",
+        "al.return_date as return_date",
 
         "ati.quantity",
 
@@ -461,6 +462,7 @@ class WarehouseService {
         "wa.batch_code",
         "wa.expiration_date",
         "wa.maintenance_due",
+        "wa.status as status",
 
         "a.code as asset_code",
         "a.name as asset_name",
@@ -509,6 +511,8 @@ class WarehouseService {
           expiration_date: row.expiration_date,
           maintenance_due: row.maintenance_due,
           warehouse_asset_id: row.warehouse_asset_id,
+          status: row.status,
+          return_date: row.return_date,
         });
 
         return acc;

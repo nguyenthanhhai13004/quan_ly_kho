@@ -26,3 +26,25 @@ export const grantAccess = (requiredPermissions: PermissionsEnum[])=>{
         }
     }
 }
+
+export const grantAccessAny = (requiredPermissions: PermissionsEnum[])=>{
+    return async (req:Request,res:Response,next:NextFunction)=>{
+        try {
+            const roleId = req?.user.role_id;
+            if (!roleId){
+                throw new ForbiddenError();
+            }
+            const userPermissions = (await permissionRepository.findAllByRoleId(Number(roleId))).map((per)=>per.code);
+            
+            const hasPermission = requiredPermissions.some((perm)=>userPermissions.includes(perm));
+            
+            if (!hasPermission){
+                throw new ForbiddenError();
+            }
+
+            next();
+        } catch (error) {
+            next(error);
+        }
+    }
+}

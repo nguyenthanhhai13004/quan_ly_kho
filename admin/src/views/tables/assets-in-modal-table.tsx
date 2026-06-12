@@ -11,8 +11,7 @@ import { MdOutlineBatchPrediction } from "react-icons/md";
 import CustomModal from "../../components/common/custom-modal";
 import { useAllBatchesByCode } from "../../queries/transaction.query";
 import { useState } from "react";
-import { useModalProvider } from "../../providers/modal-provider";
-import { ModalEnum } from "../../constants/modals.constant";
+
 import CustomCheckbox from "../../components/common/custom-checkbox";
 import CustomBadge from "../../components/common/custom-badge";
 import { getAssetBadgeProps } from "../../utils/get-asset-badge-props";
@@ -28,7 +27,7 @@ export default function AssetInModalTable({inModal=false}: {inModal?: boolean}) 
   const { addRowImport, importManualState } = useTransactionStore();
   const [seleted, setSelected] = useState<string | null>(null);
   const { batches } = useAllBatchesByCode(seleted);
-  const { currentModal, setCurrentModal, closeModal } = useModalProvider();
+  const [openDetailBatches, setOpenDetailBatches] = useState<boolean>(false);
   return (
     <>
       <CustomTable
@@ -71,7 +70,7 @@ export default function AssetInModalTable({inModal=false}: {inModal?: boolean}) 
                 label="Xem ds lô hàng"
                 onClick={() => {
                   setSelected(asset.code);
-                  setCurrentModal(ModalEnum.ASSET_DETAIL_BATCHES);
+                  setOpenDetailBatches(true);
                 }}
               />
             </>,
@@ -82,10 +81,10 @@ export default function AssetInModalTable({inModal=false}: {inModal?: boolean}) 
       <CustomModal
         title="Danh sách lô hàng chi tiết"
         width="w-5xl"
-        open={ModalEnum.ASSET_DETAIL_BATCHES === currentModal}
+        open={openDetailBatches}
         onClose={() => {
           setSelected(null);
-          closeModal();
+          setOpenDetailBatches(false);
         }}
       >
         <CustomTable
