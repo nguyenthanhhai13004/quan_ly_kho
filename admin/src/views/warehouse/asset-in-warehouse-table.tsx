@@ -18,17 +18,23 @@ import AssetInWHDetailModal from "./modals/asset-in-wh-detail-modal";
 type AssetInWarehouseTableProps = {
   showButtonBatches?: boolean;
   isInModal?: boolean;
+  filterAssetIds?: number[];
 };
 
 export default function AssetInWarehouseTable({
   showButtonBatches,
   isInModal = false,
+  filterAssetIds,
 }: AssetInWarehouseTableProps) {
   const { params, setPage, setFilters, filters } =
     usePaginationParams<PaginationAssetsDto>({
       useUrl: !isInModal,
     });
-  const { assets } = useAllAssetsInWH(isInModal ? filters : params);
+  const { assets } = useAllAssetsInWH(
+    isInModal
+      ? { ...filters, ids: filterAssetIds?.join(",") }
+      : { ...params, ids: filterAssetIds?.join(",") }
+  );
   const { toggleFilterDrawer, drawer } = useDrawer();
 
   const { openModal } = useModalProvider();

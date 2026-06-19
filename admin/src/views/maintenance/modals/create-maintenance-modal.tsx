@@ -9,7 +9,7 @@ export default function CreateMaintenanceModal({
 }: CustomModalProps) {
   return (
     <CustomModal
-      width="w-7xl"
+      width="max-w-7xl"
       title="Lên lịch bảo trì tài sản"
       onClose={onClose}
       open={open}

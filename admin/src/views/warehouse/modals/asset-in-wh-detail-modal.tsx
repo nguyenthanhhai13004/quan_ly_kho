@@ -7,7 +7,7 @@ type AssetInWHDetailModalProps = CustomModalProps & {
 export default function AssetInWHDetailModal({assetCode,onClose,open}:AssetInWHDetailModalProps) {
   if (!assetCode) return;
   return (
-    <CustomModal title="Chi tiết tài sản" width="w-6xl" onClose={onClose} open={open}>
+    <CustomModal title="Chi tiết tài sản" width="max-w-6xl" onClose={onClose} open={open}>
       <AssetInWHDetailTabs assetCode={assetCode}/>
     </CustomModal>
   );

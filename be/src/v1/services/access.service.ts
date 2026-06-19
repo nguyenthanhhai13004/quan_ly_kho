@@ -48,46 +48,49 @@ class AccessService {
       throw new UnauthorizedError("tài khoản chưa được kích hoạt");
     }
 
-    // if (
-    //   userFound.failed_login_attempts >= MAX_FAILED_LOGIN_ATTEMPTS &&
-    //   userFound.last_failed_login_at &&
-    //   Date.now() - new Date(userFound.last_failed_login_at).getTime() <
-    //     TIME_LOCK_FAILED
-    // ) {
-    //   const now = Date.now();
-    //   const lastFail = new Date(userFound.last_failed_login_at).getTime();
-    //   const diff = now - lastFail;
-    //
-    //   if (diff < TIME_LOCK_FAILED) {
-    //     const remainingMs = TIME_LOCK_FAILED - diff;
-    //
-    //     const remainingSec = Math.ceil(remainingMs / 1000);
-    //     const minutes = Math.floor(remainingSec / 60);
-    //     const seconds = remainingSec % 60;
-    //
-    //     throw new BadRequestError(
-    //       `Bạn đã nhập sai quá ${MAX_FAILED_LOGIN_ATTEMPTS} lần.
-    //   Vui lòng thử lại sau ${minutes} phút ${seconds} giây.`,
-    //     );
-    //   }
-    // }
+    if (
+      userFound.failed_login_attempts >= MAX_FAILED_LOGIN_ATTEMPTS &&
+      userFound.last_failed_login_at &&
+      Date.now() - new Date(userFound.last_failed_login_at).getTime() <
+        TIME_LOCK_FAILED
+    ) {
+      // throw new BadRequestError(
+      //   `Bạn đã nhập sai mật khẩu quá ${MAX_FAILED_LOGIN_ATTEMPTS}, thử lại sau.`,
+      // );
+      const now = Date.now();
+      const lastFail = new Date(userFound.last_failed_login_at).getTime();
+      const diff = now - lastFail;
+
+      if (diff < TIME_LOCK_FAILED) {
+        const remainingMs = TIME_LOCK_FAILED - diff;
+
+        const remainingSec = Math.ceil(remainingMs / 1000);
+        const minutes = Math.floor(remainingSec / 60);
+        const seconds = remainingSec % 60;
+
+        throw new BadRequestError(
+          `Bạn đã nhập sai quá ${MAX_FAILED_LOGIN_ATTEMPTS} lần. 
+      Vui lòng thử lại sau ${minutes} phút ${seconds} giây.`,
+        );
+      }
+    }
 
     const isMatch = await comparePassword(
       loginDto.password,
       userFound.password,
     );
     if (!isMatch) {
-      // const failedAttempts = userFound.failed_login_attempts + 1;
-      // const now = new Date();
-      // await userRepository.updateUserById(userFound.id, {
-      //   failed_login_attempts: failedAttempts,
-      //   last_failed_login_at: now,
-      // });
-      // if (failedAttempts >= MAX_FAILED_LOGIN_ATTEMPTS) {
-      //   throw new BadRequestError(
-      //     "Tài khoản tạm thời bị khóa do nhập sai quá nhiều lần.",
-      //   );
-      // }
+      const failedAttempts = userFound.failed_login_attempts + 1;
+      const now = new Date();
+      await userRepository.updateUserById(userFound.id, {
+        failed_login_attempts: failedAttempts,
+        last_failed_login_at: now,
+      });
+      if (failedAttempts >= MAX_FAILED_LOGIN_ATTEMPTS) {
+        throw new BadRequestError(
+          "Tài khoản tạm thời bị khóa do nhập sai quá nhiều lần.",
+        );
+      }
       throw new NotFoundError("username hoặc mật khẩu chưa chính xác");
     }
 
@@ -110,6 +113,7 @@ class AccessService {
       fullname: userFound.fullname,
       warehouse_ids: foundWarehouses?.map((item) => item.warehouse_id) || [],
       class_id: userFound.class_id,
+      major_id: userFound.major_id,
     });
 
     if (!tokens) {
@@ -156,6 +160,7 @@ class AccessService {
       role_id: user.role_id,
       fullname: userUpdated.fullname,
       class_id: userUpdated.class_id,
+      major_id: userUpdated.major_id,
     });
 
     if (!tokens) {
@@ -276,6 +281,7 @@ class AccessService {
         "roleName",
         "phone_number",
         "class_id",
+        "major_id",
       ],
       object: {
         ...userFound,

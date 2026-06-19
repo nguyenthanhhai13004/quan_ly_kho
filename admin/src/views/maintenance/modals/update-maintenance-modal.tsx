@@ -101,7 +101,7 @@ export default function UpdateMaintenanceModal({
   };
   return (
     <CustomModal
-      width="w-4xl"
+      width="max-w-4xl"
       title="Thu hồi tài sản"
       onClose={onClose}
       open={open}

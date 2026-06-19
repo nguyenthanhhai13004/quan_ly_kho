@@ -8,13 +8,13 @@ import { PermissionsEnum } from "../cores/enums/permissons.enum";
 const classRouter = Router();
 
 classRouter.use(asyncHandler(authentication));
-classRouter.use(grantAccess([PermissionsEnum.MANAGE_USER]));
 
 classRouter.get("/", asyncHandler(ClassController.getAll));
 classRouter.get("/all", asyncHandler(ClassController.getAllList));
+classRouter.get("/:id",asyncHandler(ClassController.getById));
+
 classRouter.post("/", asyncHandler(ClassController.createClass));
 classRouter.put("/:id", asyncHandler(ClassController.updateClass));
-classRouter.get("/:id", asyncHandler(ClassController.getById));
 classRouter.delete("/:id", asyncHandler(ClassController.delete));
 
 export default classRouter;

@@ -18,6 +18,7 @@ export const CreateUserSchema = z.object({
   .optional(),
   role_id: z.number(),
   class_id: z.number().nullable().optional(),
+  major_id: z.number().nullable().optional(),
 });
 
 export type CreateUserData = z.infer<typeof CreateUserSchema>;
@@ -30,4 +31,6 @@ export interface CreateUserDto {
   warehouse_ids?:number[];
   phone_number?:string;
   class_id?:number|null;
+  major_id?:number|null;
+  avatar?:File|null;
 }

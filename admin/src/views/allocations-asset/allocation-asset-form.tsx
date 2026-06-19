@@ -37,6 +37,10 @@ export default function AllocationAssetForm({
 }: AllocationAssetFormProps) {
   const columns = ["Hành động", "Mã lô hàng", "Tên tài sản", "Số lượng"];
   const { users } = useUsers();
+  const receiverUser = users?.items?.find((u) => u.id === defaultReceiverId);
+  const receiverDisplayText = receiverUser 
+    ? `${receiverUser.fullname} - ${receiverUser.email}` 
+    : "Đang tải...";
   const {
     batchState: { selectedBatches },
     removeBatch,
@@ -70,6 +74,17 @@ export default function AllocationAssetForm({
       setValue("receiver_id", defaultReceiverId);
     }
   }, [defaultReceiverId, setValue]);
+
+  useEffect(() => {
+    if (selectedBatches.length > 0) {
+      selectedBatches.forEach((batch, idx) => {
+        const currentVal = getValues(`items.${idx}.quantity`);
+        if (currentVal === undefined || currentVal === 1) {
+          setValue(`items.${idx}.quantity`, idx === 0 && selectedBatches.length === 1 ? (requestQuantity || 1) : 1);
+        }
+      });
+    }
+  }, [selectedBatches, requestQuantity, setValue, getValues]);
 
   const onSubmit = (data: CreateAllocationData) => {
     if (selectedBatches.length === 0) {
@@ -164,14 +179,25 @@ export default function AllocationAssetForm({
             disabled
           />,
           item.name,
-          <CustomInput
-            {...register(`items.${index}.quantity`, { valueAsNumber: true })}
-            defaultValue={1}
-            name={`items.${index}.quantity`}
-            type="number"
-            className="text-xs"
-            width="120px"
-          />,
+          <div key={`qty-container-${index}`}>
+            <CustomInput
+              {...register(`items.${index}.quantity`, { valueAsNumber: true })}
+              defaultValue={requestQuantity && selectedBatches.length === 1 && index === 0 ? requestQuantity : 1}
+              name={`items.${index}.quantity`}
+              type={requestId ? "hidden" : "number"}
+              className="text-xs"
+              width="120px"
+            />
+            {requestId && (
+              <CustomInput
+                defaultValue={requestQuantity && selectedBatches.length === 1 && index === 0 ? requestQuantity : 1}
+                type="number"
+                className="text-xs"
+                width="120px"
+                disabled
+              />
+            )}
+          </div>,
         ])}
       />
       <div className="flex flex-col gap-5 mb-3 mt-5">
@@ -232,25 +258,37 @@ export default function AllocationAssetForm({
           labelType="top"
         />
 
-        <CustomSelect
-          register={register("receiver_id", {
-            required: true,
-            valueAsNumber: true,
-          })}
-          required
-          // Khi cấp phát theo yêu cầu: khóa người nhận = chỉ huy đã gửi yêu cầu
-          disabled={!!requestId}
-          error={errors.receiver_id?.message}
-          labelType="top"
-          label="Người / Đơn vị nhận"
-          className="w-full"
-          options={
-            users?.items?.map((u) => ({
-              label: `${u.fullname} - ${u.email}`,
-              value: u.id,
-            })) || []
-          }
-        />
+        {defaultReceiverId ? (
+          <>
+            <input type="hidden" {...register("receiver_id", { valueAsNumber: true })} />
+            <CustomInput
+              label="Người / Đơn vị nhận"
+              labelType="top"
+              value={receiverDisplayText}
+              disabled
+              required
+              className="w-full"
+            />
+          </>
+        ) : (
+          <CustomSelect
+            register={register("receiver_id", {
+              required: true,
+              valueAsNumber: true,
+            })}
+            required
+            error={errors.receiver_id?.message}
+            labelType="top"
+            label="Người / Đơn vị nhận"
+            className="w-full"
+            options={
+              users?.items?.map((u) => ({
+                label: `${u.fullname} - ${u.email}`,
+                value: u.id,
+              })) || []
+            }
+          />
+        )}
       </div>
       <div className="grid grid-cols-2 gap-2">
         <CustomButton

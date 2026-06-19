@@ -18,6 +18,9 @@
 
     /* Linting */
     "strict": true,
+    //tắt báo lỗi
+    // "noUnusedLocals": false,
+    // "noUnusedParameters": false,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,

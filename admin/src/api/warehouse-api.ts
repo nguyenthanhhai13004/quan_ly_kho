@@ -83,8 +83,30 @@ class WarehouseApi {
     };
   }
 
+  static async getAssetStockAcrossWarehouses(assetId: number): Promise<
+    ApiResponseDto<{ warehouse_id: number; warehouse_name: string; warehouse_code: string; total_quantity: number }[]>
+  > {
+    const response = await api.get(`/v1/warehouses/asset-stock/${assetId}`);
+    return {
+      data: response.data.data,
+      message: response.data.message,
+      status: response.status,
+    };
+  }
+
   static async getAssetsOwn(): Promise<ApiResponseDto<any>> {
     const response = await api.get("/v1/warehouses/assets-own");
+    return {
+      data: response.data.data,
+      message: response.data.message,
+      status: response.status,
+    };
+  }
+
+  static async getAllocationOrdersOwn(classId?: string): Promise<ApiResponseDto<any>> {
+    const response = await api.get("/v1/warehouses/allocation-orders-own", {
+      params: classId ? { class_id: classId } : undefined,
+    });
     return {
       data: response.data.data,
       message: response.data.message,

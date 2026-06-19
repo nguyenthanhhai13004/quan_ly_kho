@@ -39,9 +39,11 @@ const CATEGORIES_DEFAULT = [
   }
 ];
 export async function seed(knex: Knex): Promise<void> {
+    await knex.raw('SET FOREIGN_KEY_CHECKS = 0');
     // Deletes ALL existing entries
     await knex(CATEGORY_TABLE_NAME).del();
 
     // Inserts seed entries
     await knex(CATEGORY_TABLE_NAME).insert(CATEGORIES_DEFAULT);
+    await knex.raw('SET FOREIGN_KEY_CHECKS = 1');
 };

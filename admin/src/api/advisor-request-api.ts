@@ -13,6 +13,7 @@ export interface AdvisorRequest {
   note: string | null;
   response_note: string | null;
   processed_by_user_id: number | null;
+  allocation_transaction_code?: string | null;
   advisor_name?: string;
   class_name?: string;
   student_name?: string;
@@ -28,10 +29,16 @@ const AdvisorRequestApi = {
   getMyRequests(params: PaginationDto & { keyword?: string; status?: number; type?: number }) {
     return api.get("/v1/advisor-requests/my-requests", { params });
   },
-  create(data: { student_id?: number | null; type: number; note?: string; items: { asset_id: number; quantity: number }[] }) {
+  create(data: {
+    student_id?: number | null;
+    class_id?: number | null;
+    type: number;
+    note?: string;
+    items?: { asset_id: number; quantity: number; allocation_transaction_code?: string }[];
+  }) {
     return api.post("/v1/advisor-requests", data);
   },
-  getAll(params: PaginationDto & { keyword?: string; status?: number; type?: number; class_id?: number }) {
+  getAll(params: PaginationDto & { keyword?: string; status?: number; type?: number; class_id?: number; start_date?: string; end_date?: string }) {
     return api.get("/v1/advisor-requests/all", { params });
   },
   process(id: number, data: { status: number; response_note?: string }) {
@@ -40,7 +47,16 @@ const AdvisorRequestApi = {
   fulfillAllocation(id: number, data: { allocation_data: any; response_note?: string }) {
     return api.post(`/v1/advisor-requests/${id}/fulfill-allocation`, data);
   },
-  fulfillRecall(id: number, data: { import_data: any; response_note?: string }) {
+  fulfillRecall(
+    id: number,
+    data: {
+      import_data?: any;
+      response_note?: string;
+      transaction_codes?: string[];
+      return_date?: string;
+      request_ids?: number[];
+    }
+  ) {
     return api.post(`/v1/advisor-requests/${id}/fulfill-recall`, data);
   },
 };

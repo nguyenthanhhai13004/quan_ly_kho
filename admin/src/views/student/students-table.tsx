@@ -5,12 +5,12 @@ import { BiEdit } from "react-icons/bi";
 import { useModalProvider } from "../../providers/modal-provider";
 
 import UpdateStudentModal from "./modals/update-student-modal";
+import StudentFilter from "./student-filter";
 
 import { usePaginationParams } from "../../hooks/use-pagination-params";
 import type { PaginationDto } from "../../dtos/pagination.dto";
-import { useStudents, useDeleteStudent, useResetPasswordStudent, useUpdateStudent } from "../../queries/student.query";
-import { MdDelete, MdBlock } from "react-icons/md";
-import { RiResetLeftFill } from "react-icons/ri";
+import { useStudents, useDeleteStudent } from "../../queries/student.query";
+import { MdDelete } from "react-icons/md";
 import { toast } from "react-toastify";
 
 const columns = [
@@ -28,8 +28,6 @@ export default function StudentsTable() {
   const { params, setParams } = usePaginationParams<PaginationDto & { keyword?: string; class_id?: number; active?: number }>();
   const { students } = useStudents(params);
   const { mutate: deleteStudent } = useDeleteStudent();
-  const { mutate: resetPassword } = useResetPasswordStudent();
-  const { mutate: updateStudent } = useUpdateStudent();
 
   const handlePagination = (page: number) => {
     setParams({ ...params, page });
@@ -54,31 +52,12 @@ export default function StudentsTable() {
     });
   };
 
-  const handleResetPassword = (id: number) => {
-    openConfirmModal({
-      title: "Đặt lại mật khẩu",
-      message: "Bạn có chắc chắn muốn đặt lại mật khẩu cho học viên này?",
-      confirmText: "Đặt lại",
-      cancelText: "Hủy",
-      onConfirm: () => {
-        resetPassword(id, {
-          onSuccess: () => {
-            toast.success("Đặt lại mật khẩu thành công");
-          }
-        });
-      }
-    });
-  };
-
-  const handleChangeActive = (id: number, currentActive: boolean) => {
-    updateStudent({ id, data: { is_active: !currentActive } });
-  };
-
   return (
     <>
       <CustomTable
         onPageChange={handlePagination}
         title="Danh sách học viên"
+        filter={<StudentFilter />}
         columns={columns}
         currentPage={params.page}
         totalPages={students?.totalPages}
@@ -94,16 +73,6 @@ export default function StudentsTable() {
               status={s.is_active ? "success" : "error"}
             />,
             <>
-              <CustomIcon
-                onClick={() => handleResetPassword(s.id)}
-                label="Đặt lại mật khẩu"
-                icon={<RiResetLeftFill size={20} />}
-              />
-              <CustomIcon
-                onClick={() => handleChangeActive(s.id, s.is_active)}
-                label={s.is_active ? "Khóa tài khoản" : "Mở khóa TK"}
-                icon={<MdBlock size={20} />}
-              />
               <CustomIcon
                 onClick={() => {
                   openModal(UpdateStudentModal, { studentId: s.id });

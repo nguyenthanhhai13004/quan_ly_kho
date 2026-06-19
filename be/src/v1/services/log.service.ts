@@ -1,7 +1,9 @@
+import { Request } from "express";
 import { ResponsePaginationDto } from "../cores/dtos/response-pagination.dto";
 import { InternalServerError } from "../cores/error.response";
 import db from "../databases/init.mysql-v2";
 import LogFilterPaginationDto from "../dtos/kqn-logs/log-filter-pagination";
+import { requestContainer } from "../middlewares/log.mdw";
 
 interface LogInput {
   username: string;
@@ -15,10 +17,18 @@ interface LogInput {
     old_value: any;
     new_value: any;
   }>;
+  req?: Request;
 }
 
 export class KQNLogService {
   static async createLog(input: LogInput) {
+    if (input.req) {
+      (input.req as any).isLogged = true;
+    }
+    const currentReq = requestContainer.getStore();
+    if (currentReq) {
+      (currentReq as any).isLogged = true;
+    }
     let action = await db("log_actions")
       .where("code", input.action_code)
       .first();

@@ -16,6 +16,7 @@ export type CreateKeyPairType = {
   fullname: string;
   warehouse_ids?:number[];
   class_id?:number|null;
+  major_id?:number|null;
 };
 export type TokensType = {
   access_token: string;

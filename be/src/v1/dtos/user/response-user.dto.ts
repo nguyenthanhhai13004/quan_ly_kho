@@ -11,4 +11,6 @@ export interface ResponseUserDto extends ResponseItemDto{
     warehouse_ids?:number;
     phone_number?:string;
     class_id?:number|null;
+    major_id?:number|null;
+    avatar_url?:string|null;
 }

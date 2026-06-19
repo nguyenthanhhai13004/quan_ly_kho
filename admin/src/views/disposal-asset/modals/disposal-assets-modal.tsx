@@ -18,7 +18,7 @@ export default function DisposalAssetsModal({
       title="Thanh lý tài sản"
       onClose={onClose}
       open={open}
-      width="w-7xl"
+      width="max-w-7xl"
       height="h-[500px]"
     >
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">

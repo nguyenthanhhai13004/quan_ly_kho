@@ -24,7 +24,7 @@ export default function AssetTransactionDetailModal({
   return (
     <CustomModal
       title={`Chi tiết giao dịch`}
-      width="w-4xl"
+      width="max-w-4xl"
       onClose={onClose}
       open={open}
     >

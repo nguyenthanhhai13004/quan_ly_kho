@@ -20,7 +20,8 @@ class ClassRepository {
     let query = db(`${CLASSES_TABLE_NAME} as c`)
       .select(
         "c.*",
-        "m.name as major_name"
+        "m.name as major_name",
+        db.raw("(SELECT COUNT(*) FROM students WHERE class_id = c.id) as student_count")
       )
       .leftJoin(`${MAJORS_TABLE_NAME} as m`, "c.major_id", "m.id");
 

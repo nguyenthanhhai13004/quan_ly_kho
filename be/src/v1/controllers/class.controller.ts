@@ -30,11 +30,15 @@ class ClassController {
   static async getAll(req: Request, res: Response, next: NextFunction) {
     try {
       const { page, size, keyword, major_id } = req.query;
+      let targetMajorId = major_id ? Number(major_id) : undefined;
+      if (req.user.role_id === 3) {
+        targetMajorId = req.user.major_id || -1;
+      }
       const data = await ClassService.getAll({
         page: Number(page) || 1,
         size: Number(size) || 20,
         keyword: keyword as string,
-        major_id: major_id ? Number(major_id) : undefined,
+        major_id: targetMajorId,
       });
       new OK({
         message: "Lấy danh sách lớp thành công",
@@ -48,7 +52,11 @@ class ClassController {
   static async getAllList(req: Request, res: Response, next: NextFunction) {
     try {
       const { major_id } = req.query;
-      const data = await ClassService.getAllList(major_id ? Number(major_id) : undefined);
+      let targetMajorId = major_id ? Number(major_id) : undefined;
+      if (req.user.role_id === 3) {
+        targetMajorId = req.user.major_id || -1;
+      }
+      const data = await ClassService.getAllList(targetMajorId);
       new OK({
         message: "Lấy danh sách tất cả lớp thành công",
         data: data,

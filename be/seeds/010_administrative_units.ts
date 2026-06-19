@@ -1,6 +1,7 @@
 import { Knex } from "knex";
 
 export async function seed(knex: Knex): Promise<void> {
+  await knex.raw('SET FOREIGN_KEY_CHECKS = 0');
   await knex("administrative_units").del();
 
   await knex("administrative_units").insert([
@@ -50,4 +51,5 @@ export async function seed(knex: Knex): Promise<void> {
       code_name_en: "special_administrative_region",
     },
   ]);
+  await knex.raw('SET FOREIGN_KEY_CHECKS = 1');
 }

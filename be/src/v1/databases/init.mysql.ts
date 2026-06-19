@@ -6,7 +6,8 @@ const pool = mysql.createPool({
     user:dbConfig.username,
     password:dbConfig.pass,
     database:dbConfig.name,
-    port:dbConfig.port
+    port:dbConfig.port,
+    timezone: "+07:00"
 });
 
 export default pool;

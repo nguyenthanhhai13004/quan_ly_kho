@@ -7,6 +7,7 @@ import {
 import { hashPassword } from "../src/v1/auths/utils";
 
 export async function seed(knex: Knex): Promise<void> {
+  await knex.raw('SET FOREIGN_KEY_CHECKS = 0');
   const DEFAULT_PASSWORD = "12345678";
   const DEFAULT_PASSWORD_HASH = await hashPassword(DEFAULT_PASSWORD);
 
@@ -156,4 +157,5 @@ export async function seed(knex: Knex): Promise<void> {
   });
 
   await knex(STUDENTS_TABLE_NAME).insert(students);
+  await knex.raw('SET FOREIGN_KEY_CHECKS = 1');
 }

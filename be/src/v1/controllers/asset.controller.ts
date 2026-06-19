@@ -12,12 +12,13 @@ import { LogAction, LogController } from "../cores/enums/logs.enum";
 class AssetController {
   getAllAssets = async (req: Request, res: Response, next: NextFunction) => {
     const query = {
-      page: req.query.page || 1,
-      size: req.query.size || 20,
-      category_id: req.query.category_id,
-      code: req.query.code,
-      name: req.query.name,
-    } as PaginationAssetsDto;
+      page: Number(req.query.page || 1),
+      size: Number(req.query.size || 20),
+      category_id: req.query.category_id ? Number(req.query.category_id) : undefined,
+      code: req.query.code ? String(req.query.code) : undefined,
+      name: req.query.name ? String(req.query.name) : undefined,
+      ids: req.query.ids ? String(req.query.ids).split(",").map(Number) : undefined,
+    } as PaginationAssetsDto & {ids?: number[]};
     return new OK({
       message: "danh sách tài sản",
       data: await AssetService.getAllAssets(query),

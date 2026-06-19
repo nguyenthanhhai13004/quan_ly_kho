@@ -21,7 +21,7 @@ export function useLogin() {
          navigate("/Asset/Own", { replace: true });
       }
       else if (user.role == RolesEnum.COMMANDER){
-         navigate("/Commander/Students", { replace: true });
+         navigate("/Classes/Own", { replace: true });
       }else{
          navigate("/", { replace: true });
       }

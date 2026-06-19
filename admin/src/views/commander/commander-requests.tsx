@@ -7,6 +7,7 @@ import { useMyAdvisorRequests } from "../../queries/advisor-request.query";
 import { useModalProvider } from "../../providers/modal-provider";
 import CreateAdvisorRequestModal from "./modals/create-advisor-request-modal";
 import { format } from "date-fns";
+import CommanderRequestsFilter from "./commander-requests-filter";
 
 function getTypeBadge(type: number) {
   switch (type) {
@@ -41,7 +42,6 @@ const columns = [
   "Ngày gửi",
   "Loại yêu cầu",
   "Tài sản",
-  "Số lượng",
   "Ghi chú / Lý do",
   "Trạng thái",
   "Phản hồi từ kho",
@@ -65,6 +65,33 @@ export default function CommanderRequestsView() {
     return <div className="p-6 text-center text-gray-500 font-semibold">Đang tải lịch sử yêu cầu...</div>;
   }
 
+  // Group requests by: created_at, type, note, status, response_note, processed_by_user_name
+  const groupedRequests = requests?.items
+    ? Object.values(
+        requests.items.reduce((acc: any, curr: any) => {
+          const key = `${curr.created_at}_${curr.type}_${curr.note || ""}_${curr.status}_${curr.response_note || ""}_${curr.processed_by_user_name || ""}`;
+          if (!acc[key]) {
+            acc[key] = {
+              created_at: curr.created_at,
+              type: curr.type,
+              status: curr.status,
+              note: curr.note,
+              response_note: curr.response_note,
+              processed_by_user_name: curr.processed_by_user_name,
+              items: [],
+            };
+          }
+          acc[key].items.push({
+            asset_id: curr.asset_id,
+            asset_code: curr.asset_code,
+            asset_name: curr.asset_name,
+            quantity: curr.quantity,
+          });
+          return acc;
+        }, {})
+      )
+    : [];
+
   return (
     <>
       <div className="flex justify-between items-center mb-4">
@@ -82,28 +109,35 @@ export default function CommanderRequestsView() {
       <CustomTable
         onPageChange={handlePagination}
         title="Lịch sử yêu cầu"
+        filter={<CommanderRequestsFilter />}
         columns={columns}
         currentPage={params.page}
         totalPages={requests?.totalPages}
         data={
-          requests?.items.map((r: any, index: number) => [
+          groupedRequests.map((r: any, index: number) => [
             index + 1,
             format(new Date(r.created_at), "dd/MM/yyyy HH:mm"),
             getTypeBadge(r.type),
-            <div>
-              <p className="font-semibold text-gray-800">{r.asset_name}</p>
-              <p className="text-xs text-gray-500">{r.asset_code}</p>
+            <div className="flex flex-col gap-1.5" key={`assets-${index}`}>
+              {r.items.map((item: any, idx: number) => (
+                <div key={idx} className="text-sm flex items-center gap-1.5">
+                  <span className="font-semibold text-gray-800">{item.asset_name}</span>
+                  <span className="text-xs text-gray-500">({item.asset_code})</span>
+                  <span className="text-xs bg-blue-100 text-blue-800 px-1.5 py-0.2 rounded font-bold">
+                    x{item.quantity}
+                  </span>
+                </div>
+              ))}
             </div>,
-            <span className="font-bold">{r.quantity}</span>,
-            <p className="text-sm italic max-w-[200px] truncate" title={r.note || ""}>
+            <p className="text-sm italic max-w-[200px] truncate" title={r.note || ""} key={`note-${index}`}>
               {r.note || "---"}
             </p>,
             getStatusBadge(r.status),
-            <p className="text-sm italic max-w-[200px] truncate" title={r.response_note || ""}>
+            <p className="text-sm italic max-w-[200px] truncate" title={r.response_note || ""} key={`resp-${index}`}>
               {r.response_note || "---"}
             </p>,
             r.processed_by_user_name || "---",
-          ]) || []
+          ])
         }
       />
     </>

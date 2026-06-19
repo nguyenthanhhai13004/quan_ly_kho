@@ -24,7 +24,7 @@ export default function AssetBatchesTable({
     "Hạn bảo trì"
   ];
   const { batches } = useAllBatchesByCode(assetCode);
-  const {toggleBatch,batchState:{selectedBatches}} = useTransactionStore();
+  const {toggleBatch,batchState:{selectedBatches},addRowImport} = useTransactionStore();
   return (
     <CustomTable
       columns={columns}
@@ -39,6 +39,7 @@ export default function AssetBatchesTable({
                 batchCode: batch.batch_code,
                 quantity: batch.quantity,
               })
+              addRowImport(batch)
             }}
           />,
           batch.batch_code,

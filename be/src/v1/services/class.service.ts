@@ -1,6 +1,7 @@
 import { Request } from "express";
 import classRepository, { PaginationClassesDto } from "../repositories/class.repository";
 import { BadRequestError, NotFoundError, InternalServerError } from "../cores/error.response";
+import db from "../databases/init.mysql-v2";
 import { Class } from "../models/class.model";
 import { ResponsePaginationDto } from "../cores/dtos/response-pagination.dto";
 import KQNLogService from "./log.service";
@@ -12,6 +13,13 @@ class ClassService {
     const existing = await classRepository.findByCode(data.code!);
     if (existing) {
       throw new BadRequestError("Mã lớp đã tồn tại");
+    }
+
+    if (data.major_id) {
+      const majorExists = await db("majors").where({ id: data.major_id }).first();
+      if (!majorExists) {
+        throw new BadRequestError("Hệ đào tạo được chọn không tồn tại");
+      }
     }
 
     const created = await classRepository.store(data);
@@ -42,6 +50,13 @@ class ClassService {
       const existing = await classRepository.findByCode(data.code);
       if (existing) {
         throw new BadRequestError("Mã lớp đã tồn tại");
+      }
+    }
+
+    if (data.major_id) {
+      const majorExists = await db("majors").where({ id: data.major_id }).first();
+      if (!majorExists) {
+        throw new BadRequestError("Hệ đào tạo được chọn không tồn tại");
       }
     }
 
@@ -85,6 +100,11 @@ class ClassService {
     const _class = await classRepository.findById(id);
     if (!_class) {
       throw new NotFoundError("Lớp không tồn tại");
+    }
+
+    const countStudents = await db("students").where("class_id", id).count("id as total").first();
+    if (Number(countStudents?.total || 0) > 0) {
+      throw new BadRequestError("Không thể xóa lớp học vì vẫn còn học viên trực thuộc.");
     }
 
     const deleted = await classRepository.delete(id);

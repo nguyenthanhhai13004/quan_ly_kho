@@ -22,6 +22,7 @@ const WAREHOUSES_DEFAULT = [
 ];
 
 export async function seed(knex: Knex): Promise<void> {
+  await knex.raw('SET FOREIGN_KEY_CHECKS = 0');
   // Xóa theo thứ tự FK
   await knex(WAREHOUSE_TABLE_NAME).del();
   await knex("address").del();
@@ -31,4 +32,5 @@ export async function seed(knex: Knex): Promise<void> {
 
   // Insert warehouses sau
   await knex(WAREHOUSE_TABLE_NAME).insert(WAREHOUSES_DEFAULT);
+  await knex.raw('SET FOREIGN_KEY_CHECKS = 1');
 }

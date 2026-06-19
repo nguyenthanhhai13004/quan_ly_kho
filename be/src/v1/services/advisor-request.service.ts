@@ -3,58 +3,112 @@ import userRepository from "../repositories/user.repository";
 import { BadRequestError, NotFoundError } from "../cores/error.response";
 import { AdvisorRequest } from "../models/advisor-request.model";
 import { ResponsePaginationDto } from "../cores/dtos/response-pagination.dto";
-import db from "../databases/init.mysql-v2";
-import { ADVISOR_REQUESTS_TABLE_NAME } from "../cores/constants/table-name.constant";
-import TransactionService from "./transaction.service";
 
 class AdvisorRequestService {
   static async createRequest(
     advisorId: number,
     data: {
       student_id?: number | null;
-      type: number; // 1: Cấp phát, 2: Thu hồi, 3: Báo lỗi, 4: Khác
+      class_id?: number | null;
+      type: number; // 1: Cấp phát, 2: Thu hồi, 4: Khác
       note?: string;
-      items: { asset_id: number; quantity: number }[];
+      items?: { asset_id: number; quantity: number; allocation_transaction_code?: string }[];
     }
   ): Promise<boolean> {
     // 1. Validate type
-    if (![1, 2, 3, 4].includes(data.type)) {
-      throw new BadRequestError("Loại yêu cầu không hợp lệ (1: Cấp phát, 2: Thu hồi, 3: Báo lỗi, 4: Khác)");
+    if (![1, 2, 4].includes(data.type)) {
+      throw new BadRequestError("Loại yêu cầu không hợp lệ (1: Cấp phát, 2: Thu hồi, 4: Khác)");
     }
 
-    if (!data.items || data.items.length === 0) {
+    if (data.type !== 4 && (!data.items || data.items.length === 0)) {
       throw new BadRequestError("Danh sách tài sản yêu cầu không được rỗng");
     }
 
-    // Mỗi dòng phải có tài sản hợp lệ và số lượng > 0
-    const invalidItem = data.items.find(
-      (item) => !item.asset_id || !item.quantity || item.quantity <= 0
-    );
-    if (invalidItem) {
-      throw new BadRequestError("Mỗi tài sản yêu cầu phải có số lượng lớn hơn 0");
-    }
-
-    // 2. Get advisor to verify class_id
+    // 2. Get advisor to verify major_id
     const advisor = await userRepository.findUserById(advisorId);
     if (!advisor) {
       throw new NotFoundError("Tài khoản chỉ huy không tồn tại");
     }
 
-    if (!advisor.class_id) {
-      throw new BadRequestError("Chỉ huy chưa được gán quản lý lớp học nào");
+    if (!advisor.major_id) {
+      throw new BadRequestError("Chỉ huy chưa được gán quản lý hệ nào");
     }
 
-    // 3. Prepare requests array
-    const requestsToStore = data.items.map(item => ({
-      advisor_id: advisorId,
-      class_id: advisor.class_id as number,
-      student_id: data.student_id || null,
-      asset_id: item.asset_id,
-      quantity: item.quantity,
-      type: data.type,
-      status: 0, // Pending
-      note: data.note || null,
-    }));
+    if (!advisor.warehouse_ids || advisor.warehouse_ids.length === 0) {
+      throw new BadRequestError("Chỉ huy chưa được gán quản lý kho nào. Vui lòng liên hệ Admin.");
+    }
+
+    const warehouseId = advisor.warehouse_ids[0];
+
+    const db = require("../databases/init.mysql-v2").default;
+    let resolvedClassId: number;
+
+    if (data.student_id) {
+      const student = await db("students").where({ id: data.student_id }).first();
+      if (!student) {
+        throw new NotFoundError("Học viên không tồn tại");
+      }
+      const classBelongs = await db("classes")
+        .where({ id: student.class_id, major_id: advisor.major_id })
+        .first();
+      if (!classBelongs) {
+        throw new BadRequestError("Học viên không thuộc hệ quản lý của bạn");
+      }
+      resolvedClassId = student.class_id;
+    } else {
+      if (!data.class_id) {
+        throw new BadRequestError("Vui lòng chọn lớp học để yêu cầu");
+      }
+      const classBelongs = await db("classes")
+        .where({ id: data.class_id, major_id: advisor.major_id })
+        .first();
+      if (!classBelongs) {
+        throw new BadRequestError("Lớp học không thuộc hệ quản lý của bạn");
+      }
+      resolvedClassId = data.class_id;
+    }
+
+    // 3. Validate assets
+    if (data.items && data.items.length > 0) {
+      const assetIds = data.items.map(item => item.asset_id);
+      const count = await db("assets")
+        .whereIn("id", assetIds)
+        .count("id as total")
+        .first();
+      if (Number(count?.total || 0) !== assetIds.length) {
+        throw new BadRequestError("Một hoặc nhiều tài sản yêu cầu không tồn tại");
+      }
+    }
+
+    // 4. Prepare requests array
+    let requestsToStore: any[] = [];
+    if (data.type === 4 && (!data.items || data.items.length === 0)) {
+      requestsToStore = [{
+        advisor_id: advisorId,
+        warehouse_id: warehouseId,
+        class_id: resolvedClassId,
+        student_id: data.student_id || null,
+        asset_id: null,
+        quantity: null,
+        type: data.type,
+        status: 0, // Pending
+        note: data.note || null,
+        allocation_transaction_code: null,
+      }];
+    } else {
+      requestsToStore = (data.items || []).map(item => ({
+        advisor_id: advisorId,
+        warehouse_id: warehouseId,
+        class_id: resolvedClassId,
+        student_id: data.student_id || null,
+        asset_id: item.asset_id,
+        quantity: item.quantity,
+        type: data.type,
+        status: 0, // Pending
+        note: data.note || null,
+        allocation_transaction_code: item.allocation_transaction_code || null,
+      }));
+    }
 
     // 4. Store requests
     return await advisorRequestRepository.storeMany(requestsToStore);
@@ -73,6 +127,17 @@ class AdvisorRequestService {
 
     if (request.status !== 0) {
       throw new BadRequestError("Yêu cầu này đã được xử lý trước đó");
+    }
+
+    // Validate officer's warehouse access
+    const officer = await userRepository.findUserById(processedByUserId);
+    if (officer && officer.role_id !== 1) { // Not Admin
+      if (!request.warehouse_id) {
+        throw new BadRequestError("Yêu cầu này không chứa thông tin kho");
+      }
+      if (!officer.warehouse_ids || !officer.warehouse_ids.includes(request.warehouse_id)) {
+        throw new BadRequestError("Bạn không có quyền xử lý yêu cầu thuộc kho này");
+      }
     }
 
     if (status !== 1 && status !== 2) {
@@ -99,60 +164,38 @@ class AdvisorRequestService {
       response_note?: string;
     }
   ): Promise<AdvisorRequest | null> {
+    const request = await advisorRequestRepository.findById(requestId);
+    if (!request) {
+      throw new NotFoundError("Yêu cầu không tồn tại");
+    }
+
+    if (request.status !== 0) {
+      throw new BadRequestError("Yêu cầu này đã được xử lý trước đó");
+    }
+
+    if (request.type !== 1) {
+      throw new BadRequestError("Yêu cầu này không phải là yêu cầu cấp phát");
+    }
+
     const { allocation_data, response_note } = data;
     if (!allocation_data || !allocation_data.items || allocation_data.items.length === 0) {
       throw new BadRequestError("Vui lòng chọn ít nhất 1 lô hàng để cấp phát");
     }
 
-    // Gộp tất cả vào MỘT transaction: khóa hàng yêu cầu (FOR UPDATE) để chống
-    // duyệt trùng, trừ kho và cập nhật trạng thái cùng nhau (atomic).
-    return await db.transaction(async (trx) => {
-      const request = await trx(ADVISOR_REQUESTS_TABLE_NAME)
-        .where({ id: requestId })
-        .forUpdate()
-        .first();
-      if (!request) {
-        throw new NotFoundError("Yêu cầu không tồn tại");
-      }
-      if (request.status !== 0) {
-        throw new BadRequestError("Yêu cầu này đã được xử lý trước đó");
-      }
-      if (request.type !== 1) {
-        throw new BadRequestError("Yêu cầu này không phải là yêu cầu cấp phát");
-      }
+    // Use TransactionService to create allocation
+    const TransactionService = require("./transaction.service").default;
 
-      // Người nhận phải đúng là chỉ huy đã gửi yêu cầu (chống cấp phát sai chỉ huy)
-      if (
-        allocation_data.receiver_id === undefined ||
-        Number(allocation_data.receiver_id) !== request.advisor_id
-      ) {
-        throw new BadRequestError(
-          "Người nhận phải là chỉ huy đã gửi yêu cầu cấp phát"
-        );
-      }
+    await TransactionService.createAllocation({
+      ...allocation_data,
+      warehouse_id: warehouseId,
+      created_by_user_id: processedByUserId,
+    });
 
-      // Cấp phát trong cùng transaction. expected_asset_id / expected_quantity
-      // để service kiểm tra lô đúng tài sản và tổng số lượng khớp yêu cầu.
-      await TransactionService.createAllocationTx(trx, {
-        ...allocation_data,
-        warehouse_id: warehouseId,
-        created_by_user_id: processedByUserId,
-        expected_asset_id: request.asset_id,
-        expected_quantity: request.quantity,
-      });
-
-      await trx(ADVISOR_REQUESTS_TABLE_NAME)
-        .where({ id: requestId })
-        .update({
-          status: 1, // Approved
-          response_note: response_note || null,
-          processed_by_user_id: processedByUserId,
-          updated_at: trx.fn.now(),
-        });
-
-      return await trx(ADVISOR_REQUESTS_TABLE_NAME)
-        .where({ id: requestId })
-        .first();
+    // Update request status
+    return await advisorRequestRepository.update(requestId, {
+      status: 1, // Approved
+      response_note: response_note || null,
+      processed_by_user_id: processedByUserId,
     });
   }
 
@@ -161,79 +204,99 @@ class AdvisorRequestService {
     requestId: number,
     warehouseId: number,
     data: {
-      import_data: any; // ImportManualDto
+      transaction_codes?: string[];
+      return_date?: string;
+      request_ids?: number[];
+      import_data?: any; // Keep for backward compatibility
       response_note?: string;
     }
-  ): Promise<AdvisorRequest | null> {
-    const { import_data, response_note } = data;
-    if (!import_data || !import_data.items || import_data.items.length === 0) {
-      throw new BadRequestError("Vui lòng chọn ít nhất 1 tài sản để nhập kho");
-    }
+  ): Promise<any> {
+    const { transaction_codes, return_date, request_ids = [requestId], response_note, import_data } = data;
 
-    // Gộp tất cả vào MỘT transaction: khóa hàng yêu cầu (FOR UPDATE) để chống
-    // duyệt trùng, nhập kho và cập nhật trạng thái cùng nhau (atomic).
-    return await db.transaction(async (trx) => {
-      const request = await trx(ADVISOR_REQUESTS_TABLE_NAME)
-        .where({ id: requestId })
-        .forUpdate()
-        .first();
+    // Backward compatibility: If no transaction_codes are provided, fall back to old importManual logic
+    if (!transaction_codes || transaction_codes.length === 0) {
+      const request = await advisorRequestRepository.findById(requestId);
       if (!request) {
         throw new NotFoundError("Yêu cầu không tồn tại");
       }
+
       if (request.status !== 0) {
         throw new BadRequestError("Yêu cầu này đã được xử lý trước đó");
       }
+
       if (request.type !== 2) {
         throw new BadRequestError("Yêu cầu này không phải là yêu cầu thu hồi");
       }
 
-      // Thu hồi phải đúng tài sản được yêu cầu
-      const wrongAsset = import_data.items.find(
-        (item: { asset_id: number }) =>
-          Number(item.asset_id) !== request.asset_id
-      );
-      if (wrongAsset) {
-        throw new BadRequestError(
-          "Tài sản thu hồi không khớp tài sản được yêu cầu"
-        );
+      if (!import_data || !import_data.items || import_data.items.length === 0) {
+        throw new BadRequestError("Vui lòng chọn ít nhất 1 tài sản để nhập kho");
       }
 
-      // Tổng số lượng thu hồi phải khớp số lượng yêu cầu
-      const totalQuantity = import_data.items.reduce(
-        (sum: number, item: { quantity: number }) =>
-          sum + Number(item.quantity),
-        0
-      );
-      if (totalQuantity !== request.quantity) {
-        throw new BadRequestError(
-          `Tổng số lượng thu hồi (${totalQuantity}) không khớp số lượng yêu cầu (${request.quantity})`
-        );
-      }
-
-      // Nhập kho (thu hồi) trong cùng transaction
-      await TransactionService.importManualTx(trx, {
+      const TransactionService = require("./transaction.service").default;
+      await TransactionService.importManual({
         ...import_data,
         warehouse_id: warehouseId,
         created_by_user_id: processedByUserId,
       });
 
-      await trx(ADVISOR_REQUESTS_TABLE_NAME)
-        .where({ id: requestId })
-        .update({
-          status: 1, // Approved
-          response_note: response_note || null,
-          processed_by_user_id: processedByUserId,
-          updated_at: trx.fn.now(),
-        });
+      return await advisorRequestRepository.update(requestId, {
+        status: 1, // Approved
+        response_note: response_note || null,
+        processed_by_user_id: processedByUserId,
+      });
+    }
 
-      return await trx(ADVISOR_REQUESTS_TABLE_NAME)
-        .where({ id: requestId })
-        .first();
-    });
+    // New batch recall flow
+    if (!return_date) {
+      throw new BadRequestError("Vui lòng cung cấp ngày thu hồi");
+    }
+
+    const TransactionService = require("./transaction.service").default;
+    const db = require("../databases/init.mysql-v2").default;
+
+    // Process return for each transaction code
+    for (const code of transaction_codes) {
+      const txnDetail = await TransactionService.getTransactionDetail(code);
+      if (!txnDetail) {
+        throw new NotFoundError(`Không tìm thấy giao dịch cấp phát với mã ${code}`);
+      }
+
+      if (txnDetail.warehouse_id !== warehouseId) {
+        const originWarehouse = await db("warehouses").where("id", txnDetail.warehouse_id).first();
+        const targetWarehouse = await db("warehouses").where("id", warehouseId).first();
+        throw new BadRequestError(
+          `Đơn cấp phát ${code} thuộc về kho "${originWarehouse?.name || txnDetail.warehouse_id}". Bạn không thể thu hồi về kho "${targetWarehouse?.name || warehouseId}".`
+        );
+      }
+
+      const items = txnDetail.asset_transaction_items.map((item: any) => ({
+        batch_code: item.batch_code,
+        status: 1, // Default to GOOD (1)
+      }));
+
+      await TransactionService.processReturn({
+        items,
+        return_date,
+        returned_by_user_id: processedByUserId,
+        transaction_code: code,
+      });
+    }
+
+    // Update status of all request IDs in the group
+    await db("advisor_requests")
+      .whereIn("id", request_ids)
+      .update({
+        status: 1, // Approved
+        response_note: response_note || null,
+        processed_by_user_id: processedByUserId,
+        updated_at: db.fn.now(),
+      });
+
+    return { success: true };
   }
 
-  static async getAllRequests(params: PaginationRequestsDto): Promise<ResponsePaginationDto<any>> {
-    return await advisorRequestRepository.getAll(params);
+  static async getAllRequests(user: any, params: PaginationRequestsDto): Promise<ResponsePaginationDto<any>> {
+    return await advisorRequestRepository.getAll(user, params);
   }
 
   static async getAdvisorRequests(

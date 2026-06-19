@@ -14,7 +14,7 @@ export const useMyAdvisorRequests = (params: PaginationDto & { keyword?: string;
   };
 };
 
-export const useAllAdvisorRequests = (params: PaginationDto & { keyword?: string; status?: number; type?: number; class_id?: number }) => {
+export const useAllAdvisorRequests = (params: PaginationDto & { keyword?: string; status?: number; type?: number; class_id?: number; start_date?: string; end_date?: string }) => {
   const { data, isLoading } = useQuery({
     queryKey: ["all-advisor-requests", params],
     queryFn: () => AdvisorRequestApi.getAll(params),
@@ -29,7 +29,7 @@ export const useAllAdvisorRequests = (params: PaginationDto & { keyword?: string
 export const useCreateAdvisorRequest = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: { student_id?: number | null; type: number; note?: string; items: { asset_id: number; quantity: number }[] }) =>
+    mutationFn: (data: { student_id?: number | null; class_id?: number | null; type: number; note?: string; items?: { asset_id: number; quantity: number; allocation_transaction_code?: string }[] }) =>
       AdvisorRequestApi.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["my-advisor-requests"] });
@@ -73,11 +73,18 @@ export const useFulfillRecallRequest = () => {
       data,
     }: {
       id: number;
-      data: { import_data: any; response_note?: string };
+      data: {
+        import_data?: any;
+        response_note?: string;
+        transaction_codes?: string[];
+        return_date?: string;
+        request_ids?: number[];
+      };
     }) => AdvisorRequestApi.fulfillRecall(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["all-advisor-requests"] });
       queryClient.invalidateQueries({ queryKey: ["assets-wh"] });
+      queryClient.invalidateQueries({ queryKey: ["all-allocation-return-trx"] });
     },
   });
 };

@@ -6,4 +6,5 @@ export interface PaginationAssetsDto extends PaginationDto {
     status?:number;
     category_id?:number;
     id?:number;
+    ids?:string;
 }

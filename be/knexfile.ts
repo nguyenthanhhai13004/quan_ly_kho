@@ -8,10 +8,18 @@ const config: Knex.Config = {
     port: dbConfig.port,
     user: dbConfig.username,          
     password: dbConfig.pass,
-    database: dbConfig.name
+    database: dbConfig.name,
+    timezone: "+07:00"
+  },
+  pool: {
+    afterCreate: (conn: any, cb: any) => {
+      conn.query("SET time_zone = '+07:00';", (err: any) => {
+        cb(err, conn);
+      });
+    }
   },
   migrations: {
-    directory: "./migrations"
+    directory: "./dist/migrations"
   },
   seeds: {
     directory: "./dist/seeds"

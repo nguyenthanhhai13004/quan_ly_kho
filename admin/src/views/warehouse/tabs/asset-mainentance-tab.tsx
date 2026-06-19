@@ -1,6 +1,7 @@
 import { MaintenanceStatusEnum } from "../../../common/enums/maintenance-status";
 import { TransactionTypeEnum } from "../../../common/enums/transaction-type.enums";
 import CustomTable from "../../../components/common/custom-table";
+import CustomBadge from "../../../components/common/custom-badge";
 import type { PaginationTransactionsForAssetDto } from "../../../dtos/transaction/pagination-transactions-for-asset";
 import { usePaginationParams } from "../../../hooks/use-pagination-params";
 import { useAllTransactionsForAsset } from "../../../queries/transaction.query";
@@ -31,9 +32,14 @@ export default function AssetMainentanceTab({
           t.reason,
           t.note,
           t.quantity,
-          t?.maintenance_status === MaintenanceStatusEnum.IN_PROGRESS
-            ? "Đang bảo trì"
-            : "Hoàn thành bảo trì",
+          <CustomBadge
+            label={
+              t?.maintenance_status === MaintenanceStatusEnum.IN_PROGRESS
+                ? "Đang bảo trì"
+                : "Hoàn thành bảo trì"
+            }
+            status={t?.maintenance_status === 0 ? "warning" : "success"}
+          />,
         ]) || []
       }
     />

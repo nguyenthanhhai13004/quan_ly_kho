@@ -10,4 +10,5 @@ export interface ResponseUserDto extends ResponseItemDto {
   phone_number?:string;
   permissions?:string[];
   class_id?:number | null;
+  major_id?:number | null;
 }

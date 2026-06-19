@@ -9,7 +9,7 @@ type AssetBatchesModalProps = CustomModalProps & {
 
 export default function AssetBatchesModal({onClose,open,assetCode,assetName}:AssetBatchesModalProps){
     if (!assetCode) return;
-    return <CustomModal title="Danh sách lô hàng chi tiết" width="w-5xl" open={open} onClose={onClose}>
+    return <CustomModal title="Danh sách lô hàng chi tiết" width="max-w-5xl" open={open} onClose={onClose}>
         <AssetBatchesTable assetName={assetName} assetCode={assetCode}/>
     </CustomModal>
 }

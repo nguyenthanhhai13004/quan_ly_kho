@@ -4,6 +4,7 @@ import APIV1 from "./v1/routes";
 import { DEFAULT_PORT, ROOT_UPLOADS } from "./v1/cores/constants/app.constant";
 const PORT = process.env.PORT || DEFAULT_PORT;
 import compression from "compression";
+import { logRequestMdw, requestContextMdw } from "./v1/middlewares/log.mdw";
 import cors from "cors";
 import morgan from "morgan";
 import helmet from "helmet";
@@ -54,6 +55,8 @@ if (NODE_ENV === NodeEnvEnum.DEV) {
   app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 }
 app.use(compression());
+app.use(requestContextMdw);
+app.use(logRequestMdw);
 /* MIDDLEWARES END*/
 
 /**

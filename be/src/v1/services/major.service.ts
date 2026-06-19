@@ -1,6 +1,7 @@
 import { Request } from "express";
 import majorRepository, { PaginationMajorsDto } from "../repositories/major.repository";
 import { BadRequestError, NotFoundError, InternalServerError } from "../cores/error.response";
+import db from "../databases/init.mysql-v2";
 import { Major } from "../models/major.model";
 import { ResponsePaginationDto } from "../cores/dtos/response-pagination.dto";
 import KQNLogService from "./log.service";
@@ -85,6 +86,11 @@ class MajorService {
     const major = await majorRepository.findById(id);
     if (!major) {
       throw new NotFoundError("Hệ không tồn tại");
+    }
+
+    const countClasses = await db("classes").where("major_id", id).count("id as total").first();
+    if (Number(countClasses?.total || 0) > 0) {
+      throw new BadRequestError("Không thể xóa hệ đào tạo vì vẫn còn lớp học trực thuộc.");
     }
 
     const deleted = await majorRepository.delete(id);

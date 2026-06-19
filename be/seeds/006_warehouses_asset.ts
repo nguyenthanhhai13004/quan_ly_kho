@@ -72,9 +72,11 @@ export default WAREHOUSE_ASSETS_DEFAULT;
 
 
 export async function seed(knex: Knex): Promise<void> {
+    await knex.raw('SET FOREIGN_KEY_CHECKS = 0');
     // Deletes ALL existing entries
     await knex(WAREHOUSE_ASSET_TABLE_NAME).del();
 
     // Inserts seed entries
     await knex(WAREHOUSE_ASSET_TABLE_NAME).insert(WAREHOUSE_ASSETS_DEFAULT);
+    await knex.raw('SET FOREIGN_KEY_CHECKS = 1');
 };

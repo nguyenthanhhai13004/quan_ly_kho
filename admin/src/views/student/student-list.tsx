@@ -4,7 +4,6 @@ import StudentsTable from "./students-table";
 import CreateStudentModal from "./modals/create-student-modal";
 import { useModalProvider } from "../../providers/modal-provider";
 
-
 export default function StudentListView() {
   const { openModal } = useModalProvider();
   const openCreateModal = () => openModal(CreateStudentModal);

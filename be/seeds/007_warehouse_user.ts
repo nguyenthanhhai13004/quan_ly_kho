@@ -19,21 +19,16 @@ const USER_WAREHOUSES_DEFAULT = [
   { user_id: 3, warehouse_id: 5 },
   { user_id: 3, warehouse_id: 10 },
 
-  // // === John Doe (Cán bộ kho) ===
-  // { user_id: 3, warehouse_id: 3 }, // Miền Trung
-  // { user_id: 3, warehouse_id: 4 }, // Miền Nam
-
-  // // === Jane Smith (User) ===
-  // { user_id: 4, warehouse_id: 7 }, // Học viện QP
-
-  // // === Jane Smith (test1 - User) ===
-  // { user_id: 5, warehouse_id: 8 }, // Sư đoàn 312
+  // === Chỉ huy (chihuyk48) quản lý Kho Quân nhu Khu vực Miền Nam ===
+  { user_id: 4, warehouse_id: 4 },
 ];
 
 export async function seed(knex: Knex): Promise<void> {
+    await knex.raw('SET FOREIGN_KEY_CHECKS = 0');
     // Deletes ALL existing entries
     await knex(WAREHOUSE_USER_TABLE_NAME).del();
 
     // Inserts seed entries
     await knex(WAREHOUSE_USER_TABLE_NAME).insert(USER_WAREHOUSES_DEFAULT);
+    await knex.raw('SET FOREIGN_KEY_CHECKS = 1');
 };

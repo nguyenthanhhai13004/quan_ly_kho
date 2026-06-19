@@ -8,13 +8,25 @@ import CustomWrapperPermissions from "../components/common/custom-wrapper-permis
 import Cookies from "js-cookie";
 import { useEffect } from "react";
 import { useAppStore } from "../stores/app-store";
+import { useMe } from "../queries/auth.query";
+import { RolesEnum } from "../common/enums/roles.enum";
 
 export default function Sidebar() {
   const { setToggle, toggle} = useAppProvider();
   const {warehouseSelectedName,setWarehouseSelectedName} = useAppStore();
+  const { user } = useMe();
+
   useEffect(()=>{
     setWarehouseSelectedName(Cookies.get("wh-selected-name")||"")
   },[])
+
+  const visibleSidebarItems = SIDEBAR_ITEMS.filter((item) => {
+    if (user?.role === RolesEnum.COMMANDER && item.path === "/") {
+      return false;
+    }
+    return true;
+  });
+
   return (
     <div
       className={`${
@@ -44,11 +56,12 @@ export default function Sidebar() {
           <FiSidebar size={20} />
         </div>
       </div>
-      {SIDEBAR_ITEMS.map((item, index) => {
+      {visibleSidebarItems.map((item, index) => {
         if (toggle) {
           return (
             <CustomWrapperPermissions
               permissionsRequired={item?.permissions || []}
+              key={index}
             >
               <SidebarItemCollapsed
                 label={item.label}
@@ -63,6 +76,7 @@ export default function Sidebar() {
         return (
           <CustomWrapperPermissions
             permissionsRequired={item?.permissions || []}
+            key={index}
           >
             <SidebarItemExpanded
               label={item.label}

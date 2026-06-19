@@ -53,6 +53,9 @@
   "scripts": {
     "prepare": "husky",
     "start:dev": "nodemon",
-    "build": "tsc"
+    "build": "tsc",
+    "migrate:latest": "npm run build && npx knex migrate:latest",
+    "migrate:rollback": "npm run build && npx knex migrate:rollback --all",
+    "seed:run": "npm run build && npx knex seed:run"
   }
 }

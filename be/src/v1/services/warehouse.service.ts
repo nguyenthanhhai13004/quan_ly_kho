@@ -185,14 +185,50 @@ class WarehouseService {
     return batches;
   }
 
+  static async getAssetStockAcrossWarehouses(assetId: number) {
+    const rows = await db("warehouse_asset as wa")
+      .join("warehouses as w", "wa.warehouse_id", "w.id")
+      .select(
+        "wa.warehouse_id",
+        "w.name as warehouse_name",
+        "w.code as warehouse_code",
+        "wa.status",
+        "wa.expiration_date",
+        "wa.maintenance_due",
+        "wa.quantity"
+      )
+      .where("wa.asset_id", assetId);
+
+    const stockMap: Record<number, { warehouse_id: number; warehouse_name: string; warehouse_code: string; total_quantity: number }> = {};
+
+    for (const row of rows) {
+      const finalStatus = resolveStatus(row);
+      if (finalStatus === AssetStatusEnum.GOOD) {
+        if (!stockMap[row.warehouse_id]) {
+          stockMap[row.warehouse_id] = {
+            warehouse_id: row.warehouse_id,
+            warehouse_name: row.warehouse_name,
+            warehouse_code: row.warehouse_code,
+            total_quantity: 0
+          };
+        }
+        stockMap[row.warehouse_id].total_quantity += Number(row.quantity);
+      }
+    }
+
+    return Object.values(stockMap);
+  }
+
   static async getAllAssetsInWarehouseOwn(
-    { page, size, category_id, code, name, status }: PaginationAssetsDto & { status?: number },
+    { page, size, category_id, code, name, status, ids }: PaginationAssetsDto & { status?: number; ids?: number[] },
     warehouse_id: number,
   ) {
 
 
 
-    const offset = (page - 1) * size;
+    const parsedPage = Number(page || 1);
+    const parsedSize = Number(size || 20);
+    const offset = (parsedPage - 1) * parsedSize;
 
     let assetQuery = db("assets as a")
       .select(
@@ -205,6 +241,10 @@ class WarehouseService {
       .innerJoin("warehouse_asset as wa", "wa.asset_id", "a.id")
       .innerJoin("categories as c", "c.id", "a.category_id")
       .where("wa.warehouse_id", warehouse_id);
+
+    if (ids && ids.length > 0) {
+      assetQuery = assetQuery.whereIn("a.id", ids);
+    }
 
     if (code && code.trim() !== "") {
       assetQuery = assetQuery.where("a.code", "like", `%${code}%`);
@@ -249,15 +289,15 @@ class WarehouseService {
       }
     }
 
-    assetQuery = assetQuery.groupBy("a.id").limit(size).offset(offset);
+    assetQuery = assetQuery.groupBy("a.id").limit(parsedSize).offset(offset);
 
     const assets = await assetQuery;
 
     if (assets.length === 0) {
       return {
         items: [],
-        page,
-        size,
+        page: parsedPage,
+        size: parsedSize,
         total: 0,
         totalPages: 0,
       };
@@ -320,6 +360,10 @@ class WarehouseService {
       .innerJoin("warehouse_asset as wa", "wa.asset_id", "a.id")
       .where("wa.warehouse_id", warehouse_id);
 
+    if (ids && ids.length > 0) {
+      totalQuery = totalQuery.whereIn("a.id", ids);
+    }
+
     if (code && code.trim() !== "") {
       totalQuery = totalQuery.where("a.code", "like", `%${code}%`);
     }
@@ -355,10 +399,10 @@ class WarehouseService {
 
     return {
       items:items.filter((i)=>i.status.length>0),
-      page,
-      size,
+      page: parsedPage,
+      size: parsedSize,
       total,
-      totalPages: Math.ceil(total / size),
+      totalPages: Math.ceil(total / parsedSize),
     };
   }
 
@@ -403,7 +447,6 @@ class WarehouseService {
           .join("asset_transactions as at", "al.transaction_id", "at.id")
           .where("at.warehouse_id", warehouse_id)
           .whereNull("al.return_date")
-          .whereNull("al.return_deadline")
           .sum({ total: "ati.quantity" })
           .first()
       )?.total || 0,
@@ -427,7 +470,7 @@ class WarehouseService {
 
     // lấy tổng tài sản sắp hết hạn
     const next10Days = new Date();
-    next10Days.setDate(today.getDate() + 30);
+    next10Days.setDate(today.getDate() + 10);
     const totalExpiringSoon = Number(
       (
         await db("warehouse_asset")
@@ -441,20 +484,22 @@ class WarehouseService {
     );
 
     return {
-      total_assets_in_warehouse: totalAssetsInWarehouse,
+      total_assets_in_warehouse: totalAssetsInWarehouse + totalAllocated,
       total_allocated: totalAllocated,
       total_need_maintenance: totalNeedMaintenance,
       total_expiring_soon: totalExpiringSoon,
     };
   }
 
-  static async getAssetsAllcationOwn(userId: number) {
-    const rows = await db("asset_lifecycle as al")
+  static async getAllocationOrdersOwn(userId: number, classId?: number) {
+    const query = db("asset_lifecycle as al")
       .select(
         "al.id as lifecycle_id",
         "al.receiver_id",
         "al.transaction_id",
-        "al.return_date as return_date",
+        "al.return_date",
+        "al.allocation_date",
+        "al.return_deadline",
 
         "ati.quantity",
 
@@ -464,6 +509,100 @@ class WarehouseService {
         "wa.maintenance_due",
         "wa.status as status",
 
+        "a.id as asset_id",
+        "a.code as asset_code",
+        "a.name as asset_name",
+        "a.image_url as asset_image_url",
+
+        "c.name as category_name",
+
+        "at.code as transaction_code",
+        "at.name as transaction_name",
+        "at.created_at as transaction_created_at",
+
+        "w.name as warehouse_name",
+      )
+      .innerJoin(
+        "asset_transaction_items as ati",
+        "al.transaction_id",
+        "ati.transaction_id",
+      )
+      .innerJoin("warehouse_asset as wa", "ati.warehouse_asset_id", "wa.id")
+      .innerJoin("assets as a", "wa.asset_id", "a.id")
+      .innerJoin("categories as c", "a.category_id", "c.id")
+      .innerJoin("asset_transactions as at", "al.transaction_id", "at.id")
+      .innerJoin("warehouses as w", "at.warehouse_id", "w.id")
+      .where("al.receiver_id", userId)
+      .whereNull("al.return_date");
+
+    // Filter by class: only show allocations whose assets were requested for this class
+    if (classId) {
+      const fulfilledAssetIds = await db("advisor_requests")
+        .distinct("asset_id")
+        .where({ class_id: classId, type: 1, status: 1, advisor_id: userId });
+      const assetIds = fulfilledAssetIds.map((r: any) => r.asset_id);
+      if (assetIds.length > 0) {
+        query.whereIn("a.id", assetIds);
+      } else {
+        return [];
+      }
+    }
+
+    const rows = await query;
+
+    // Group by transaction
+    const grouped = Object.values(
+      rows.reduce((acc: any, row: any) => {
+        const txKey = row.transaction_id;
+        if (!acc[txKey]) {
+          acc[txKey] = {
+            transaction_id: row.transaction_id,
+            transaction_code: row.transaction_code,
+            transaction_name: row.transaction_name,
+            allocation_date: row.allocation_date,
+            return_deadline: row.return_deadline,
+            warehouse_name: row.warehouse_name,
+            transaction_created_at: row.transaction_created_at,
+            items: [],
+          };
+        }
+        acc[txKey].items.push({
+          asset_id: row.asset_id,
+          asset_code: row.asset_code,
+          asset_name: row.asset_name,
+          asset_image_url: row.asset_image_url,
+          category_name: row.category_name,
+          batch_code: row.batch_code,
+          quantity: row.quantity,
+          warehouse_asset_id: row.warehouse_asset_id,
+          status: row.status,
+        });
+        return acc;
+      }, {}),
+    );
+
+    return grouped;
+  }
+
+  static async getAssetsAllcationOwn(userId: number) {
+    const rows = await db("asset_lifecycle as al")
+      .select(
+        "al.id as lifecycle_id",
+        "al.receiver_id",
+        "al.transaction_id",
+        "al.return_date as return_date",
+        "al.allocation_date as allocation_date",
+        "al.return_deadline as return_deadline",
+
+        "ati.quantity",
+
+        "wa.id as warehouse_asset_id",
+        "wa.batch_code",
+        "wa.expiration_date",
+        "wa.maintenance_due",
+        "wa.status as status",
+
+        "a.id as asset_id",
         "a.code as asset_code",
         "a.name as asset_name",
         "a.description as asset_description",
@@ -491,6 +630,7 @@ class WarehouseService {
       rows.reduce((acc: any, row: any) => {
         if (!acc[row.asset_code]) {
           acc[row.asset_code] = {
+            id: row.asset_id,
             asset_code: row.asset_code,
             asset_name: row.asset_name,
             asset_description: row.asset_description,
@@ -513,6 +653,8 @@ class WarehouseService {
           warehouse_asset_id: row.warehouse_asset_id,
           status: row.status,
           return_date: row.return_date,
+          allocation_date: row.allocation_date,
+          return_deadline: row.return_deadline,
         });
 
         return acc;

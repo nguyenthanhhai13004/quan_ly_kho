@@ -97,7 +97,7 @@ export default function ImportExcelModal({ onClose, open }: CustomModalProps) {
   return (
     <CustomModal
       title="Nhập tài sản từ file excel"
-      width="w-7xl"
+      width="max-w-7xl"
       height="h-[500px]"
       onClose={onClose}
       open={open}

@@ -5,6 +5,7 @@ import { ROLE_LIST_DEFAULT } from "../src/v1/cores/constants/roles.constant";
 
 
 export async function seed(knex: Knex): Promise<void> {
+  await knex.raw('SET FOREIGN_KEY_CHECKS = 0');
   // Deletes ALL existing entries
   await knex(ROLE_PERMISSION_TABLE_NAME).del();
   await knex(ROLE_TABLE_NAME).del();
@@ -41,5 +42,5 @@ export async function seed(knex: Knex): Promise<void> {
   }
 
   await knex(ROLE_PERMISSION_TABLE_NAME).insert(rolePermissions);
-
+  await knex.raw('SET FOREIGN_KEY_CHECKS = 1');
 }

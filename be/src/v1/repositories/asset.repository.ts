@@ -26,9 +26,9 @@ class AssetRepository extends BaseRepository<Asset> {
   }
 
   async findAllPaginationCustom(
-    paginationDto: PaginationAssetsDto,
+    paginationDto: PaginationAssetsDto & { ids?: number[] },
   ): Promise<ResponsePaginationDto<ResponseAssetDto>> {
-    const { page, size, category_id, code, name } = paginationDto;
+    const { page, size, category_id, code, name, ids } = paginationDto;
     const offset = (page - 1) * size;
 
     const query = db(this.tableName)
@@ -45,6 +45,9 @@ class AssetRepository extends BaseRepository<Asset> {
       )
       .whereNull(`${this.tableName}.deleted_at`);
 
+    if (ids && ids.length > 0) {
+      query.whereIn(`${this.tableName}.id`, ids);
+    }
     if (category_id) query.where(`${this.tableName}.category_id`, category_id);
     if (code) query.whereILike(`${this.tableName}.code`, `%${code}%`);
     if (name) query.whereILike(`${this.tableName}.name`, `%${name}%`);
@@ -52,7 +55,9 @@ class AssetRepository extends BaseRepository<Asset> {
       `${this.tableName}.deleted_at`,
     );
 
-
+    if (ids && ids.length > 0) {
+      totalQuery.whereIn(`${this.tableName}.id`, ids);
+    }
     if (category_id)
       totalQuery.where(`${this.tableName}.category_id`, category_id);
     if (code) totalQuery.whereILike(`${this.tableName}.code`, `%${code}%`);

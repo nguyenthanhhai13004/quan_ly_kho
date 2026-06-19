@@ -75,8 +75,44 @@ export function useAssetsOwn() {
     },
   });
 
-  return {
+    return {
     assets: query.data,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error,
+    refetch: query.refetch,
+  };
+}
+
+export function useAllocationOrdersOwn(classId?: string) {
+  const query = useQuery({
+    queryKey: ["allocation-orders-own", classId],
+    queryFn: async () => {
+      const res = await WarehouseApi.getAllocationOrdersOwn(classId);
+      return res.data;
+    },
+    enabled: !!classId,
+  });
+
+  return {
+    orders: query.data as any[] | undefined,
+    isLoading: query.isLoading,
+  };
+}
+
+export function useAssetStock(assetId?: number) {
+  const query = useQuery({
+    queryKey: ["asset-stock", assetId],
+    queryFn: async () => {
+      if (!assetId) return [];
+      const res = await WarehouseApi.getAssetStockAcrossWarehouses(assetId);
+      return res.data;
+    },
+    enabled: !!assetId,
+  });
+
+  return {
+    stock: query.data,
     isLoading: query.isLoading,
     isError: query.isError,
     error: query.error,

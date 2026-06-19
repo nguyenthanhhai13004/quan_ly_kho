@@ -9,7 +9,7 @@ export default function ImportManualModal({ onClose, open }: CustomModalProps) {
       title="Nhập kho thủ công"
       onClose={onClose}
       open={open}
-      width="w-7xl"
+      width="max-w-7xl"
       height="h-[500px]"
     >
       <ImportAssetsView/>

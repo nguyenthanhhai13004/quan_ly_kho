@@ -54,7 +54,7 @@ export const SIDEBAR_ITEMS = [
   {
     icon: <PiUsersThree size={20} />,
     label: "Học viên lớp quản lý",
-    path: "/Commander/Students",
+    path: "/Classes/Own",
     permissions: [PermissionsEnum.COMMANDER_STUDENTS_VIEW],
   },
   {

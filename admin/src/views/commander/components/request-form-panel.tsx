@@ -8,11 +8,13 @@ import CustomButton from "../../../components/common/custom-button";
 import { useCreateAdvisorRequest } from "../../../queries/advisor-request.query";
 import { toast } from "react-toastify";
 import { useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useAllClasses } from "../../../queries/class.query";
+import { useMe } from "../../../queries/auth.query";
 
 const REQUEST_TYPE_OPTIONS = [
   { label: "Cấp phát tài sản", value: "1" },
   { label: "Thu hồi tài sản", value: "2" },
-  { label: "Báo lỗi tài sản", value: "3" },
   { label: "Khác", value: "4" },
 ];
 
@@ -21,8 +23,10 @@ export default function RequestFormPanel({ onClose }: { onClose: () => void }) {
     selectedAssets,
     type,
     note,
+    classId: selectedClassId,
     setType,
     setNote,
+    setClassId: setSelectedClassId,
     removeSelectedAsset,
     updateAssetQuantity,
     resetState,
@@ -30,31 +34,62 @@ export default function RequestFormPanel({ onClose }: { onClose: () => void }) {
 
   const { mutate, isPending } = useCreateAdvisorRequest();
   const queryClient = useQueryClient();
+  const { classes } = useAllClasses();
+  const { user } = useMe();
+  const filteredClasses = classes?.filter((c) => c.major_id === user?.major_id) || [];
+
+  useEffect(() => {
+    if (filteredClasses.length > 0 && !selectedClassId) {
+      setSelectedClassId(String(filteredClasses[0].id));
+    }
+  }, [filteredClasses, selectedClassId]);
 
   const columns = ["Hành động", "Mã", "Tên", "Số lượng"];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (selectedAssets.length === 0) {
-      toast.error("Vui lòng chọn ít nhất một tài sản");
-      return;
+    if (type !== "4") {
+      if (selectedAssets.length === 0) {
+        toast.error("Vui lòng chọn ít nhất một tài sản");
+        return;
+      }
+
+      const hasInvalidQuantity = selectedAssets.some((a) => !a.quantity || a.quantity < 1);
+      if (hasInvalidQuantity) {
+        toast.error("Số lượng tài sản không hợp lệ");
+        return;
+      }
+
+      if (type === "2") {
+        const hasMissingCode = selectedAssets.some((a) => !a.allocation_transaction_code);
+        if (hasMissingCode) {
+          toast.error("Tài sản thu hồi không hợp lệ (thiếu mã đơn cấp phát)");
+          return;
+        }
+      }
+    } else {
+      if (!note?.trim()) {
+        toast.error("Vui lòng nhập nội dung ghi chú lý do / ý kiến");
+        return;
+      }
     }
 
-    const hasInvalidQuantity = selectedAssets.some((a) => !a.quantity || a.quantity < 1);
-    if (hasInvalidQuantity) {
-      toast.error("Số lượng tài sản không hợp lệ");
-      return;
-    }
-
-    const items = selectedAssets.map((a) => ({
+    const items = type === "4" ? undefined : selectedAssets.map((a) => ({
       asset_id: a.id,
       quantity: a.quantity,
+      allocation_transaction_code: a.allocation_transaction_code || undefined,
     }));
+
+    if (!selectedClassId) {
+      toast.error("Vui lòng chọn lớp học yêu cầu");
+      return;
+    }
 
     mutate(
       {
         type: Number(type),
+        class_id: Number(selectedClassId),
         note,
         items,
       },
@@ -75,35 +110,65 @@ export default function RequestFormPanel({ onClose }: { onClose: () => void }) {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col h-full bg-white rounded-lg shadow">
       <div className="flex-1 overflow-auto">
-        <CustomTable
-          columns={columns}
-          size="small"
-          data={selectedAssets.map((item, index) => [
-            <CustomIcon
-              key={`trash-${index}`}
-              icon={<BiTrash size={16} />}
-              label="Xóa"
-              onClick={() => removeSelectedAsset(index)}
-              variant="danger"
-            />,
-            <span className="text-xs font-semibold">{item.code}</span>,
-            <span className="text-xs truncate max-w-[120px]" title={item.name}>
-              {item.name}
-            </span>,
-            <CustomInput
-              key={`quantity-${index}`}
-              name={`items.${index}.quantity`}
-              value={item.quantity}
-              onChange={(e) => updateAssetQuantity(index, Number(e.target.value))}
-              type="number"
-              className="text-xs"
-              width="80px"
-              min={1}
-            />,
-          ])}
-        />
+        {type === "4" ? (
+          <div className="p-6 text-center text-sm text-gray-500 bg-gray-50 border border-gray-200 rounded-2xl m-4">
+            <p className="font-semibold text-blue-600 mb-1">Yêu cầu khác / Trao đổi thông tin</p>
+            <p>Gửi yêu cầu trao đổi hoặc phản hồi thông tin với quản lý kho. Không cần chọn tài sản hay đơn hàng.</p>
+          </div>
+        ) : (
+          <CustomTable
+            columns={columns}
+            size="small"
+            data={selectedAssets.map((item, index) => [
+              <CustomIcon
+                key={`trash-${index}`}
+                icon={<BiTrash size={16} />}
+                label="Xóa"
+                onClick={() => removeSelectedAsset(index)}
+                variant="danger"
+              />,
+              <div key={`code-container-${index}`}>
+                <span className="text-xs font-semibold block">{item.code}</span>
+                {item.allocation_transaction_code && (
+                  <span className="text-[10px] text-gray-500 bg-gray-100 px-1 py-0.2 rounded font-mono">
+                    {item.allocation_transaction_code}
+                  </span>
+                )}
+              </div>,
+              <span className="text-xs truncate max-w-[120px]" title={item.name} key={`name-${index}`}>
+                {item.name}
+              </span>,
+              type === "2" ? (
+                <span className="text-xs font-semibold px-2 py-1 bg-gray-50 border border-gray-200 rounded block w-[80px] text-center" key={`quantity-${index}`}>
+                  {item.quantity}
+                </span>
+              ) : (
+                <CustomInput
+                  key={`quantity-${index}`}
+                  name={`items.${index}.quantity`}
+                  value={item.quantity}
+                  onChange={(e) => updateAssetQuantity(index, Number(e.target.value))}
+                  type="number"
+                  className="text-xs"
+                  width="80px"
+                  min={1}
+                />
+              ),
+            ])}
+          />
+        )}
 
         <div className="flex flex-col gap-4 p-4 mt-2">
+          <CustomSelect
+            label="Lớp học yêu cầu"
+            name="class_id"
+            value={selectedClassId}
+            onChange={(e) => setSelectedClassId(e.target.value)}
+            required
+            labelType="top"
+            options={filteredClasses.map((c) => ({ label: c.name, value: String(c.id) }))}
+          />
+
           <CustomSelect
             label="Loại yêu cầu"
             name="type"

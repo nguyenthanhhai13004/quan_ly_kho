@@ -7,6 +7,7 @@ import CustomButton from "../../../components/common/custom-button";
 import { toast } from "react-toastify";
 import { useCreateStudent } from "../../../queries/student.query";
 import { useAllClasses } from "../../../queries/class.query";
+import { useMe } from "../../../queries/auth.query";
 
 export default function CreateStudentModal({
   open,
@@ -16,7 +17,13 @@ export default function CreateStudentModal({
   onClose: () => void;
 }) {
   const { mutate, isPending } = useCreateStudent();
+  const { user } = useMe();
   const { classes } = useAllClasses();
+  
+  const isCommander = user?.role === "commander";
+  const filteredClasses = isCommander
+    ? classes?.filter((c) => c.major_id === user.major_id)
+    : classes;
   
   const formik = useFormik({
     initialValues: {
@@ -68,7 +75,7 @@ export default function CreateStudentModal({
           error={formik.touched.class_id ? formik.errors.class_id : undefined}
           required
           labelType="top"
-          options={classes?.map(c => ({ label: c.name, value: String(c.id) })) || []}
+          options={filteredClasses?.map(c => ({ label: c.name, value: String(c.id) })) || []}
         />
         <CustomInput
           label="Mã học viên"

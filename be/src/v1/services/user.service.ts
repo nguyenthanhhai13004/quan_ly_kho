@@ -1,5 +1,6 @@
 import { Request } from "express";
 import { hashPassword } from "../auths/utils";
+import { ROOT_UPLOADS } from "../cores/constants/app.constant";
 import { RESET_PASSWORD_USER_DEFAULT } from "../cores/constants/app.constant";
 import {
   CREATE_NEW_USER_EMAIL_TEMPLATE,
@@ -12,6 +13,7 @@ import {
   InternalServerError,
   NotFoundError,
 } from "../cores/error.response";
+import db from "../databases/init.mysql-v2";
 import { UpdateProfileOwnDto } from "../dtos/auth/update-profile-own.dto";
 import { CreateUserDto } from "../dtos/user/create-user.dto";
 import { PaginationUsersDto } from "../dtos/user/pagination-users.dto";
@@ -32,10 +34,32 @@ import { getDiffChangesArray } from "../utils/get-diff-changes";
 class UserService {
   static async createUser(
     createUserDto: CreateUserDto,
+    file?: Express.Multer.File,
   ): Promise<ResponseUserDto> {
     const roleFound = await roleRepository.findRoleById(createUserDto.role_id);
     if (!roleFound) {
       throw new NotFoundError("role không tìm thấy");
+    }
+
+    if (createUserDto.role_id === 3 && (!createUserDto.warehouse_ids || createUserDto.warehouse_ids.length === 0)) {
+      throw new BadRequestError("Chỉ huy phải được gán quản lý kho");
+    }
+
+    if (createUserDto.major_id) {
+      const majorExists = await db("majors").where({ id: createUserDto.major_id }).first();
+      if (!majorExists) {
+        throw new BadRequestError("Hệ quản lý được chọn không tồn tại");
+      }
+    }
+
+    if (createUserDto.warehouse_ids && createUserDto.warehouse_ids.length > 0) {
+      const count = await db("warehouses")
+        .whereIn("id", createUserDto.warehouse_ids)
+        .count("id as total")
+        .first();
+      if (Number(count?.total || 0) !== createUserDto.warehouse_ids.length) {
+        throw new BadRequestError("Một hoặc nhiều kho được chọn không tồn tại");
+      }
     }
 
     const isEmailTaken = await userRepository.isEmailTaken(createUserDto.email);
@@ -52,9 +76,13 @@ class UserService {
 
     const password = generateRandomPassword();
     const passwordHash = await hashPassword(password);
+    const avatarUrl = file ? `/${ROOT_UPLOADS}/${file.filename}` : null;
     const { warehouse_ids, ...userCreateData } = {
       ...createUserDto,
       password: passwordHash,
+      avatar_url: avatarUrl,
+      class_id: null,
+      major_id: createUserDto.role_id === 3 ? createUserDto.major_id : null,
     };
     const userStore = await userRepository.store(userCreateData);
     if (!userStore) {
@@ -91,18 +119,40 @@ class UserService {
     });
 
     return getInfoData<ResponseUserDto>({
-      fields: ["id", "fullname", "username", "email", "is_active", "class_id"],
+      fields: ["id", "fullname", "username", "email", "is_active", "class_id", "major_id", "avatar_url"],
       object: userStore,
     });
   }
   static async updateUser(
     updateUserDto: UpdatedUserDto,
     req: Request,
+    file?: Express.Multer.File,
   ): Promise<ResponseUserDto> {
     const userFound = await userRepository.findUserById(updateUserDto.id);
 
     if (!userFound) {
       throw new NotFoundError("user không tồn tại.");
+    }
+
+    if (userFound.role_id === 3 && (!updateUserDto.warehouse_ids || updateUserDto.warehouse_ids.length === 0)) {
+      throw new BadRequestError("Chỉ huy phải được gán quản lý kho");
+    }
+
+    if (updateUserDto.major_id) {
+      const majorExists = await db("majors").where({ id: updateUserDto.major_id }).first();
+      if (!majorExists) {
+        throw new BadRequestError("Hệ quản lý được chọn không tồn tại");
+      }
+    }
+
+    if (updateUserDto.warehouse_ids && updateUserDto.warehouse_ids.length > 0) {
+      const count = await db("warehouses")
+        .whereIn("id", updateUserDto.warehouse_ids)
+        .count("id as total")
+        .first();
+      if (Number(count?.total || 0) !== updateUserDto.warehouse_ids.length) {
+        throw new BadRequestError("Một hoặc nhiều kho được chọn không tồn tại");
+      }
     }
 
     if (userFound.email !== updateUserDto.email) {
@@ -113,12 +163,17 @@ class UserService {
         throw new BadRequestError("email đã được sử dụng");
       }
     }
+    const avatarUrl = file
+      ? `/${ROOT_UPLOADS}/${file.filename}`
+      : userFound.avatar_url || null;
     const updated = await userRepository.updateUserById(updateUserDto.id, {
       email: updateUserDto.email,
       is_active: updateUserDto.active,
       fullname: updateUserDto.fullname,
       phone_number: updateUserDto.phone_number || "",
-      class_id: userFound.role_id === 3 ? updateUserDto.class_id : null,
+      class_id: null,
+      major_id: userFound.role_id === 3 ? updateUserDto.major_id : null,
+      avatar_url: avatarUrl,
     });
 
     if (!updated) {
@@ -163,7 +218,7 @@ class UserService {
     });
 
     return getInfoData<ResponseUserDto>({
-      fields: ["id", "fullname", "username", "email", "is_active", "class_id"],
+      fields: ["id", "fullname", "username", "email", "is_active", "class_id", "major_id", "avatar_url"],
       object: updated,
     });
   }
@@ -175,7 +230,7 @@ class UserService {
       ...result,
       items: result.items.map((u) =>
         getInfoData({
-          fields: ["id", "fullname", "username", "email", "is_active", "class_id"],
+          fields: ["id", "fullname", "username", "email", "is_active", "class_id", "major_id", "avatar_url"],
           object: u,
         }),
       ),
@@ -198,6 +253,8 @@ class UserService {
         "warehouse_ids",
         "phone_number",
         "class_id",
+        "major_id",
+        "avatar_url",
       ],
       object: {
         ...userFound,

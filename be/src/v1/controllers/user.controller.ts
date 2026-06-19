@@ -22,7 +22,7 @@ class UserController {
   };
 
   createUser = async (req: Request, res: Response, next: NextFunction) => {
-    const result = await UserService.createUser(req.body);
+    const result = await UserService.createUser(req.body, req.file);
     const { ip, url } = getRequestInfo(req);
     await KQNLogService.createLog({
       action_code: LogAction.CREATE,
@@ -47,6 +47,7 @@ class UserController {
           id: req.params.id,
         },
         req,
+        req.file,
       ),
     }).send(res);
   };

@@ -70,13 +70,14 @@ class WarehouseController {
   ) => {
     const warehouse_id = Number(req.headers[HEADERS.X_WAREHOUSE_ID] as string);
     const query = {
-      page: req.query.page || 1,
-      size: req.query.size || 20,
-      category_id: req.query.category_id,
-      code: req.query.code,
-      name: req.query.name,
-      status: req.query?.status,
-    } as PaginationAssetsDto & {status?:any};
+      page: Number(req.query.page || 1),
+      size: Number(req.query.size || 20),
+      category_id: req.query.category_id ? Number(req.query.category_id) : undefined,
+      code: req.query.code ? String(req.query.code) : undefined,
+      name: req.query.name ? String(req.query.name) : undefined,
+      status: req.query.status ? Number(req.query.status) : undefined,
+      ids: req.query.ids ? String(req.query.ids).split(",").map(Number) : undefined,
+    } as PaginationAssetsDto & {status?:any; ids?: number[]};
     return new OK({
       message: "danh sách tài sản trong kho",
       data: await WarehouseService.getAllAssetsInWarehouseOwn(
@@ -114,6 +115,18 @@ class WarehouseController {
     }).send(res);
   };
 
+  getAssetStockAcrossWarehouses = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    const assetId = Number(req.params.asset_id);
+    return new OK({
+      message: "Tồn kho tài sản theo kho",
+      data: await WarehouseService.getAssetStockAcrossWarehouses(assetId),
+    }).send(res);
+  };
+
   getAssetsAllocationOwn = async (
     req: Request,
     res: Response,
@@ -122,6 +135,18 @@ class WarehouseController {
     return new OK({
       message: "Danh sách tài sản đang sở hữu",
       data: await WarehouseService.getAssetsAllcationOwn(req.user.id),
+    }).send(res);
+  };
+
+  getAllocationOrdersOwn = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    const classId = req.query.class_id ? Number(req.query.class_id) : undefined;
+    return new OK({
+      message: "Danh sách đơn cấp phát đang sở hữu (chưa trả)",
+      data: await WarehouseService.getAllocationOrdersOwn(req.user.id, classId),
     }).send(res);
   };
 }

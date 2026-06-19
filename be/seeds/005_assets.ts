@@ -35,9 +35,11 @@ export const ASSETS_DEFAULT = [
 export const ASSETS_DEFAULT_NO_COST = ASSETS_DEFAULT.map(({ cost, ...rest }) => rest);
 
 export async function seed(knex: Knex): Promise<void> {
+    await knex.raw('SET FOREIGN_KEY_CHECKS = 0');
     // Deletes ALL existing entries
     await knex(ASSET_TABLE_NAME).del();
 
     // Inserts seed entries
     await knex(ASSET_TABLE_NAME).insert(ASSETS_DEFAULT_NO_COST);
+    await knex.raw('SET FOREIGN_KEY_CHECKS = 1');
 };

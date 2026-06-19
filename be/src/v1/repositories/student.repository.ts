@@ -6,7 +6,7 @@ import { ResponsePaginationDto } from "../cores/dtos/response-pagination.dto";
 
 export interface PaginationStudentsDto extends PaginationDto {
   keyword?: string;
-  class_id?: number;
+  class_id?: number | number[];
   active?: number;
 }
 
@@ -43,7 +43,11 @@ class StudentRepository {
     }
 
     if (class_id) {
+      if (Array.isArray(class_id)) {
+        query = query.whereIn("s.class_id", class_id);
+      } else {
         query = query.where("s.class_id", class_id);
+      }
     }
 
     if (active !== undefined && active !== null) {

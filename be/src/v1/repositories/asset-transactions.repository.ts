@@ -299,9 +299,11 @@ class AssetTransactionsRepository extends BaseRepository<AssetTransactions> {
       "lfc.disposal_date",
       "u_receiver.fullname as u_fullname",
       "u_receiver.email as u_email",
+      "wh.name as warehouse_name",
     )
     .leftJoin("asset_lifecycle as lfc", "t.id", "lfc.transaction_id")
     .leftJoin("users as u_receiver", "lfc.receiver_id", "u_receiver.id")
+    .leftJoin("warehouses as wh", "t.warehouse_id", "wh.id")
     .where("t.id", id)
     .first();
 

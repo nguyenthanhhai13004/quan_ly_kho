@@ -29,6 +29,7 @@ import StudentPage from "../pages/student-page";
 import CommanderStudentsPage from "../pages/commander/commander-students-page";
 import CommanderRequestsPage from "../pages/commander/commander-requests-page";
 import OfficerRequestsPage from "../pages/commander/officer-requests-page";
+import ClassesOwnPage from "../pages/commander/classes-own-page";
 
 type RouteType = {
   path: string;
@@ -99,7 +100,7 @@ const routesUser: RouteType[] = [
     path: "/Student/List",
     element: StudentPage,
     layout: MainLayout,
-    permissions:[PermissionsEnum.MANAGE_USER],
+    permissions:[PermissionsEnum.MANAGE_USER, PermissionsEnum.COMMANDER_STUDENTS_VIEW],
     seo:{ title: "Quản lý học viên" }
   }
 ];
@@ -208,11 +209,11 @@ const routesSystem : RouteType[] = [
 
 const routesCommander: RouteType[] = [
   {
-    path: "/Commander/Students",
-    element: CommanderStudentsPage,
+    path: "/Classes/Own",
+    element: ClassesOwnPage,
     layout: MainLayout,
     permissions: [PermissionsEnum.COMMANDER_STUDENTS_VIEW],
-    seo: { title: "Học viên lớp quản lý" },
+    seo: { title: "Lớp học quản lý" },
   },
   {
     path: "/Commander/Requests",

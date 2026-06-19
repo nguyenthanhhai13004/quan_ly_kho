@@ -9,6 +9,8 @@ router.get("/any",warehouseController.getAllWarehouseAny)
 router.get("/assets",warehouseController.getAllAssetsInWarehouseOwn)
 router.get("/batches/need-maintenance",warehouseController.getAllBatchesNeedMaintenanceInWarehouseOwn)
 router.get("/assets-own",warehouseController.getAssetsAllocationOwn)
+router.get("/allocation-orders-own",warehouseController.getAllocationOrdersOwn)
+router.get("/asset-stock/:asset_id", warehouseController.getAssetStockAcrossWarehouses)
 // create warehouse
 router.post("/",warehouseController.createWarehouse)
 export default router;

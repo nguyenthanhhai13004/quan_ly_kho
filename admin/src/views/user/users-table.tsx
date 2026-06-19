@@ -6,6 +6,7 @@ import CustomIcon from "../../components/common/custom-icon";
 import { RiResetLeftFill } from "react-icons/ri";
 import UserFilter from "./user-filter";
 import { MdBlock } from "react-icons/md";
+import { FaUserCircle } from "react-icons/fa";
 import type { UpdateUserDto } from "../../dtos/user/update-user.dto";
 import { BiEdit } from "react-icons/bi";
 import { useModalProvider } from "../../providers/modal-provider";
@@ -20,6 +21,7 @@ import { useUpdateUser, useUsers } from "../../queries/user.query";
 
 const columns = [
   "STT",
+  "Avatar",
   "Fullname",
   "Username",
   "Email",
@@ -67,6 +69,15 @@ export default function UsersTable() {
         data={
           users?.items.map((s, index: number) => [
             index + 1,
+            s.avatar_url ? (
+              <img
+                src={`${import.meta.env.VITE_API_URL}${s.avatar_url}`}
+                alt={s.fullname}
+                className="w-9 h-9 rounded-full object-cover border border-gray-200"
+              />
+            ) : (
+              <FaUserCircle className="text-gray-300" size={36} />
+            ),
             s.fullname,
             s.username,
             s.email,

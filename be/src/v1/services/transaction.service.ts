@@ -14,7 +14,6 @@ import { parseUploadedFileColumns } from "../utils/parse-uploaded-file-columns";
 import ImportManualDto from "../dtos/transaction/import-manual.dto";
 import warehouseRepository from "../repositories/warehouse.repository";
 import db from "../databases/init.mysql-v2";
-import { Knex } from "knex";
 import { AssetTransactions } from "../models/asset-transactions.model";
 import warehouseAssetRepository from "../repositories/warehouse-asset.repository";
 import CreateAllocationDto from "../dtos/transaction/create-allocation.dto";
@@ -23,8 +22,6 @@ import CreateDisposalDto from "../dtos/transaction/create-disposal.dto";
 import AssetStatusEnum from "../cores/enums/assets-status.enum";
 import { generateBatchCode } from "../utils/generate-batch-code";
 import { AssetTransactionItems } from "../models/asset-transaction-items.model";
-import { WarehouseAsset } from "../models/warehouse-asset.model";
-import { AssetLifecycle } from "../models/asset-lifecycle.model";
 import { excelToJsDate } from "../utils/excel-to-js-date";
 import ExportManualDto from "../dtos/transaction/export-manual.dto";
 import { ExportExcelDto } from "../dtos/transaction/export-excel.dto";
@@ -65,17 +62,6 @@ type TrendData = {
 
 class TransactionService {
   static async createAllocation(createAllocationDto: CreateAllocationDto) {
-    return await db.transaction((trx) =>
-      this.createAllocationTx(trx, createAllocationDto),
-    );
-  }
-
-  // Lõi cấp phát chạy trong một transaction cho sẵn, để có thể gộp chung
-  // transaction với bước cập nhật trạng thái khi duyệt yêu cầu cấp phát.
-  static async createAllocationTx(
-    trx: Knex.Transaction,
-    createAllocationDto: CreateAllocationDto,
-  ) {
     const {
       allocation_date,
       items,
@@ -87,15 +73,14 @@ class TransactionService {
       note,
       return_deadline,
       code,
-      expected_asset_id,
-      expected_quantity,
     } = createAllocationDto;
-    const trxFound = await trx<AssetTransactions>("asset_transactions")
+    return await db.transaction(async (trx) => {
+      const trxFound = await trx("asset_transactions")
         .where("code", code)
         .first();
       if (trxFound)
         throw new BadRequestError("mã không hợp lệ, thử với mã khác");
-      const resultTrans = await trx<AssetTransactions>("asset_transactions").insert({
+      const resultTrans = await trx("asset_transactions").insert({
         code,
         name,
         reason,
@@ -107,10 +92,10 @@ class TransactionService {
       const transactionId = resultTrans[0];
       if (!transactionId)
         throw new InternalServerError("Không tạo được transaction");
-      const transaction = await trx<AssetTransactions>("asset_transactions")
+      const transaction = await trx("asset_transactions")
         .where("id", transactionId)
         .first();
-      await trx<AssetLifecycle>("asset_lifecycle").insert({
+      await trx("asset_lifecycle").insert({
         transaction_id: transactionId,
         allocation_date,
         return_deadline: return_deadline ? return_deadline : null,
@@ -118,10 +103,9 @@ class TransactionService {
         receiver_id,
       });
       const insertedItems: any[] = [];
-      let totalQuantity = 0;
       for (const item of items) {
         const { batch_code, quantity } = item;
-        const warehouseAsset = await trx<WarehouseAsset>("warehouse_asset")
+        const warehouseAsset = await trx("warehouse_asset")
           .where({
             warehouse_id,
             batch_code,
@@ -132,22 +116,12 @@ class TransactionService {
             `Batch code ${batch_code} không tồn tại trong kho ${warehouse_id}`,
           );
         }
-        // Khi cấp phát theo yêu cầu: lô được chọn phải đúng tài sản được yêu cầu
-        if (
-          expected_asset_id !== undefined &&
-          warehouseAsset.asset_id !== expected_asset_id
-        ) {
-          throw new BadRequestError(
-            `Lô ${batch_code} không thuộc tài sản được yêu cầu cấp phát`,
-          );
-        }
         if (warehouseAsset.quantity < quantity) {
           throw new BadRequestError(
             `Số lượng trong kho không đủ cho batch code ${batch_code}`,
           );
         }
-        totalQuantity += quantity;
-        await trx<WarehouseAsset>("warehouse_asset")
+        await trx("warehouse_asset")
           .where({ id: warehouseAsset.id })
           .update({
             quantity: warehouseAsset.quantity - quantity,
@@ -170,22 +144,14 @@ class TransactionService {
           .first();
         insertedItems.push(itemRecord);
       }
-      // Khi cấp phát theo yêu cầu: tổng số lượng cấp phát phải khớp số lượng yêu cầu
-      if (
-        expected_quantity !== undefined &&
-        totalQuantity !== expected_quantity
-      ) {
-        throw new BadRequestError(
-          `Tổng số lượng cấp phát (${totalQuantity}) không khớp số lượng yêu cầu (${expected_quantity})`,
-        );
-      }
-    return {
-      ...transaction,
-      allocation_date,
-      return_deadline,
-      receiver_id,
-      items: insertedItems,
-    };
+      return {
+        ...transaction,
+        allocation_date,
+        return_deadline,
+        receiver_id,
+        items: insertedItems,
+      };
+    });
   }
 
   static async processReturn({
@@ -424,33 +390,26 @@ class TransactionService {
 
     return Array.from(map.values());
   }
-  static async importManual(dto: ImportManualDto) {
+  static async importManual({
+    warehouse_id,
+    items,
+    received_date,
+    sender_location,
+    note,
+    reason,
+    created_by_user_id,
+    name,
+    code,
+  }: ImportManualDto) {
     const warehouseFound = await warehouseRepository.findOneByCondition({
-      id: dto.warehouse_id,
+      id: warehouse_id,
     });
     if (!warehouseFound) {
       throw new NotFoundError("kho không tồn tại");
     }
-    return await db.transaction((trx) => this.importManualTx(trx, dto));
-  }
 
-  // Lõi nhập kho thủ công chạy trong một transaction cho sẵn, để có thể gộp
-  // chung transaction với bước cập nhật trạng thái khi duyệt yêu cầu thu hồi.
-  static async importManualTx(
-    trx: Knex.Transaction,
-    {
-      warehouse_id,
-      items,
-      received_date,
-      sender_location,
-      note,
-      reason,
-      created_by_user_id,
-      name,
-      code,
-    }: ImportManualDto,
-  ) {
-    const trxFound = await trx("asset_transactions")
+    return await db.transaction(async (trx) => {
+      const trxFound = await trx("asset_transactions")
         .where("code", code)
         .first();
       if (trxFound)
@@ -558,12 +517,13 @@ class TransactionService {
         insertedItems.push(itemRecord);
       }
 
-    return {
-      ...transaction,
-      received_date: importRecord.received_date,
-      sender_location: importRecord.sender_location,
-      items: insertedItems,
-    };
+      return {
+        ...transaction,
+        received_date: importRecord.received_date,
+        sender_location: importRecord.sender_location,
+        items: insertedItems,
+      };
+    });
   }
   static async importFromExcel({
     file,
@@ -1215,6 +1175,7 @@ class TransactionService {
       }
 
       const processedItems: any[] = [];
+      const processedAssetIds: number[] = [];
 
       for (const item of items) {
         const { batch_code, status, next_maintenance_date } = item;
@@ -1237,6 +1198,10 @@ class TransactionService {
 
         if (!warehouseAsset) {
           throw new NotFoundError(`Batch code ${batch_code} không tồn tại`);
+        }
+
+        if (!processedAssetIds.includes(warehouseAsset.asset_id)) {
+          processedAssetIds.push(warehouseAsset.asset_id);
         }
 
         const oldData = {
@@ -1326,6 +1291,21 @@ class TransactionService {
           updated_at: trx.raw("NOW()"),
           status: MaintenanceStatusEnum.COMPLETED,
         });
+
+      // Tự động duyệt các yêu cầu thu hồi đang chờ nếu tài sản đã hoàn thành bảo trì
+      if (processedAssetIds.length > 0) {
+        await trx("advisor_requests")
+          .where("type", 2) // Thu hồi
+          .where("status", 0) // Chờ duyệt
+          .where("warehouse_id", transaction.warehouse_id)
+          .whereIn("asset_id", processedAssetIds)
+          .update({
+            status: 1, // Đã duyệt
+            response_note: "Tự động duyệt - Đã hoàn thành bảo trì",
+            processed_by_user_id: modified_by_user_id,
+            updated_at: trx.raw("NOW()"),
+          });
+      }
 
       return {
         transaction_id: transaction.id,

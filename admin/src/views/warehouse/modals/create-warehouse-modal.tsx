@@ -243,7 +243,7 @@ export default function CreateWarehouseModal({
     mutate(
       {
         ...data,
-        address_detail: currentGeo?.display_name,
+        address_detail: currentGeo?.display_name || data.address_detail,
       },
       {
         onSuccess: () => {
@@ -257,7 +257,7 @@ export default function CreateWarehouseModal({
 
   return (
     <CustomModal
-      width="w-2xl"
+      width="max-w-2xl"
       title="Tạo kho"
       open={open}
       onClose={onClose}
@@ -281,6 +281,8 @@ export default function CreateWarehouseModal({
               label="Tỉnh/Thành Phố"
               labelType="top"
               className="w-full"
+              placeholder="Chọn Tỉnh/Thành Phố"
+              value={province}
               options={
                 provinceData?.map((p: any) => ({
                   value: p.code,
@@ -312,6 +314,8 @@ export default function CreateWarehouseModal({
               label="Xã/Phường"
               labelType="top"
               className="w-full"
+              placeholder="Chọn Xã/Phường"
+              value={ward}
               options={
                 wardData?.map((w: any) => ({
                   value: w.code,

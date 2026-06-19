@@ -3,6 +3,7 @@ import { hashPassword } from "../src/v1/auths/utils";
 import { USER_TABLE_NAME } from "../src/v1/cores/constants/table-name.constant";
 
 export async function seed(knex: Knex): Promise<void> {
+  await knex.raw('SET FOREIGN_KEY_CHECKS = 0');
   // Deletes ALL existing entries
   await knex(USER_TABLE_NAME).del();
   const DEFAULT_PASSWORD = "12345678";
@@ -44,8 +45,10 @@ export async function seed(knex: Knex): Promise<void> {
       username: "chihuyk48",
       password: DEFAULT_PASSWORD_HASH,
       role_id: 3,
-      class_id: 1,
+      class_id: null,
+      major_id: 1,
       phone_number: "0999999996",
     },
   ]);
+  await knex.raw('SET FOREIGN_KEY_CHECKS = 1');
 }

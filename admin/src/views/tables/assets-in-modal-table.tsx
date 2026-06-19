@@ -17,12 +17,22 @@ import CustomBadge from "../../components/common/custom-badge";
 import { getAssetBadgeProps } from "../../utils/get-asset-badge-props";
 import dayjs from "dayjs";
 
-export default function AssetInModalTable({inModal=false}: {inModal?: boolean}) {
+export default function AssetInModalTable({
+  inModal = false,
+  filterAssetIds,
+}: {
+  inModal?: boolean;
+  filterAssetIds?: number[];
+}) {
   const { setFilters, filters, setPageFilter } =
     usePaginationParams<PaginationAssetsDto>({
       useUrl: false,
     });
-  const { assets } = useAllAssets(filters);
+  const { assets } = useAllAssets(
+    filterAssetIds
+      ? { ...filters, ids: filterAssetIds.join(",") }
+      : filters
+  );
   const columns = ["STT", "Mã", "Tên", "Ảnh", "Danh mục", "Hoạt động"];
   const { addRowImport, importManualState } = useTransactionStore();
   const [seleted, setSelected] = useState<string | null>(null);

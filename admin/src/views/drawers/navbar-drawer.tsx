@@ -3,6 +3,8 @@ import CustomWrapperPermissions from "../../components/common/custom-wrapper-per
 import { SIDEBAR_ITEMS } from "../../constants/sidebar-items.constant";
 import { useAppStore } from "../../stores/app-store";
 import SidebarItemExpanded from "../sidebar-item-expanded";
+import { useMe } from "../../queries/auth.query";
+import { RolesEnum } from "../../common/enums/roles.enum";
 
 export default function NavbarDrawer({
   open,
@@ -12,9 +14,19 @@ export default function NavbarDrawer({
   onClose: () => void;
 }) {
   const {setOpenDrawer } = useAppStore();
-   const handleNavigate = () => {
+  const { user } = useMe();
+
+  const handleNavigate = () => {
     setOpenDrawer(false);
   };
+
+  const visibleSidebarItems = SIDEBAR_ITEMS.filter((item) => {
+    if (user?.role === RolesEnum.COMMANDER && item.path === "/") {
+      return false;
+    }
+    return true;
+  });
+
   return (
     <CustomDrawer
       background="bg-black"
@@ -24,10 +36,11 @@ export default function NavbarDrawer({
       open={open}
     >
       <div>
-        {SIDEBAR_ITEMS.map((item, index) => {
+        {visibleSidebarItems.map((item, index) => {
           return (
             <CustomWrapperPermissions
               permissionsRequired={item?.permissions || []}
+              key={index}
             >
               <SidebarItemExpanded
                 label={item.label}
