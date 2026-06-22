@@ -158,7 +158,7 @@ const routesAsset : RouteType[] = [
     element: AssetListPage,
     layout: MainLayout,
     seo:{
-      title:"Quản lý tài sản"
+      title:"Quản lý danh mục tài sản"
     }
   },
   {

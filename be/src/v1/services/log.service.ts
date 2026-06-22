@@ -22,6 +22,7 @@ interface LogInput {
 
 export class KQNLogService {
   static async createLog(input: LogInput) {
+    //Gắn "cờ" isLogged để đánh dấu rằng request này đã được hệ thống ghi log
     if (input.req) {
       (input.req as any).isLogged = true;
     }

@@ -76,17 +76,17 @@ export const SIDEBAR_ITEMS = [
     permissions: [PermissionsEnum.WAREHOUSE_OFFICER_REQUESTS_VIEW],
   },
   {
-    icon: <MdOutlineWebAsset size={20} />,
-    label: "Quản lý tài sản",
-    path: "/Asset/List",
-    permissions: [PermissionsEnum.ASSET_VIEW_ALL],
-    children: [],
-  },
-  {
     icon: <MdCategory size={20} />,
     label: "Quản lý danh mục",
     path: "/Category",
     permissions: [PermissionsEnum.MANAGE_ASSET_CATEGORY],
+    children: [],
+  },
+  {
+    icon: <MdOutlineWebAsset size={20} />,
+    label: "Quản lý danh mục tài sản",
+    path: "/Asset/List",
+    permissions: [PermissionsEnum.ASSET_VIEW_ALL],
     children: [],
   },
   {

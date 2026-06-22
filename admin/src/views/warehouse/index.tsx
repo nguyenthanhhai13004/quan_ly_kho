@@ -26,7 +26,7 @@ export default function AssetInWarehouseView() {
   return (
     <>
       <ViewHeader
-        title="Quản lý tài sản trong kho"
+        title="Quản lý tồn kho"
         actions={[
           <CustomButton
             onClick={() => openModal(ImportManualModal)}

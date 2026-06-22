@@ -10,7 +10,7 @@ export default function AssetListView() {
   return (
     <>
       <div className="flex justify-between items-center mb-3">
-        <h2 className="text-3xl font-semibold py-3">Quản lý tài sản</h2>
+        <h2 className="text-3xl font-semibold py-3">Quản lý danh mục tài sản</h2>
         <div className="flex gap-2">
           <CustomButton
             onClick={() => openModal(CreateAssetModal)}
