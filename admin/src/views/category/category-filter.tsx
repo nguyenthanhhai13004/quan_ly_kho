@@ -13,7 +13,7 @@ export default function CategoryFilter() {
   return (
     <FilterWrapper onReset={resetParams} onSubmit={handleSearch}>
       <CustomInput
-        placeholder="Danh mục A .."
+        placeholder="Tên danh mục"
         value={filters?.keyword || ""}
         onChange={(e) => handleChange("keyword", e.target.value)}
         className="min-w-[150px]"

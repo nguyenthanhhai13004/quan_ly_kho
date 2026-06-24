@@ -70,7 +70,7 @@ export default function CategoriesTable() {
             //     }}
             //   ></span>
             // </div>,
-            ,
+            
             <>
               <CustomIcon
                 onClick={() => {

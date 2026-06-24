@@ -134,28 +134,13 @@ class AssetService {
   }
 
   static async deleteAsset(assetId: number, warehouseId: number) {
-    // throw new BadRequestError(
-    //   "Không thể xóa vì tài sản còn ghi nhận. Kiểm tra lịch cấp phát, xuất kho, bảo trì.",
-    // );
-    // const hasAsset = await db("warehouse_asset")
-    //   .where({
-    //     asset_id: assetId,
-    //     warehouse_id: warehouseId,
-    //   })
-    //   .first();
-
-    // if (!hasAsset) {
-    //   throw new BadRequestError(
-    //     "Không thể xoá tài sản không thuộc quyền kho của bạn.",
-    //   );
-    // }
-
+   
     const inTransaction =
       await warehouseAssetRepository.isAssetInAnyTransaction(assetId);
 
     if (inTransaction) {
       throw new BadRequestError(
-        "Không thể xóa vì tài sản đang ghi nhận trong giao dịch (cấp phát, xuất kho hoặc bảo trì).",
+        "Không thể xóa vì tài sản đang ghi nhận trong giao dịch",
       );
     }
 
