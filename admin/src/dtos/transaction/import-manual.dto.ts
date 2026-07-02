@@ -2,7 +2,10 @@ import { CreateTransactionSchema } from "./create-transaction.dto";
 import { z } from "zod";
 
 export const ImportManualItemSchema = z.object({
+  row_key: z.string().optional(),
   batch_code: z.string().optional(),
+  new_batch_code: z.string().optional(),
+  is_new_batch: z.boolean().optional(),
   asset_id: z.number("asset_id is required"),
   quantity: z
     .number("quantity is required")
@@ -13,13 +16,19 @@ export const ImportManualItemSchema = z.object({
   maintenance_due: z.string().optional(),
 });
 
-export const ImportManualSchema = z.object({
-  received_date: z.string("received_date is required").nonempty("Ngày nhận là bắt buộc"),
-  sender_location: z.string("sender_location is required").nonempty("Nơi nhận là bắt buộc"),
-  items: z
-    .array(ImportManualItemSchema)
-    .nonempty("At least one item is required"), //phiếu nhập phải có ít nhất 1 item
-}).extend(CreateTransactionSchema.shape);
+export const ImportManualSchema = z
+  .object({
+    received_date: z
+      .string("received_date is required")
+      .nonempty("Ngày nhận là bắt buộc"),
+    sender_location: z
+      .string("sender_location is required")
+      .nonempty("Nơi nhận là bắt buộc"),
+    items: z
+      .array(ImportManualItemSchema)
+      .nonempty("At least one item is required"), //phiếu nhập phải có ít nhất 1 item
+  })
+  .extend(CreateTransactionSchema.shape);
 
 export type ImportManualItemData = z.infer<typeof ImportManualItemSchema>;
 export type ImportManualData = z.infer<typeof ImportManualSchema>;

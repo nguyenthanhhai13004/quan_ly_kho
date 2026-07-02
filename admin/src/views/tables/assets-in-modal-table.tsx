@@ -29,9 +29,7 @@ export default function AssetInModalTable({
       useUrl: false,
     });
   const { assets } = useAllAssets(
-    filterAssetIds
-      ? { ...filters, ids: filterAssetIds.join(",") }
-      : filters
+    filterAssetIds ? { ...filters, ids: filterAssetIds.join(",") } : filters,
   );
   const columns = ["STT", "Mã", "Tên", "Ảnh", "Danh mục", "Hoạt động"];
   const { addRowImport, importManualState } = useTransactionStore();
@@ -112,16 +110,18 @@ export default function AssetInModalTable({
               <CustomCheckbox
                 disabled={batch.quantity == 0}
                 checked={importManualState.selectedAssets.some(
-                  (b) => b.batchCode === batch.batch_code,
+                  (b) => !b.newBatch && b.batchCode === batch.batch_code,
                 )}
                 onChange={() => {
                   const assetFound = assets?.items.find(
                     (a) => a.id === batch.asset_id,
                   );
+                  if (!assetFound) return;
+
                   addRowImport({
-                    id: assetFound?.id,
-                    code: assetFound?.code,
-                    name: assetFound?.name,
+                    id: assetFound.id,
+                    code: assetFound.code,
+                    name: assetFound.name,
                     batchCode: batch.batch_code,
                   });
                 }}

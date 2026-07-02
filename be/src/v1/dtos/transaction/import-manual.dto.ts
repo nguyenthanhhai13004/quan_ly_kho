@@ -2,7 +2,9 @@ import { CreateTransactionDto } from "./create-transaction.dto";
 
 export interface ImportManualItemDto {
   batch_code?: string;
-  asset_id: string;
+  new_batch_code?: string;
+  is_new_batch?: boolean;
+  asset_id: number | string;
   quantity: number;
   cost?: number;
   manufacture_date?: string;
@@ -10,7 +12,7 @@ export interface ImportManualItemDto {
   maintenance_due?: string;
 }
 
-export default interface ImportManualDto extends CreateTransactionDto{
+export default interface ImportManualDto extends CreateTransactionDto {
   received_date: string;
   sender_location: string;
   reason?: string;

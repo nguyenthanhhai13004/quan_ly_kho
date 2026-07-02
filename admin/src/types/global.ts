@@ -1,5 +1,21 @@
+export type TSelectedAssetInput = {
+  id?: number;
+  asset_id?: number;
+  code?: string;
+  asset_code?: string;
+  name?: string;
+  asset_name?: string;
+  batchCode?: string;
+  batch_code?: string;
+  quantity?: number;
+  cost?: number;
+  manufactureDate?: string;
+  maintenanceDue?: string;
+  expirationDate?: string;
+  newBatch?: boolean;
+};
 export type TSelectedAsset = {
-  id:number;
+  id: number;
   code: string;
   name: string;
   batchCode?: string;
@@ -8,7 +24,8 @@ export type TSelectedAsset = {
   manufactureDate?: string;
   maintenanceDue?: string;
   expirationDate?: string;
-  newBatch?: boolean;
+  rowKey: string;
+  newBatch: boolean;
 };
 export type TImportManualState = {
   selectedAssets: TSelectedAsset[];
@@ -45,8 +62,8 @@ export type TExportManualState = {
   selectedBatches: TSelectedBatch[];
   exportDate: string;
   receiverName: string;
-  receiverPhone:string;
-  receiverAddress:string;
+  receiverPhone: string;
+  receiverAddress: string;
   notes?: string;
   reason?: string;
 };
@@ -57,4 +74,3 @@ export type TDisposalState = {
   notes?: string;
   reason?: string;
 };
-

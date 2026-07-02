@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTransactionStore } from "../../stores/transactions-store";
 import { useForm } from "react-hook-form";
+import { useCallback, useEffect } from "react";
 import {
   ImportManualSchema,
   type ImportManualData,
@@ -14,11 +15,10 @@ import CustomButton from "../../components/common/custom-button";
 import { useImportManualTransaction } from "../../queries/transaction.query";
 import { useFulfillRecallRequest } from "../../queries/advisor-request.query";
 import { useModalProvider } from "../../providers/modal-provider";
-import TransactionApi from "../../api/transactions-api";
 import { toast } from "react-toastify";
 import generateTransactionCode from "../../utils/generate-transaction-code";
 import { MdOutlineMotionPhotosAuto } from "react-icons/md";
-import { redirect, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export type ImportManualFormProps = {
   onClose?: () => void;
@@ -40,12 +40,50 @@ export default function ImportManualForm({
     "Hạn bảo trì",
     "Hạn sử dụng",
   ];
-  const {
-    importManualState,
-    removeSelectedAsset,
-    newBatchToggle,
-    resetImportManualState,
-  } = useTransactionStore();
+  const { importManualState, removeSelectedAsset, resetImportManualState } =
+    useTransactionStore();
+
+  const buildFormItem = useCallback(
+    (
+      asset: (typeof importManualState.selectedAssets)[number],
+      existedItem?: ImportManualData["items"][number],
+    ): ImportManualData["items"][number] => ({
+      row_key: asset.rowKey,
+      asset_id: asset.id,
+      batch_code: asset.newBatch ? undefined : asset.batchCode,
+      new_batch_code: asset.newBatch ? asset.batchCode : undefined,
+      is_new_batch: asset.newBatch,
+      cost: existedItem?.cost ?? 0,
+      quantity: existedItem?.quantity ?? 1,
+      manufacture_date: existedItem?.manufacture_date,
+      maintenance_due: existedItem?.maintenance_due,
+      expiration_date: existedItem?.expiration_date,
+    }),
+    [],
+  );
+
+  const buildPayloadItem = useCallback(
+    (
+      asset: (typeof importManualState.selectedAssets)[number],
+      existedItem?: ImportManualData["items"][number],
+    ) => {
+      const item = buildFormItem(asset, existedItem);
+
+      return {
+        asset_id: item.asset_id,
+        batch_code: item.batch_code,
+        new_batch_code: item.new_batch_code,
+        is_new_batch: item.is_new_batch,
+        cost: item.cost,
+        quantity: item.quantity,
+        manufacture_date: item.manufacture_date,
+        maintenance_due: item.maintenance_due,
+        expiration_date: item.expiration_date,
+      };
+    },
+    [buildFormItem],
+  );
+
   const {
     handleSubmit,
     register,
@@ -60,10 +98,9 @@ export default function ImportManualForm({
       sender_location: importManualState.senderLocation,
       reason: importManualState.reason,
       note: importManualState.notes,
-      items: importManualState.selectedAssets.map((asset) => ({
-        asset_id: asset.id,
-        batch_code:asset.batchCode,
-      })),
+      items: importManualState.selectedAssets.map((asset) =>
+        buildFormItem(asset),
+      ),
       code: generateTransactionCode(),
     },
   });
@@ -71,32 +108,42 @@ export default function ImportManualForm({
   const { mutate: importManual } = useImportManualTransaction();
   const { mutate: fulfillRecall } = useFulfillRecallRequest();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const formItems = getValues("items") || [];
+    const formItemsByRowKey = new Map(
+      formItems.map((item) => [item.row_key, item]),
+    );
+    const nextItems = importManualState.selectedAssets.map((asset, index) => {
+      const existedItem =
+        formItemsByRowKey.get(asset.rowKey) ?? formItems[index];
+
+      return buildFormItem(asset, existedItem);
+    });
+
+    setValue("items", nextItems as ImportManualData["items"]);
+  }, [buildFormItem, getValues, importManualState.selectedAssets, setValue]);
+
   const onSubmit = (data: ImportManualData) => {
     if (importManualState.selectedAssets.length === 0) {
       toast.error("Danh sách nhập kho phải >= 1");
       return;
     }
     const formItems = getValues("items") || [];
-    const syncedItems = importManualState.selectedAssets.map((asset) => {
-    const existedItem = formItems.find(
-      (i) => i.asset_id === asset.id
+    const formItemsByRowKey = new Map(
+      formItems.map((item) => [item.row_key, item]),
     );
+    const syncedItems = importManualState.selectedAssets.map((asset, index) => {
+      const existedItem =
+        formItemsByRowKey.get(asset.rowKey) ?? formItems[index];
 
-    return {
-      asset_id: asset.id,
-      batch_code: asset.batchCode,
-      cost: existedItem?.cost ?? 0,
-      quantity: existedItem?.quantity ?? 1,
-      manufacture_date: existedItem?.manufacture_date,
-      maintenance_due: existedItem?.maintenance_due,
-      expiration_date: existedItem?.expiration_date,
-    };
-  });
+      return buildPayloadItem(asset, existedItem);
+    });
 
-  if (syncedItems.length === 0) {
-    toast.error("Danh sách tài sản không hợp lệ");
-    return;
-  }
+    if (syncedItems.length === 0) {
+      toast.error("Danh sách tài sản không hợp lệ");
+      return;
+    }
 
     const payload = {
       ...data,
@@ -120,7 +167,7 @@ export default function ImportManualForm({
                 resetImportManualState();
                 if (onClose) onClose();
               },
-            }
+            },
           );
         } else {
           importManual(
@@ -138,109 +185,94 @@ export default function ImportManualForm({
       },
     });
   };
-  const handleCheckBatch = async (index: number) => {
-    const batchCode = getValues("items")?.[index].batch_code;
-    if (!batchCode) return;
-    try {
-      const response = await TransactionApi.getDetailBatch(batchCode);
-      if (response.data) {
-        toast.info(`${batchCode} tồn tại`);
-      }
-    } catch (error) {
-      toast.error(error as string);
-      return;
-    }
-  };
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <CustomTable
         columns={columns}
         size="small"
-        data={importManualState.selectedAssets.map((item, index) => [
-          <>
+        rowKeys={importManualState.selectedAssets.map((item) => item.rowKey)}
+        data={importManualState.selectedAssets.map((item, index) => {
+          const rowKey = item.rowKey;
+
+          return [
             <CustomIcon
-              key={`trash-${index}`}
+              key={`trash-${rowKey}`}
               icon={<BiTrash size={16} />}
               label="Xóa"
-              onClick={() => removeSelectedAsset(index)}
+              onClick={() => removeSelectedAsset(rowKey)}
               variant="danger"
-            />
-            {/* <CustomIcon
-              key={`check-${index}`}
-              icon={<ImSpellCheck size={16} />}
-              label="Kiểm tra lô hàng"
-              onClick={() => handleCheckBatch(index)}
-              variant="success"
-            /> */}
-          </>,
-          <CustomInput
-            key={`batchCode-${index}`}
-            {...register(`items.${index}.batch_code`)}
-            value={item.batchCode}
-            name={`items.${index}.batch_code`}
-            className="text-xs"
-            width="120px"
-            placeholder=""
-            type="text"
-            // value={item.newBatch ? "" : getValues(`items.${index}.batch_code`)}
-            disabled={true}
-          />,
-          <div>
-            {item.code}
-            <input
-              {...register(`items.${index}.asset_id`, { valueAsNumber: true })}
-              className="hidden"
+            />,
+            <CustomInput
+              key={`batchCode-${rowKey}`}
+              {...register(`items.${index}.batch_code`)}
+              value={item.batchCode ?? ""}
+              name={`items.${index}.batch_code`}
+              className="text-xs"
+              width="120px"
+              placeholder=""
+              type="text"
+              // value={item.newBatch ? "" : getValues(`items.${index}.batch_code`)}
+              disabled={true}
+            />,
+            <div>
+              {item.code}
+              <input
+                {...register(`items.${index}.asset_id`, {
+                  valueAsNumber: true,
+                })}
+                className="hidden"
+                type="number"
+                readOnly
+                value={item.id}
+              />
+            </div>,
+            item.name,
+            <CustomInput
+              key={`cost-${rowKey}`}
+              {...register(`items.${index}.cost`, { valueAsNumber: true })}
+              defaultValue={0}
+              name={`items.${index}.cost`}
               type="number"
-              readOnly
-              value={item.id}
-            />
-          </div>,
-          item.name,
-          <CustomInput
-            key={`cost-${index}`}
-            {...register(`items.${index}.cost`, { valueAsNumber: true })}
-            defaultValue={0}
-            name={`items.${index}.cost`}
-            type="number"
-            className="text-xs"
-            width="120px"
-            disabled={!item.newBatch}
-          />,
-          <CustomInput
-            key={`quantity-${index}`}
-            {...register(`items.${index}.quantity`, { valueAsNumber: true })}
-            defaultValue={1}
-            name={`items.${index}.quantity`}
-            type="number"
-            className="text-xs"
-            width="120px"
-          />,
-          <CustomInput
-            key={`manufactureDate-${index}`}
-            type="date"
-            className="text-xs"
-            width="120px"
-            disabled={!item.newBatch}
-            {...register(`items.${index}.manufacture_date`)}
-          />, 
+              className="text-xs"
+              width="120px"
+              disabled={!item.newBatch}
+            />,
+            <CustomInput
+              key={`quantity-${rowKey}`}
+              {...register(`items.${index}.quantity`, { valueAsNumber: true })}
+              defaultValue={1}
+              name={`items.${index}.quantity`}
+              type="number"
+              className="text-xs"
+              width="120px"
+            />,
+            <CustomInput
+              key={`manufactureDate-${rowKey}`}
+              type="date"
+              className="text-xs"
+              width="120px"
+              disabled={!item.newBatch}
+              {...register(`items.${index}.manufacture_date`)}
+            />,
 
-          <CustomInput
-            key={`maintenanceDue-${index}`}
-            className="text-xs"
-            width="120px"
-            type="date"
-            disabled={!item.newBatch}
-            {...register(`items.${index}.maintenance_due`)}
-          />,
-          <CustomInput
-            key={`expirationDate-${index}`}
-            className="text-xs"
-            width="120px"
-            type="date"
-            disabled={!item.newBatch}
-            {...register(`items.${index}.expiration_date`)}
-          />,
-        ])}
+            <CustomInput
+              key={`maintenanceDue-${rowKey}`}
+              className="text-xs"
+              width="120px"
+              type="date"
+              disabled={!item.newBatch}
+              {...register(`items.${index}.maintenance_due`)}
+            />,
+            <CustomInput
+              key={`expirationDate-${rowKey}`}
+              className="text-xs"
+              width="120px"
+              type="date"
+              disabled={!item.newBatch}
+              {...register(`items.${index}.expiration_date`)}
+            />,
+          ];
+        })}
       />
       <div className="flex flex-col gap-5 mb-3 mt-5">
         <CustomInput
@@ -251,7 +283,7 @@ export default function ImportManualForm({
             <CustomIcon
               label="Tạo tự động"
               variant="info"
-              onClick={()=>setValue("code",generateTransactionCode())}
+              onClick={() => setValue("code", generateTransactionCode())}
               icon={<MdOutlineMotionPhotosAuto size={16} />}
             />
           }

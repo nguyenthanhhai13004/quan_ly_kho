@@ -96,7 +96,7 @@ class AssetController {
       url,
     });
     return new OK({
-      message: "lấy chi tiết tài sản thành công",
+      message: "tạo mã code tài sản thành công",
       data: await AssetService.generateCode(req.body),
     }).send(res);
   };

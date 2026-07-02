@@ -101,7 +101,7 @@ export default function UpdateAssetModal({
                   disabled
                   value={asset?.code}
                   labelType="top"
-                  placeholder="VK-001"
+                  placeholder="Mã tài sản"
                   label="Mã tài sản"
                 />
                  <CustomSelect
@@ -129,7 +129,7 @@ export default function UpdateAssetModal({
                 error={errors?.name?.message}
                 labelType="top"
                 required
-                placeholder="Súng AK"
+                placeholder="Tên tài sản"
                 label="Tên"
               />
             </div>

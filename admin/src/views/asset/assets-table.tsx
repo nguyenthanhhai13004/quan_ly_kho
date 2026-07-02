@@ -100,20 +100,7 @@ export default function AssetsTable({
                 label="Xóa tài sản"
               />
               ,
-              {showButtonAdd && (
-                <CustomIcon
-                  variant="default"
-                  icon={<BiPlus size={20} />}
-                  label="Thêm vào ds nhập kho"
-                  onClick={() =>
-                    addRowImport({
-                      code: asset.code,
-                      name: asset.name,
-                      id: asset.id,
-                    })
-                  }
-                />
-              )}
+              
             </>,
           ]) || []
         }

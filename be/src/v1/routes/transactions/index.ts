@@ -43,9 +43,9 @@ router.put("/maintenances/:code", transactionController.updateMaintenance);
 // ========================
 // GET TRANSACTIONS
 // ========================
+router.get("/asset/:assetCode", transactionController.getTransactionsForAsset);
 router.get("/:code", transactionController.getTransactionDetail);
 router.get("/", transactionController.getTransactions);
-router.get("/asset/:assetCode",transactionController.getTransactionsForAsset)
 
 // ========================
 // GET STATS

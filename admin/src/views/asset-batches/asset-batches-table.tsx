@@ -6,13 +6,12 @@ import { useAllBatchesByCode } from "../../queries/transaction.query";
 import { useTransactionStore } from "../../stores/transactions-store";
 import { getAssetBadgeProps } from "../../utils/get-asset-badge-props";
 
-
 export default function AssetBatchesTable({
   assetCode,
-  assetName
+  assetName,
 }: {
   assetCode: string;
-  assetName?:string;
+  assetName?: string;
 }) {
   const columns = [
     "Chọn",
@@ -21,10 +20,14 @@ export default function AssetBatchesTable({
     "Tình trạng",
     "Ngày sản xuất",
     "Hạn sử dụng",
-    "Hạn bảo trì"
+    "Hạn bảo trì",
   ];
   const { batches } = useAllBatchesByCode(assetCode);
-  const {toggleBatch,batchState:{selectedBatches},addRowImport} = useTransactionStore();
+  const {
+    toggleBatch,
+    batchState: { selectedBatches },
+    addRowImport,
+  } = useTransactionStore();
   return (
     <CustomTable
       columns={columns}
@@ -32,32 +35,35 @@ export default function AssetBatchesTable({
         batches?.map((batch) => [
           <CustomCheckbox
             disabled={batch.quantity == 0}
-            checked={selectedBatches.some((b) => b.batchCode === batch.batch_code)}
-            onChange={() =>{
+            checked={selectedBatches.some(
+              (b) => b.batchCode === batch.batch_code,
+            )}
+            onChange={() => {
               toggleBatch({
                 name: assetName,
                 batchCode: batch.batch_code,
                 quantity: batch.quantity,
-              })
-              addRowImport(batch)
+              });
+              addRowImport({
+                id: batch.asset_id,
+                code: assetCode,
+                name: assetName ?? assetCode,
+                batchCode: batch.batch_code,
+              });
             }}
           />,
           batch.batch_code,
           batch.quantity,
-          <CustomBadge
-          {
-            ...getAssetBadgeProps(batch.status)
-          }
-          />,
-           dayjs(batch.manufacture_date).isValid()
-                ? dayjs(batch.manufacture_date).format("DD/MM/YYYY")
-                : "N/A",
-              dayjs(batch.expiration_date).isValid()
-                ? dayjs(batch.expiration_date).format("DD/MM/YYYY")
-                : "N/A",
-              dayjs(batch.maintenance_due).isValid()
-                ? dayjs(batch.maintenance_due).format("DD/MM/YYYY")
-                : "N/A",
+          <CustomBadge {...getAssetBadgeProps(batch.status)} />,
+          dayjs(batch.manufacture_date).isValid()
+            ? dayjs(batch.manufacture_date).format("DD/MM/YYYY")
+            : "N/A",
+          dayjs(batch.expiration_date).isValid()
+            ? dayjs(batch.expiration_date).format("DD/MM/YYYY")
+            : "N/A",
+          dayjs(batch.maintenance_due).isValid()
+            ? dayjs(batch.maintenance_due).format("DD/MM/YYYY")
+            : "N/A",
         ]) || []
       }
     />

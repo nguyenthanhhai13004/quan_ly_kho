@@ -54,6 +54,8 @@
     "prepare": "husky",
     "start:dev": "nodemon",
     "build": "tsc",
+    "test:db-design": "ts-node scripts/verify-db-design.ts",
+    "test:db-data": "ts-node scripts/check-db-constraint-readiness.ts",
     "migrate:latest": "npm run build && npx knex migrate:latest",
     "migrate:rollback": "npm run build && npx knex migrate:rollback --all",
     "seed:run": "npm run build && npx knex seed:run"

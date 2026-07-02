@@ -84,7 +84,6 @@ export const useFulfillRecallRequest = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["all-advisor-requests"] });
       queryClient.invalidateQueries({ queryKey: ["assets-wh"] });
-      queryClient.invalidateQueries({ queryKey: ["all-allocation-return-trx"] });
     },
   });
 };

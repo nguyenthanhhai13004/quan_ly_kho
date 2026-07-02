@@ -1,9 +1,7 @@
-export default function generateBatchCode(): string {
-  const prefix = "BATCH-";
-  const timestamp = Date.now().toString().slice(-6);
-  let randomNumber = "";
-  for (let i = 0; i < 4; i++) {
-    randomNumber += Math.floor(Math.random() * 10);
-  }
-  return `${prefix}${timestamp}${randomNumber}`;
+export default function generateBatchCode(assetCode = "NEW"): string {
+  const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+  const normalizedAssetCode = assetCode.replace(/[^a-zA-Z0-9-]/g, "") || "NEW";
+  const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+
+  return `BATCH-${normalizedAssetCode}-${datePart}-${random}`;
 }

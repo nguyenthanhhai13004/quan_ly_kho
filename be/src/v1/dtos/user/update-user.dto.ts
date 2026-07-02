@@ -9,10 +9,14 @@ export const UpdatedUserSchema = Joi.object({
   class_id: Joi.number().allow(null).optional(),
   major_id: Joi.number().allow(null).optional(),
   avatar_url: Joi.string().allow("", null).optional(),
-  warehouse_ids: Joi.array().items(Joi.number()).optional().messages({
-    "array.base": "warehouse_ids phải là một mảng",
-    "array.includes": "warehouse_ids chỉ chứa giá trị dạng số"
-  })
+  warehouse_ids: Joi.array()
+    .items(Joi.number().integer().positive())
+    .unique()
+    .optional()
+    .messages({
+      "array.base": "warehouse_ids phải là một mảng",
+      "array.includes": "warehouse_ids chỉ chứa giá trị dạng số",
+    }),
 });
 
 export interface UpdatedUserDto {

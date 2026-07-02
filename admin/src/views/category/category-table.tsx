@@ -9,7 +9,6 @@ import {
   useDeleteCategory,
 } from "../../queries/category.query";
 
-import type { TCategory } from "../../types/category.type";
 import { toast } from "react-toastify";
 import CategoryFilter from "./category-filter";
 import type { PaginationDto } from "../../common/dtos/pagination.dto";
@@ -18,10 +17,9 @@ import { usePaginationParams } from "../../hooks/use-pagination-params";
 const columns = ["STT", "Mã", "Tên", "Mô tả", "Hoạt động"];
 
 export default function CategoriesTable() {
-  const {
-      params,
-      setPage
-    } = usePaginationParams<PaginationDto & { keyword: string }>({});
+  const { params, setPage } = usePaginationParams<
+    PaginationDto & { keyword: string }
+  >({});
   const { categories } = useAllCategories(params);
   const { openModal, openConfirmModal } = useModalProvider();
   const { mutate } = useDeleteCategory();
@@ -49,12 +47,13 @@ export default function CategoriesTable() {
       <CustomTable
         columns={columns}
         title="Danh sách danh mục"
-        filter={<CategoryFilter/>}
+        filter={<CategoryFilter />}
+        totalPages={Number(categories?.totalPages || 1)}
         onPageChange={setPage}
-        currentPage={categories?.page}
+        currentPage={params.page}
         data={
           categories?.items.map((category, index: number) => [
-            index + 1,
+            index + 1 + (params.page - 1) * params.size,
             category.code,
             category.name,
             category.description,

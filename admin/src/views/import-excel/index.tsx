@@ -56,7 +56,8 @@ export default function ImportExcelView() {
     setCurrentFile(null);
     setErrors([]);
     setData([]);
-    if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
+    const isExcel = file.name.endsWith(".xlsx") || file.name.endsWith(".xls");
+    if (!isExcel) {
       alert("Vui lòng chọn file Excel (.xlsx hoặc .xls)");
       return;
     }
@@ -75,7 +76,7 @@ export default function ImportExcelView() {
       const data = e.target?.result;
       if (!data) return;
 
-      const workbook = XLSX.read(data, { type: "binary" });
+      const workbook = XLSX.read(data, { type: "array" });
       const sheetName = workbook.SheetNames[0];
       const sheet = workbook.Sheets[sheetName];
       const json: any[] = XLSX.utils.sheet_to_json(sheet);
@@ -92,7 +93,7 @@ export default function ImportExcelView() {
       })) as TImportExcelItem[];
       setData(formatted);
     };
-    reader.readAsBinaryString(file);
+    reader.readAsArrayBuffer(file);
   };
   const onSubmit = (data: ImportExcelData) => {
     if (!currentFile) return;

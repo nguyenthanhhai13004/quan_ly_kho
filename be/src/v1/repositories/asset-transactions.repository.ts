@@ -394,7 +394,11 @@ class AssetTransactionsRepository extends BaseRepository<AssetTransactions> {
       })
 
       .leftJoin("asset_maintenances as am", function () {
-        this.on("am.transaction_id", "=", "at.id").andOn(db.raw("at.type = 3"));
+        this.on("am.transaction_id", "=", "at.id").andOn(
+          "at.type",
+          "=",
+          db.raw(TransactionTypeEnum.MAINTENANCE),
+        );
       })
 
       .select(
@@ -430,7 +434,10 @@ class AssetTransactionsRepository extends BaseRepository<AssetTransactions> {
       query.whereIn("at.type", types);
     }
 
-    const items = await query.limit(size).offset(offset);
+    const items = await query
+      .orderBy("at.id", "desc")
+      .limit(size)
+      .offset(offset);
 
     const totalQuery = db("asset_transactions as at")
       .join("asset_transaction_items as ati", "ati.transaction_id", "at.id")

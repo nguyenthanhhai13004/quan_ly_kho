@@ -49,20 +49,18 @@ class WarehouseRepository extends BaseRepository<Warehouse> {
     };
   }
 
- async findAllWithUsers(
-  paginationDto: PaginationDto & { keyword?: string },
-) {
-  const { page, size, keyword } = paginationDto;
+  async findAllWithUsers(paginationDto: PaginationDto & { keyword?: string }) {
+    const { page, size, keyword } = paginationDto;
 
-  const offset = (page - 1) * size;
+    const offset = (page - 1) * size;
 
-  let query = db(this.tableName)
-    .select(
-      `${this.tableName}.*`,
-      "address.address_detail",
-      "address.latitude",
-      "address.longitude",
-      db.raw(`
+    let query = db(this.tableName)
+      .select(
+        `${this.tableName}.*`,
+        "address.address_detail",
+        "address.latitude",
+        "address.longitude",
+        db.raw(`
         CONCAT(
           '[',
           IFNULL(
@@ -78,58 +76,66 @@ class WarehouseRepository extends BaseRepository<Warehouse> {
           ']'
         ) as managers
       `),
-    )
-    .leftJoin(
-      "warehouse_user",
-      "warehouse_user.warehouse_id",
-      `${this.tableName}.id`,
-    )
-    .leftJoin("users", "users.id", "warehouse_user.user_id")
-    .leftJoin("address", "address.id", `${this.tableName}.address_id`)
-    .whereNull(`${this.tableName}.deleted_at`)
-    .groupBy(`${this.tableName}.id`);
+      )
+      .leftJoin(
+        "warehouse_user",
+        "warehouse_user.warehouse_id",
+        `${this.tableName}.id`,
+      )
+      .leftJoin("users", "users.id", "warehouse_user.user_id")
+      .leftJoin("address", "address.id", `${this.tableName}.address_id`)
+      .whereNull(`${this.tableName}.deleted_at`)
+      .groupBy(`${this.tableName}.id`);
 
-  if (keyword) {
-    query = query.andWhere((qb) => {
-      qb.where(`${this.tableName}.name`, "like", `%${keyword}%`)
-        .orWhere("address.address_detail", "like", `%${keyword}%`);
-    });
+    if (keyword) {
+      query = query.andWhere((qb) => {
+        qb.where(`${this.tableName}.name`, "like", `%${keyword}%`).orWhere(
+          "address.address_detail",
+          "like",
+          `%${keyword}%`,
+        );
+      });
+    }
+
+    let totalQuery = db(this.tableName)
+      .leftJoin("address", "address.id", `${this.tableName}.address_id`)
+      .whereNull(`${this.tableName}.deleted_at`);
+
+    if (keyword) {
+      totalQuery = totalQuery.andWhere((qb) => {
+        qb.where(`${this.tableName}.name`, "like", `%${keyword}%`).orWhere(
+          "address.address_detail",
+          "like",
+          `%${keyword}%`,
+        );
+      });
+    }
+
+    const totalResult = await totalQuery.countDistinct<
+      {
+        count: number;
+      }[]
+    >(`${this.tableName}.id as count`);
+
+    const count = Number(totalResult?.[0]?.count || 0);
+
+    const rows = await query
+      .limit(size)
+      .offset(offset)
+      .orderBy(`${this.tableName}.id`, "desc");
+
+    const items = rows.map((row) => ({
+      ...row,
+      managers: row.managers ? JSON.parse(row.managers) : [],
+    }));
+
+    return {
+      items,
+      size,
+      page,
+      total: count,
+      totalPages: Math.ceil(count / size),
+    };
   }
-
-  let totalQuery = db(this.tableName)
-    .leftJoin("address", "address.id", `${this.tableName}.address_id`)
-    .whereNull(`${this.tableName}.deleted_at`);
-
-  if (keyword) {
-    totalQuery = totalQuery.andWhere((qb) => {
-      qb.where(`${this.tableName}.name`, "like", `%${keyword}%`)
-        .orWhere("address.address_detail", "like", `%${keyword}%`);
-    });
-  }
-
-  const totalResult = await totalQuery.countDistinct<{
-    count: number;
-  }[]>(`${this.tableName}.id as count`);
-
-  const count = Number(totalResult?.[0]?.count || 0);
-
-  const rows = await query
-    .limit(size)
-    .offset(offset)
-    .orderBy(`${this.tableName}.id`, "desc");
-
-  const items = rows.map((row) => ({
-    ...row,
-    managers: row.managers ? JSON.parse(row.managers) : [],
-  }));
-
-  return {
-    items,
-    size,
-    page,
-    total: count,
-    totalPages: Math.ceil(count / size),
-  };
-}
 }
 export default new WarehouseRepository();

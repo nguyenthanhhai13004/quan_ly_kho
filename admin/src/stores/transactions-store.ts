@@ -1,29 +1,22 @@
 import { create } from "zustand";
 import type {
-  TDisposalState,
-  TExportManualState,
   TImportManualState,
-  TSelectedAsset,
+  TSelectedAssetInput,
   TSelectedBatch,
 } from "../types/global";
+import generateBatchCode from "../utils/generate-batch-code";
 
 export type TTransactionState = {
   importManualState: TImportManualState;
-  // exportManualState: TExportManualState;
-  // disposalState: TDisposalState;
   batchState: {
     selectedBatches: TSelectedBatch[];
   };
 };
 
 export type TTransactionAction = {
-  removeSelectedAsset: (index: number) => void;
-  newBatchToggle: (index: number) => void;
-  updateSelectedAsset: (index: number, field: string, value: any) => void;
-  addRowImport: (asset: any) => void;
-  // toggleExportManualState: (batch: TSelectedBatch) => void;
+  removeSelectedAsset: (rowKey: string) => void;
+  addRowImport: (asset: TSelectedAssetInput) => void;
   resetImportManualState: () => void;
-  // resetExportManualState: () => void;
   toggleBatch: (batch: TSelectedBatch) => void;
   removeBatch: (batchCode: string) => void;
   resetBatchState: () => void;
@@ -32,6 +25,7 @@ export type TTransactionAction = {
 export const useTransactionStore = create<
   TTransactionState & TTransactionAction
 >((set) => ({
+  // Luu trang thai form nhap thu cong: danh sach tai san duoc chon va thong tin chung cua phieu nhap.
   importManualState: {
     selectedAssets: [],
     receivedDate: "",
@@ -39,24 +33,11 @@ export const useTransactionStore = create<
     notes: "",
     reason: "",
   },
-  // exportManualState: {
-  //   selectedBatches: [],
-  //   exportDate: "",
-  //   receiverAddress: "",
-  //   receiverName: "",
-  //   receiverPhone: "",
-  //   notes: "",
-  //   reason: "",
-  // },
-  // disposalState: {
-  //   disposalDate: "",
-  //   selectedBatches: [],
-  //   notes: "",
-  //   reason: "",
-  // },
+  // Luu danh sach lo dang duoc chon cho cac thao tac theo lo.
   batchState: {
     selectedBatches: [],
   },
+  // Chon/bo chon mot lo dua tren batchCode; neu lo da ton tai thi xoa khoi danh sach.
   toggleBatch: ({ name, batchCode, quantity }: TSelectedBatch) =>
     set((state) => {
       const exists = state.batchState.selectedBatches.some(
@@ -76,6 +57,7 @@ export const useTransactionStore = create<
       };
     }),
 
+  // Xoa mot lo da chon khoi batchState theo ma lo.
   removeBatch: (batchCode: string) =>
     set((state) => ({
       batchState: {
@@ -84,12 +66,14 @@ export const useTransactionStore = create<
         ),
       },
     })),
+  // Dua danh sach lo da chon ve rong.
   resetBatchState: () =>
     set(() => ({
       batchState: {
         selectedBatches: [],
       },
     })),
+  // Dat lai form nhap thu cong ve gia tri ban dau.
   resetImportManualState: () =>
     set(() => ({
       importManualState: {
@@ -100,136 +84,76 @@ export const useTransactionStore = create<
         reason: "",
       },
     })),
-  addRowImport: (asset: TSelectedAsset) =>
+  // Them tai san vao form nhap; lo moi luon la mot dong rieng, lo cu thi toggle theo ma lo.
+  addRowImport: (asset: TSelectedAssetInput) =>
     set((state) => {
+      const assetId = asset.id ?? asset.asset_id;
+      const assetCode = asset.code ?? asset.asset_code;
+      const rawBatchCode = asset.batchCode ?? asset.batch_code;
+      const existingBatchCode = rawBatchCode || undefined;
+      const isNewBatch = existingBatchCode == undefined;
+
+      if (!assetId || !assetCode) {
+        return state;
+      }
+
+      const assetName = asset.name ?? asset.asset_name ?? assetCode;
+
       const exists = state.importManualState.selectedAssets.some(
-        (a) => a.batchCode === asset.batchCode && asset.batchCode !== undefined,
+        (a) =>
+          !a.newBatch &&
+          a.batchCode === existingBatchCode &&
+          existingBatchCode !== undefined,
       );
       if (exists) {
         return {
           importManualState: {
             ...state.importManualState,
             selectedAssets: state.importManualState.selectedAssets.filter(
-              (a) => a.batchCode !== asset.batchCode,
+              (a) => a.batchCode !== existingBatchCode,
             ),
           },
         };
       }
+
+      const selectedBatchCodes = new Set(
+        state.importManualState.selectedAssets.map((a) => a.batchCode),
+      );
+      let batchCode = existingBatchCode;
+
+      if (isNewBatch) {
+        do {
+          batchCode = generateBatchCode(assetCode);
+        } while (selectedBatchCodes.has(batchCode));
+      }
+
       return {
         importManualState: {
           ...state.importManualState,
           selectedAssets: [
             ...state.importManualState.selectedAssets,
             {
-              id: asset.id,
-              code: asset.code,
-              name: asset.name,
-              newBatch: asset.batchCode == undefined,
-              batchCode: asset.batchCode,
+              id: assetId,
+              code: assetCode,
+              name: assetName,
+              newBatch: isNewBatch,
+              batchCode,
+              rowKey: isNewBatch
+                ? `new-${assetId}-${batchCode}`
+                : `batch-${batchCode}`,
             },
           ],
         },
       };
     }),
-  removeSelectedAsset: (index: number) =>
+  // Xoa dung dong da chon trong form nhap theo rowKey on dinh.
+  removeSelectedAsset: (rowKey: string) =>
     set((state) => ({
       importManualState: {
         ...state.importManualState,
         selectedAssets: state.importManualState.selectedAssets.filter(
-          (_, i) => i !== index,
+          (asset) => asset.rowKey !== rowKey,
         ),
       },
     })),
-  newBatchToggle: (index: number) =>
-    set((state) => ({
-      importManualState: {
-        ...state.importManualState,
-        selectedAssets: state.importManualState.selectedAssets.map(
-          (asset, i) =>
-            i === index ? { ...asset, newBatch: !asset.newBatch } : asset,
-        ),
-      },
-    })),
-  updateSelectedAsset: (index: number, field: string, value: any) =>
-    set((state) => ({
-      importManualState: {
-        ...state.importManualState,
-        selectedAssets: state.importManualState.selectedAssets.map(
-          (asset, i) => (i === index ? { ...asset, [field]: value } : asset),
-        ),
-      },
-    })),
-
-  // toggleExportManualState: ({ name, batchCode, quantity }: TSelectedBatch) =>
-  //   set((state) => {
-  //     const exists = state.exportManualState.selectedBatches.find(
-  //       (b) => b.batchCode === batchCode,
-  //     );
-  //     if (exists) {
-  //       return {
-  //         exportManualState: {
-  //           ...state.exportManualState,
-  //           selectedBatches: state.exportManualState.selectedBatches.filter(
-  //             (b) => b.batchCode !== batchCode,
-  //           ),
-  //         },
-  //       };
-  //     }
-  //     return {
-  //       exportManualState: {
-  //         ...state.exportManualState,
-  //         selectedBatches: [
-  //           ...state.exportManualState.selectedBatches,
-  //           { name, batchCode, quantity },
-  //         ],
-  //       },
-  //     };
-  //   }),
-  // resetExportManualState: () =>
-  //   set(() => ({
-  //     exportManualState: {
-  //       exportDate: "",
-  //       receiverAddress: "",
-  //       receiverName: "",
-  //       receiverPhone: "",
-  //       selectedBatches: [],
-  //       notes: "",
-  //       reason: "",
-  //     },
-  //   })),
-
-  // toggleDisposalState: ({ name, batchCode, quantity }: TSelectedBatch) =>
-  //   set((state) => {
-  //     const exists = state.disposalState.selectedBatches.find(
-  //       (b) => b.batchCode === batchCode,
-  //     );
-  //     if (exists) {
-  //       return {
-  //         disposalState: {
-  //           ...state.disposalState,
-  //           selectedBatches: state.disposalState.selectedBatches.filter(
-  //             (b) => b.batchCode !== batchCode,
-  //           ),
-  //         },
-  //       };
-  //     }
-  //     return {
-  //       disposalState: {
-  //         ...state.disposalState,
-  //         selectedBatches: [
-  //           ...state.disposalState.selectedBatches,
-  //           { name, batchCode, quantity },
-  //         ],
-  //       },
-  //     };
-  //   }),
-  // resetDisposalState: () =>
-  //   set(() => ({
-  //     disposalState: {
-  //       disposalDate: "",
-  //       selectedBatches: [],
-  //       notes: "",
-  //       reason: "",
-  //     },
-  //   })),
 }));

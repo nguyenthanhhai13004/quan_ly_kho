@@ -117,7 +117,7 @@ export default function CreateAssetModal({ open, onClose }: CustomModalProps) {
                   labelType="top"
                   required
                   disabled
-                  placeholder="VK-001"
+                  placeholder="Mã tài sản"
                   label="Mã tài sản"
                   icon={
                     <CustomIcon
@@ -158,7 +158,7 @@ export default function CreateAssetModal({ open, onClose }: CustomModalProps) {
                 error={errors?.name?.message}
                 labelType="top"
                 required
-                placeholder="Súng AK"
+                placeholder="Tên tài sản"
                 label="Tên"
               />
             </div>

@@ -18,8 +18,9 @@ export default function AssetTransactionDetailModal({
   onClose,
   open,
 }: AssetTransactionDetailModalProps) {
-  if (!transactionCode) return;
   const { transaction } = useDetailTransaction(transactionCode);
+
+  if (!transactionCode) return null;
 
   return (
     <CustomModal

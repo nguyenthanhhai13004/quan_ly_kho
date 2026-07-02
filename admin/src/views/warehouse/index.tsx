@@ -10,7 +10,6 @@ import ImportManualModal from "./modals/import-manual-modal";
 import { useModalProvider } from "../../providers/modal-provider";
 import { useEffect, useRef, useState } from "react";
 import { useTransactionStore } from "../../stores/transactions-store";
-import AssetInWHDetailModal from "./modals/asset-in-wh-detail-modal";
 
 export default function AssetInWarehouseView() {
   const { openModal } = useModalProvider();
@@ -53,8 +52,6 @@ export default function AssetInWarehouseView() {
         ]}
       />
       <AssetInWarehouseTable />
-
-      {/* <AssetInWHDetailModal/> */}
     </>
   );
 }

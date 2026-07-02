@@ -41,23 +41,27 @@ class UserService {
       throw new NotFoundError("role không tìm thấy");
     }
 
-    if (createUserDto.role_id === 3 && (!createUserDto.warehouse_ids || createUserDto.warehouse_ids.length === 0)) {
+    const warehouseIds = Array.from(new Set(createUserDto.warehouse_ids || []));
+
+    if (createUserDto.role_id === 3 && warehouseIds.length === 0) {
       throw new BadRequestError("Chỉ huy phải được gán quản lý kho");
     }
 
     if (createUserDto.major_id) {
-      const majorExists = await db("majors").where({ id: createUserDto.major_id }).first();
+      const majorExists = await db("majors")
+        .where({ id: createUserDto.major_id })
+        .first();
       if (!majorExists) {
         throw new BadRequestError("Hệ quản lý được chọn không tồn tại");
       }
     }
 
-    if (createUserDto.warehouse_ids && createUserDto.warehouse_ids.length > 0) {
+    if (warehouseIds.length > 0) {
       const count = await db("warehouses")
-        .whereIn("id", createUserDto.warehouse_ids)
+        .whereIn("id", warehouseIds)
         .count("id as total")
         .first();
-      if (Number(count?.total || 0) !== createUserDto.warehouse_ids.length) {
+      if (Number(count?.total || 0) !== warehouseIds.length) {
         throw new BadRequestError("Một hoặc nhiều kho được chọn không tồn tại");
       }
     }
@@ -90,12 +94,9 @@ class UserService {
     }
 
     // store warehouses for user
-    if (
-      createUserDto.warehouse_ids !== undefined &&
-      createUserDto.warehouse_ids.length > 0
-    ) {
+    if (createUserDto.warehouse_ids !== undefined && warehouseIds.length > 0) {
       await warehouseUserRepository.createMany(
-        createUserDto.warehouse_ids.map((w) => ({
+        warehouseIds.map((w) => ({
           user_id: userStore.id,
           warehouse_id: w,
         })),
@@ -119,7 +120,16 @@ class UserService {
     });
 
     return getInfoData<ResponseUserDto>({
-      fields: ["id", "fullname", "username", "email", "is_active", "class_id", "major_id", "avatar_url"],
+      fields: [
+        "id",
+        "fullname",
+        "username",
+        "email",
+        "is_active",
+        "class_id",
+        "major_id",
+        "avatar_url",
+      ],
       object: userStore,
     });
   }
@@ -134,23 +144,32 @@ class UserService {
       throw new NotFoundError("user không tồn tại.");
     }
 
-    if (userFound.role_id === 3 && (!updateUserDto.warehouse_ids || updateUserDto.warehouse_ids.length === 0)) {
+    const warehouseIds = updateUserDto.warehouse_ids
+      ? Array.from(new Set(updateUserDto.warehouse_ids))
+      : undefined;
+
+    if (
+      userFound.role_id === 3 &&
+      (!warehouseIds || warehouseIds.length === 0)
+    ) {
       throw new BadRequestError("Chỉ huy phải được gán quản lý kho");
     }
 
     if (updateUserDto.major_id) {
-      const majorExists = await db("majors").where({ id: updateUserDto.major_id }).first();
+      const majorExists = await db("majors")
+        .where({ id: updateUserDto.major_id })
+        .first();
       if (!majorExists) {
         throw new BadRequestError("Hệ quản lý được chọn không tồn tại");
       }
     }
 
-    if (updateUserDto.warehouse_ids && updateUserDto.warehouse_ids.length > 0) {
+    if (warehouseIds && warehouseIds.length > 0) {
       const count = await db("warehouses")
-        .whereIn("id", updateUserDto.warehouse_ids)
+        .whereIn("id", warehouseIds)
         .count("id as total")
         .first();
-      if (Number(count?.total || 0) !== updateUserDto.warehouse_ids.length) {
+      if (Number(count?.total || 0) !== warehouseIds.length) {
         throw new BadRequestError("Một hoặc nhiều kho được chọn không tồn tại");
       }
     }
@@ -181,12 +200,12 @@ class UserService {
     }
 
     // update warehouse
-    if (updateUserDto.warehouse_ids !== undefined) {
+    if (warehouseIds !== undefined) {
       // remove all
       await warehouseUserRepository.deleteAllByUserId(updated.id);
-      if (updateUserDto.warehouse_ids.length > 0) {
+      if (warehouseIds.length > 0) {
         await warehouseUserRepository.createMany(
-          updateUserDto.warehouse_ids.map((w) => ({
+          warehouseIds.map((w) => ({
             user_id: updated.id,
             warehouse_id: w,
           })),
@@ -218,7 +237,16 @@ class UserService {
     });
 
     return getInfoData<ResponseUserDto>({
-      fields: ["id", "fullname", "username", "email", "is_active", "class_id", "major_id", "avatar_url"],
+      fields: [
+        "id",
+        "fullname",
+        "username",
+        "email",
+        "is_active",
+        "class_id",
+        "major_id",
+        "avatar_url",
+      ],
       object: updated,
     });
   }
@@ -230,7 +258,16 @@ class UserService {
       ...result,
       items: result.items.map((u) =>
         getInfoData({
-          fields: ["id", "fullname", "username", "email", "is_active", "class_id", "major_id", "avatar_url"],
+          fields: [
+            "id",
+            "fullname",
+            "username",
+            "email",
+            "is_active",
+            "class_id",
+            "major_id",
+            "avatar_url",
+          ],
           object: u,
         }),
       ),

@@ -25,6 +25,7 @@ interface CustomTableProps {
   showCheckbox?: boolean;
   checkboxHeader?: React.ReactNode;
   onCheckboxChange?: (checked: boolean, rowIndex: number, data?: any) => void;
+  rowKeys?: React.Key[];
 }
 
 export default function CustomTable({
@@ -45,6 +46,7 @@ export default function CustomTable({
   checkboxHeader,
   size = "medium",
   onCheckboxChange,
+  rowKeys,
 }: CustomTableProps) {
   const { toggle } = useAppProvider();
 
@@ -83,7 +85,11 @@ export default function CustomTable({
       )}
     >
       <div className="flex lg:justify-between items-center mb-5">
-        {title && <h4 className="text-sm lg:inline-block hidden whitespace-nowrap mr-2">{title}</h4>}
+        {title && (
+          <h4 className="text-sm lg:inline-block hidden whitespace-nowrap mr-2">
+            {title}
+          </h4>
+        )}
         <div className="gap-2 items-center">
           {/* {onDrawer && (
             <CustomIcon
@@ -128,7 +134,7 @@ export default function CustomTable({
           {data.length === 0 && <p>Không có dữ liệu</p>}
           {data.map((row, rowIndex) => (
             <tr
-              key={rowIndex}
+              key={rowKeys?.[rowIndex] ?? rowIndex}
               className={striped && rowIndex % 2 === 0 ? "bg-[#f5f5f5]" : ""}
             >
               {showCheckbox && (
@@ -137,8 +143,9 @@ export default function CustomTable({
                 >
                   <CustomCheckbox
                     onChange={(e) => {
-                      onCheckboxChange &&
+                      if (onCheckboxChange) {
                         onCheckboxChange(e.target.checked, rowIndex, row);
+                      }
                     }}
                   />
                 </td>

@@ -50,16 +50,22 @@ class CategoryService {
   static async addNewCategory(
     createCategoryDto: CreateCategoryDto,
   ): Promise<Category> {
-    const categoryFound = await categoryRepository.findOneByCondition({
-      name: createCategoryDto.code,
-    });
-    if (categoryFound) {
-      throw new BadRequestError("danh mục này đã tồn tại");
+    const [nameFound, codeFound] = await Promise.all([
+      categoryRepository.findOneByCondition({ name: createCategoryDto.name }),
+      categoryRepository.findOneByCondition({ code: createCategoryDto.code }),
+    ]);
+
+    if (nameFound) {
+      throw new BadRequestError("tên danh mục này đã tồn tại");
     }
+
+    if (codeFound) {
+      throw new BadRequestError("mã danh mục này đã tồn tại");
+    }
+
     const categoryStore = await categoryRepository.create(createCategoryDto);
     return categoryStore;
   }
-
   static async updateCategory(
     categoryId: number,
     updateCategoryDto: UpdateCategoryDto,
@@ -72,6 +78,7 @@ class CategoryService {
 
     // find name
     const nameIsExit = await categoryRepository.findOneByCondition({
+      // tại sao không viết là updateCategoryDto mà là {name: updateCategoryDto.name,}
       name: updateCategoryDto.name,
     });
     if (nameIsExit && updateCategoryDto.name !== categoryFound.name) {

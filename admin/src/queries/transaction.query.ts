@@ -34,6 +34,9 @@ export function useImportManualTransaction() {
     },
     onError: (error: any) => {
       console.error(error.response?.data || error.message);
+      toast.error(
+        error.response?.data?.message || "Nhập kho thủ công thất bại",
+      );
     },
   });
 }
@@ -164,7 +167,7 @@ export function useCreateMaintenanceTransaction() {
     },
     onSuccess: ({ message }) => {
       queryClient.invalidateQueries({ queryKey: ["maintenances"] });
-      queryClient.invalidateQueries({ queryKey: ["batches-need-maintenance"] });//batches-need-maintenance
+      queryClient.invalidateQueries({ queryKey: ["batches-need-maintenance"] }); //batches-need-maintenance
       toast.info(message, {
         progress: undefined,
         hideProgressBar: true,
@@ -312,7 +315,7 @@ export function useAllImportExportTrx(
     queryFn: async () => {
       const res = await TransactionApi.getTransactions({
         ...paginationTrxDto,
-        types: [TransactionTypeEnum.IMPORT,TransactionTypeEnum.EXPORT],
+        types: [TransactionTypeEnum.IMPORT, TransactionTypeEnum.EXPORT],
       });
       return res.data;
     },
@@ -353,16 +356,19 @@ export function useAllTransactions(
 
 export function useAllTransactionsForAsset(
   paginationTrxDto: PaginationTransactionsForAssetDto,
-  assetCode:string,
-  types:number[]
+  assetCode: string,
+  types: number[],
 ) {
   const query = useQuery({
-    queryKey: ["transactions",types,assetCode,paginationTrxDto],
+    queryKey: ["transactions", types, assetCode, paginationTrxDto],
     queryFn: async () => {
-      const res = await TransactionApi.getTransactionsForAsset({
-        ...paginationTrxDto,
-        types
-      },assetCode)
+      const res = await TransactionApi.getTransactionsForAsset(
+        {
+          ...paginationTrxDto,
+          types,
+        },
+        assetCode,
+      );
       return res.data;
     },
     staleTime: 0,
@@ -378,13 +384,15 @@ export function useAllTransactionsForAsset(
   };
 }
 
-export function useDetailTransaction(transactionCode: string) {
+export function useDetailTransaction(transactionCode: string | null) {
   const query = useQuery({
     queryKey: ["transaction", transactionCode],
     queryFn: async () => {
+      if (!transactionCode) return null;
       const res = await TransactionApi.getDetailTransaction(transactionCode);
       return res.data;
     },
+    enabled: Boolean(transactionCode),
   });
 
   return {
@@ -396,11 +404,11 @@ export function useDetailTransaction(transactionCode: string) {
   };
 }
 
-export function useAllBatchesByCode(assetCode?: string|null) {
+export function useAllBatchesByCode(assetCode?: string | null) {
   const query = useQuery({
     queryKey: [assetCode, "batches"],
     queryFn: async () => {
-      if (!assetCode)return;
+      if (!assetCode) return;
       const res = await TransactionApi.getAssetBatches(assetCode);
       return res.data;
     },

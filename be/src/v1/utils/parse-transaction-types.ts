@@ -7,6 +7,7 @@ export function parseTransactionTypes(input?: string | string[]): number[] {
       TransactionTypeEnum.EXPORT,
       TransactionTypeEnum.ALLOCATION_RETURN,
       TransactionTypeEnum.DISPOSAL,
+      TransactionTypeEnum.MAINTENANCE,
     ];
   }
 

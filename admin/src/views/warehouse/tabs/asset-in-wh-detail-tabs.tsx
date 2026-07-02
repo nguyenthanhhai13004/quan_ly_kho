@@ -17,7 +17,6 @@ type AssetInWHDetailTabsProps = {
 export default function AssetInWHDetailTabs({
   assetCode,
 }: AssetInWHDetailTabsProps) {
-  if (!assetCode) return;
   const { batches } = useAllBatchesByCode(assetCode);
   const tabs: ICustomTab[] = [
     {

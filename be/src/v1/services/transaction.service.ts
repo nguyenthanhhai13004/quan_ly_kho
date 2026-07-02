@@ -60,6 +60,9 @@ type TrendData = {
   data: { x: string; y: number }[];
 };
 
+const isTruthyFlag = (value: unknown) =>
+  value === true || value === 1 || value === "true" || value === "1";
+
 class TransactionService {
   static async createAllocation(createAllocationDto: CreateAllocationDto) {
     const {
@@ -375,6 +378,8 @@ class TransactionService {
       const key = JSON.stringify({
         asset_id: item.asset_id,
         batch_code: item.batch_code || null,
+        new_batch_code: item.new_batch_code || null,
+        is_new_batch: Boolean(item.is_new_batch),
         manufacture_date: item.manufacture_date || null,
         expiration_date: item.expiration_date || null,
         maintenance_due: item.maintenance_due || null,
@@ -451,6 +456,8 @@ class TransactionService {
           asset_id,
           quantity,
           batch_code,
+          new_batch_code,
+          is_new_batch,
           cost,
           manufacture_date,
           expiration_date,
@@ -458,8 +465,11 @@ class TransactionService {
         } = item;
 
         let warehouseAssetId: number;
+        const shouldCreateNewBatch =
+          isTruthyFlag(is_new_batch) ||
+          (!batch_code && Boolean(new_batch_code));
 
-        if (batch_code) {
+        if (batch_code && !shouldCreateNewBatch) {
           const existingWA = await trx("warehouse_asset")
             .where({
               warehouse_id,
@@ -484,7 +494,18 @@ class TransactionService {
 
           warehouseAssetId = existingWA.id;
         } else {
-          const newBatchCode = generateBatchCode(asset_id.toString());
+          const newBatchCode =
+            new_batch_code ||
+            batch_code ||
+            generateBatchCode(asset_id.toString());
+          const existedBatch = await trx("warehouse_asset")
+            .where({ batch_code: newBatchCode })
+            .first();
+
+          if (existedBatch) {
+            throw new BadRequestError(`Batch code ${newBatchCode} đã tồn tại`);
+          }
+
           const resultWA = await trx("warehouse_asset").insert({
             warehouse_id,
             asset_id,

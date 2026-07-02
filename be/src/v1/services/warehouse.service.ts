@@ -65,16 +65,12 @@ class WarehouseService {
   static async createWarehouse({
     userId,
     name,
-    // province_code,
-    // ward_code,
     address_detail,
     latitude,
     longitude,
   }: {
     userId: number;
     name: string;
-    // province_code: string;
-    // ward_code: string;
     address_detail: string;
     latitude?: number | null;
     longitude?: number | null;
@@ -86,15 +82,16 @@ class WarehouseService {
       throw new BadRequestError("kho đã tồn tại, vui lòng đặt tên khác");
     }
 
-    // create new address
     const address = await addressRepository.create({
       address_detail,
       latitude,
       longitude,
+      created_by_user_id: userId,
+      modified_by_user_id: userId,
     });
 
     if (!address) {
-      throw new InternalServerError("Tạo thất bại");
+      throw new InternalServerError("Tạo địa chỉ thất bại");
     }
 
     const newWarehouse = await warehouseRepository.create({
@@ -109,7 +106,6 @@ class WarehouseService {
     }
     return newWarehouse;
   }
-
   static async getAllWarehouseOwn(
     userId: number,
     paginationDto: PaginationDto,
@@ -195,11 +191,19 @@ class WarehouseService {
         "wa.status",
         "wa.expiration_date",
         "wa.maintenance_due",
-        "wa.quantity"
+        "wa.quantity",
       )
       .where("wa.asset_id", assetId);
 
-    const stockMap: Record<number, { warehouse_id: number; warehouse_name: string; warehouse_code: string; total_quantity: number }> = {};
+    const stockMap: Record<
+      number,
+      {
+        warehouse_id: number;
+        warehouse_name: string;
+        warehouse_code: string;
+        total_quantity: number;
+      }
+    > = {};
 
     for (const row of rows) {
       const finalStatus = resolveStatus(row);
@@ -209,7 +213,7 @@ class WarehouseService {
             warehouse_id: row.warehouse_id,
             warehouse_name: row.warehouse_name,
             warehouse_code: row.warehouse_code,
-            total_quantity: 0
+            total_quantity: 0,
           };
         }
         stockMap[row.warehouse_id].total_quantity += Number(row.quantity);
@@ -220,12 +224,17 @@ class WarehouseService {
   }
 
   static async getAllAssetsInWarehouseOwn(
-    { page, size, category_id, code, name, status, ids }: PaginationAssetsDto & { status?: number; ids?: number[] },
+    {
+      page,
+      size,
+      category_id,
+      code,
+      name,
+      status,
+      ids,
+    }: PaginationAssetsDto & { status?: number; ids?: number[] },
     warehouse_id: number,
   ) {
-
-
-
     const parsedPage = Number(page || 1);
     const parsedSize = Number(size || 20);
     const offset = (parsedPage - 1) * parsedSize;
@@ -280,8 +289,8 @@ class WarehouseService {
       } else if (status == 3) {
         // assetQuery = assetQuery.where("wa.status", AssetStatusEnum.MAINTENANCE);
         assetQuery = assetQuery
-        .whereNotNull("wa.maintenance_due")
-        .where("wa.maintenance_due", "<=", now);
+          .whereNotNull("wa.maintenance_due")
+          .where("wa.maintenance_due", "<=", now);
       } else if (status == 4) {
         assetQuery = assetQuery.where("wa.expiration_date", "<", now);
       } else if (status == 2) {
@@ -376,15 +385,15 @@ class WarehouseService {
       totalQuery = totalQuery.where("a.category_id", category_id);
     }
 
-    if (status){
+    if (status) {
       const now = new Date();
       if (status == 1) {
         totalQuery = totalQuery.where("wa.status", AssetStatusEnum.GOOD);
       } else if (status == 3) {
         // assetQuery = assetQuery.where("wa.status", AssetStatusEnum.MAINTENANCE);
         totalQuery = totalQuery
-        .whereNotNull("wa.maintenance_due")
-        .where("wa.maintenance_due", "<=", now);
+          .whereNotNull("wa.maintenance_due")
+          .where("wa.maintenance_due", "<=", now);
       } else if (status == 4) {
         totalQuery = totalQuery.where("wa.expiration_date", "<", now);
       } else if (status == 2) {
@@ -398,7 +407,7 @@ class WarehouseService {
       .then((res) => Number(res?.count || 0));
 
     return {
-      items:items.filter((i)=>i.status.length>0),
+      items: items.filter((i) => i.status.length > 0),
       page: parsedPage,
       size: parsedSize,
       total,
