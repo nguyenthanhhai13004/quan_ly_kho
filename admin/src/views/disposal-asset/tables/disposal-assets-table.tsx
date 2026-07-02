@@ -38,7 +38,7 @@ export default function DisposalAssetTable({
   return (
     <>
       <CustomTable
-        title="D/S lịch sử thanh lý"
+        // title="D/S lịch sử thanh lý"
         columns={columns}
         filter={<TransactionFilter />}
         currentPage={params.page}

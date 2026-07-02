@@ -12,7 +12,7 @@ type TransactionFilterProps = {
 export default function TransactionFilter({
   onFiltersChange,
 }: TransactionFilterProps) {
-  const { users } = useUsers();
+  const { users } = useUsers({ page: 1, size: 100 });
   const {
     handleChange,
     filters,
@@ -55,6 +55,7 @@ export default function TransactionFilter({
         placeholder="Tất cả"
         value={filters?.created_by_user_id || ""}
         className="min-w-[150px] rounded-2xl"
+        searchable
         options={
           users?.items.map((u) => {
             return {

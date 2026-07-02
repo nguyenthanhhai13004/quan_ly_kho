@@ -13,6 +13,7 @@ export default function CommanderRequestsFilter() {
         labelType="top"
         placeholder="Tất cả loại"
         className="min-w-[150px] w-full rounded-2xl"
+        customDropdown
         options={[
           { label: "Cấp phát", value: "1" },
           { label: "Thu hồi", value: "2" },
@@ -27,6 +28,7 @@ export default function CommanderRequestsFilter() {
         labelType="top"
         placeholder="Tất cả trạng thái"
         className="min-w-[150px] w-full rounded-2xl"
+        customDropdown
         options={[
           { label: "Chờ duyệt", value: "0" },
           { label: "Đã duyệt", value: "1" },

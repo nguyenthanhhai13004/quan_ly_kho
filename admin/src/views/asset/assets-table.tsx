@@ -67,7 +67,7 @@ export default function AssetsTable({
         }
         // onDrawer={toggleFilterDrawer}
         // isOpenDrawer={drawer === String(DrawerEnum.FILTER_DRAWER)}
-        title="D/s tài sản"
+        // title="D/s tài sản"
         totalPages={Number(assets?.totalPages || 1)}
         currentPage={params.page}
         onPageChange={setPage}

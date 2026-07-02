@@ -10,6 +10,7 @@ import { BiEdit } from "react-icons/bi";
 import { RiResetLeftFill } from "react-icons/ri";
 import UpdateStudentModal from "../student/modals/update-student-modal";
 import { toast } from "react-toastify";
+import StudentFilter from "../student/student-filter";
 
 const columns = [
   "STT",
@@ -67,6 +68,7 @@ export default function CommanderStudentsView() {
       <CustomTable
         onPageChange={handlePagination}
         title="Danh sách học viên"
+        filter={<StudentFilter />}
         columns={columns}
         currentPage={params.page}
         totalPages={students?.totalPages}

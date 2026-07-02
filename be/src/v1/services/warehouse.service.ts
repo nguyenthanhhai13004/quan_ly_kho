@@ -298,7 +298,11 @@ class WarehouseService {
       }
     }
 
-    assetQuery = assetQuery.groupBy("a.id").limit(parsedSize).offset(offset);
+    assetQuery = assetQuery
+      .groupBy("a.id")
+      .orderBy("a.id", "desc")
+      .limit(parsedSize)
+      .offset(offset);
 
     const assets = await assetQuery;
 

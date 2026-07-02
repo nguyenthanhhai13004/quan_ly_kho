@@ -14,10 +14,11 @@ export const useMajors = (params: PaginationDto & { keyword?: string }) => {
   };
 };
 
-export const useAllMajors = () => {
+export const useAllMajors = (options?: { enabled?: boolean }) => {
   const { data, isLoading } = useQuery({
     queryKey: ["all-majors"],
     queryFn: () => MajorApi.getAllList(),
+    ...options,
   });
 
   return {

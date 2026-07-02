@@ -133,6 +133,7 @@ export default function AssetOwnPage() {
         labelType="top"
         placeholder="Tất cả danh mục"
         className="min-w-[150px] w-full rounded-2xl"
+        searchable
         options={uniqueCategories.map((cat) => ({ label: cat, value: cat }))}
         value={categoryDraft}
         onChange={(e) => setCategoryDraft(e.target.value)}
@@ -142,6 +143,7 @@ export default function AssetOwnPage() {
         labelType="top"
         placeholder="Tất cả tình trạng"
         className="min-w-[150px] w-full rounded-2xl"
+        customDropdown
         options={[
           { label: "Tốt", value: String(AssetStatusEnum.GOOD) },
           { label: "Hỏng", value: String(AssetStatusEnum.BROKEN) },

@@ -59,7 +59,7 @@ export default function UsersTable() {
     <>
       <CustomTable
         onPageChange={handlePagination}
-        title="D/S người dùng"
+        // title="D/S người dùng"
         filter={<UserFilter />}
         columns={columns}
         onDrawer={toggleFilterDrawer}

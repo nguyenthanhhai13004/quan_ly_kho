@@ -8,12 +8,16 @@ import { getRequestInfo } from "../utils/request-info";
 
 class UserController {
   getAllUsers = async (req: Request, res: Response, next: NextFunction) => {
+    const page = req.query.page ? Number(req.query.page) : 1;
+    const size = req.query.size ? Number(req.query.size) : 20;
+    const role = req.query.role ? Number(req.query.role) : undefined;
+    const active = req.query.active ? Number(req.query.active) : undefined;
     const query = {
-      page: req.query.page || 1,
-      size: req.query.size || 20,
+      page: Number.isNaN(page) ? 1 : page,
+      size: Number.isNaN(size) ? 20 : size,
       keyword: req.query.keyword || "",
-      role: req.query.role,
-      active: req.query.active,
+      role: Number.isNaN(role) ? undefined : role,
+      active: Number.isNaN(active) ? undefined : active,
     } as PaginationUsersDto;
     return new OK({
       message: "lấy danh sách người dùng thành công",

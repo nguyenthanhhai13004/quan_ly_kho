@@ -34,7 +34,7 @@ export default function CreateAssetModal({ open, onClose }: CustomModalProps) {
   } = useForm<CreateAssetData>({
     resolver: zodResolver(CreateAssetSchema),
   });
-  const { categories } = useAllCategories();
+  const { categories } = useAllCategories({ page: 1, size: 100 });
   const { mutate } = useCreateAsset();
   const onSubmit = (data: CreateAssetData) => {
     const { category_id, code, name, description } = data;

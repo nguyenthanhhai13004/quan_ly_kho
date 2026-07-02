@@ -11,6 +11,7 @@ import { useClasses, useDeleteClass } from "../../queries/class.query";
 import { format } from "date-fns";
 import { MdDelete } from "react-icons/md";
 import { toast } from "react-toastify";
+import ClassFilter from "../student/class-filter";
 
 const columns = [
   "STT",
@@ -55,6 +56,7 @@ export default function ClassesTable() {
       <CustomTable
         onPageChange={handlePagination}
         title="Danh sách lớp"
+        filter={<ClassFilter showMajor />}
         columns={columns}
         currentPage={params.page}
         totalPages={classes?.totalPages}

@@ -206,6 +206,7 @@ export default function OfficerRequestsView() {
               value={localFilters.type}
               onChange={(e) => setLocalFilters({ ...localFilters, type: e.target.value })}
               className="min-w-[130px]"
+              customDropdown
               options={[
                 { label: "Cấp phát", value: 1 },
                 { label: "Thu hồi", value: 2 },
@@ -220,6 +221,7 @@ export default function OfficerRequestsView() {
               value={localFilters.class_id}
               onChange={(e) => setLocalFilters({ ...localFilters, class_id: e.target.value })}
               className="min-w-[130px]"
+              searchable
               options={
                 classes?.map((c) => ({
                   label: c.name,

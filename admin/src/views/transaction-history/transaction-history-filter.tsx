@@ -6,7 +6,7 @@ import { usePaginationParams } from "../../hooks/use-pagination-params";
 import type { PaginationTransactionsDto } from "../../dtos/transaction/pagination-transactions.dto";
 import FilterWrapper from "../filter-wrapper";
 export default function TransactionHistoryFilter() {
-  const { users } = useUsers();
+  const { users } = useUsers({ page: 1, size: 100 });
   const { handleChange, filters, handleSearch, resetParams } =
     usePaginationParams<PaginationTransactionsDto>();
   return (
@@ -15,6 +15,7 @@ export default function TransactionHistoryFilter() {
         placeholder="Tất cả"
         labelType="top"
         className="min-w-[150px] rounded-2xl"
+        customDropdown
         options={[
           {
             label: "Xuất",
@@ -62,6 +63,7 @@ export default function TransactionHistoryFilter() {
         placeholder="Tất cả"
         value={filters?.created_by_user_id || ""}
         className="min-w-[150px] rounded-2xl"
+        searchable
         options={
           users?.items.map((u) => {
             return {

@@ -23,13 +23,13 @@ class UserRepository {
           .orWhere("fullname", "like", `%${keyword}%`);
       });
 
-    if (active) {
+    if (active !== undefined && active !== null) {
       query = query.where(function () {
         this.where("is_active", "=", active);
       });
     }
 
-    if (role) {
+    if (role !== undefined && role !== null) {
       query = query.where(function () {
         this.where("role_id", "=", role);
       });

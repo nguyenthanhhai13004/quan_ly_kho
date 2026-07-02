@@ -35,7 +35,7 @@ export default function TransactionsHistoryTable() {
   return (
     <>
       <CustomTable
-        title="D/S"
+        // title="D/S"
         filter={<TransactionHistoryFilter />}
         columns={columns}
         currentPage={params.page}

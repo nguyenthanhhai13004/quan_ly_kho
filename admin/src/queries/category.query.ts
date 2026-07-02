@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import CategoryApi from "../api/category-api";
 import type { TCategory } from "../types/category.type";
 import type { PaginationDto } from "../common/dtos/pagination.dto";
-export function useAllCategories(paginationDto?: PaginationDto & { keyword: string }) {
+export function useAllCategories(paginationDto?: PaginationDto & { keyword?: string }) {
   const query = useQuery({
     queryKey: ["categories",paginationDto],
     queryFn: async () => {

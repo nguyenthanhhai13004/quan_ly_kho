@@ -42,7 +42,7 @@ export default function AssetInModalTable({
         columns={columns}
         checkboxHeader={"Chọn tài sản"}
         filter={<AssetFilter onFiltersChange={setFilters} inModal={inModal} />}
-        title="D/s tài sản"
+        // title="D/s tài sản"
         totalPages={assets?.totalPages}
         currentPage={filters.page}
         onPageChange={setPageFilter}

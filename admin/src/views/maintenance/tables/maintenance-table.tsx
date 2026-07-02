@@ -42,7 +42,7 @@ export default function MaintenanceTable({ assetCode,isInModal}: MaintenanceTabl
   return (
     <>
       <CustomTable
-        title="D/S"
+        // title="D/S"
         columns={columns}
         filter={<TransactionFilter onFiltersChange={isInModal ? setFilters : undefined}/>}
         data={

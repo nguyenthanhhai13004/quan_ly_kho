@@ -44,7 +44,7 @@ export default function UpdateAssetModal({
   } = useForm<UpdateAssetData>({
     resolver: zodResolver(UpdateAssetSchema),
   });
-  const { categories } = useAllCategories();
+  const { categories } = useAllCategories({ page: 1, size: 100 });
   const { mutate } = useUpdateAsset();
  useEffect(() => {
   if (asset) {

@@ -16,6 +16,7 @@ export default function StudentFilter() {
         labelType="top"
         placeholder="Tất cả"
         className="min-w-[150px] w-full rounded-2xl"
+        searchable
         options={
           classes?.map((c) => ({
             label: c.name,
@@ -30,6 +31,7 @@ export default function StudentFilter() {
         labelType="top"
         placeholder="Tất cả"
         className="min-w-[150px] w-full rounded-2xl"
+        customDropdown
         options={[
           { label: "Đang hoạt động", value: "1" },
           { label: "Không hoạt động", value: "0" },

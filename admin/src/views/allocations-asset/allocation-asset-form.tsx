@@ -36,7 +36,7 @@ export default function AllocationAssetForm({
   defaultReceiverId,
 }: AllocationAssetFormProps) {
   const columns = ["Hành động", "Mã lô hàng", "Tên tài sản", "Số lượng"];
-  const { users } = useUsers();
+  const { users } = useUsers({ page: 1, size: 100 });
   const receiverUser = users?.items?.find((u) => u.id === defaultReceiverId);
   const receiverDisplayText = receiverUser 
     ? `${receiverUser.fullname} - ${receiverUser.email}` 

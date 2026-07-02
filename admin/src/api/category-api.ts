@@ -6,7 +6,7 @@ import type { TCategory } from "../types/category.type";
 
 class CategoryApi {
   static async getAllCategories(
-    paginationDto?: PaginationDto & { keyword: string },
+    paginationDto?: PaginationDto & { keyword?: string },
   ): Promise<ApiResponseDto<ResponsePaginationDto<TCategory>>> {
     const response = await api.get("/v1/categories", {
       params: paginationDto,

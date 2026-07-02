@@ -15,6 +15,7 @@ export default function UserFilter() {
         labelType="top"
         placeholder="Tất cả"
         className="min-w-[150px] w-full rounded-2xl"
+        customDropdown
         options={
           roles?.map((role) => {
             return {
@@ -31,12 +32,13 @@ export default function UserFilter() {
         labelType="top"
         placeholder="Tất cả"
         className="min-w-[150px] w-full rounded-2xl"
+        customDropdown
         options={[
           { label: "Active", value: "1" },
           { label: "Inactive", value: "0" },
         ]}
         label="Trạng thái"
-        value={filters?.active || ""}
+        value={filters?.active !== undefined && filters?.active !== null ? String(filters.active) : ""}
         onChange={(e) => handleChange("active", e.target.value)}
       />
       <CustomInput

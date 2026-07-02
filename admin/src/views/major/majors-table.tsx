@@ -11,6 +11,7 @@ import { useMajors, useDeleteMajor } from "../../queries/major.query";
 import { format } from "date-fns";
 import { MdDelete } from "react-icons/md";
 import { toast } from "react-toastify";
+import MajorFilter from "./major-filter";
 
 const columns = [
   "STT",
@@ -55,6 +56,7 @@ export default function MajorsTable() {
       <CustomTable
         onPageChange={handlePagination}
         title="Danh sách hệ"
+        filter={<MajorFilter />}
         columns={columns}
         currentPage={params.page}
         totalPages={majors?.totalPages}

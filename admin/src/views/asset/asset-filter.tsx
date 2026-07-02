@@ -5,7 +5,7 @@ import type { PaginationAssetsDto } from "../../dtos/asset/pagination-assets.dto
 import { usePaginationParams } from "../../hooks/use-pagination-params";
 import { useAllCategories } from "../../queries/category.query";
 import FilterWrapper from "../filter-wrapper";
-import { statusMap } from "../warehouse/asset-status-badges";
+import { statusMap } from "../../constants/asset-status-map.constant";
 
 type AssetFilterProps = {
   onFiltersChange?: (newFilters: PaginationAssetsDto) => void;
@@ -16,7 +16,7 @@ export default function AssetFilter({
   onFiltersChange,
   inModal
 }: AssetFilterProps) {
-  const { categories } = useAllCategories();
+  const { categories } = useAllCategories({ page: 1, size: 100 });
   const {
     filters,
     handleChange,
@@ -44,6 +44,7 @@ export default function AssetFilter({
         labelType="top"
         placeholder="Tất cả danh mục"
         className="min-w-[150px]"
+        searchable
         options={
           categories?.items?.map((c) => ({
             label: c.name,
@@ -61,6 +62,7 @@ export default function AssetFilter({
         labelType="top"
         placeholder="Tất cả tình trạng"
         className="min-w-[150px]"
+        customDropdown
         options={
           Object.entries(statusMap).map(([key, value]) => ({
             label: value.label,

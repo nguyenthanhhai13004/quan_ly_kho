@@ -30,7 +30,7 @@ export default function ImportExportTransactionsTable() {
   return (
     <>
       <CustomTable
-        title="D/S"
+        // title="D/S"
         filter={<ImportExportFilter />}
         columns={columns}
         currentPage={params.page}
