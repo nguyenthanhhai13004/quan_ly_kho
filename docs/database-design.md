@@ -1,9 +1,10 @@
 # Tài liệu thiết kế Cơ sở dữ liệu — Hệ thống Quản lý Kho tài sản
 > **Công nghệ:** MySQL + Knex.js (migrations trong `be/migrations/`, seed trong `be/seeds/`).
-> **Phạm vi:** 22 bảng, chia thành 6 nhóm nghiệp vụ (A–F).
+> **Phạm vi:** 26 bảng, chia thành 6 nhóm nghiệp vụ (A–F).
 ## Mục lục
 
 - [Quy ước chung](#quy-ước-chung)
+- [Khóa chính, khóa ngoại & quan hệ](#khóa-chính-khóa-ngoại--quan-hệ)
 - [A. Phân quyền & Người dùng (RBAC)](#a-phân-quyền--người-dùng-rbac)
 - [B. Danh mục & Tài sản / Kho](#b-danh-mục--tài-sản--kho)
 - [C. Giao dịch tài sản](#c-giao-dịch-tài-sản)
@@ -32,15 +33,108 @@ Hầu hết các bảng nghiệp vụ đều dùng chung một bộ cột chuẩ
 - `CASCADE` — xóa cha thì xóa luôn con (vd xóa giao dịch → xóa dòng chi tiết).
 - `SET NULL` — xóa cha thì cột FK ở con thành `NULL` (giữ lại bản ghi con).
 - `RESTRICT` — chặn không cho xóa cha nếu còn con tham chiếu.
+## Khóa chính, khóa ngoại & quan hệ
+
+Theo `docs/database.dbml` và migration FK, schema hiện có **26 bảng** và **77 khóa ngoại**: 32 FK nghiệp vụ liệt kê trực tiếp bên dưới, cộng 45 FK audit tới `users.id`.
+
+### Khóa chính (PK)
+
+| Bảng | Khóa chính | Ghi chú |
+|---|---|---|
+| `users` | `id` | Tự tăng. |
+| `roles` | `id` | Tự tăng. |
+| `permissions` | `id` | Tự tăng. |
+| `role_permission` | (`role_id`, `permission_id`) | Khóa chính ghép, bảng nối N-N, không có `id`. |
+| `majors` | `id` | Tự tăng. |
+| `classes` | `id` | Tự tăng. |
+| `students` | `id` | Tự tăng. |
+| `categories` | `id` | Tự tăng. |
+| `assets` | `id` | Tự tăng. |
+| `address` | `id` | `bigint`, tự tăng. |
+| `warehouses` | `id` | Tự tăng. |
+| `warehouse_user` | (`user_id`, `warehouse_id`) | Khóa chính ghép, bảng nối N-N, không có `id`. |
+| `warehouse_asset` | `id` | Tự tăng. |
+| `asset_transactions` | `id` | Tự tăng. |
+| `asset_imports` | `id` | Tự tăng. |
+| `asset_exports` | `id` | Tự tăng. |
+| `asset_transaction_items` | `id` | Tự tăng. |
+| `asset_lifecycle` | `id` | Tự tăng. |
+| `asset_maintenances` | `id` | Tự tăng. |
+| `advisor_requests` | `id` | Tự tăng. |
+| `log_actions` | `id` | `bigint`, tự tăng. |
+| `log_controllers` | `id` | `bigint`, tự tăng. |
+| `kqn_logs` | `id` | `bigint`, tự tăng. |
+| `administrative_units` | `id` | Không tự tăng, lấy theo dữ liệu chuẩn. |
+| `provinces` | `code` | Mã tỉnh/thành là PK. |
+| `wards` | `code` | Mã phường/xã là PK. |
+
+### Khóa ngoại nghiệp vụ và quan hệ
+
+Các quan hệ dưới đây là theo ràng buộc DB hiện tại. Nếu một FK không có `unique`, quan hệ được tính là `1-N`, kể cả khi nghiệp vụ thường chỉ tạo một bản ghi chi tiết cho một loại phiếu.
+
+| Bảng con.cột FK | Bảng cha.cột PK/UK | Quan hệ | Khi xóa cha | Ý nghĩa |
+|---|---|---|---|---|
+| `users.role_id` | `roles.id` | `roles` 1-N `users` | `SET NULL` | User mất vai trò nếu role bị xóa vật lý. |
+| `users.class_id` | `classes.id` | `classes` 1-N `users` | `SET NULL` | Tài khoản user có thể rời khỏi lớp nếu lớp bị xóa. |
+| `users.major_id` | `majors.id` | `majors` 1-N `users` | `SET NULL` | Tài khoản user có thể rời khỏi ngành nếu ngành bị xóa. |
+| `role_permission.role_id` | `roles.id` | `roles` 1-N `role_permission` | `CASCADE` | Xóa role thì chỉ xóa các dòng gán quyền trong `role_permission`; không xóa bản ghi `permissions`. |
+| `role_permission.permission_id` | `permissions.id` | `permissions` 1-N `role_permission` | `CASCADE` | Xóa permission thì chỉ xóa các dòng gán role trong `role_permission`; không xóa bản ghi `roles`. |
+| `classes.major_id` | `majors.id` | `majors` 1-N `classes` | `CASCADE` | Xóa ngành thì xóa các lớp thuộc ngành. |
+| `students.class_id` | `classes.id` | `classes` 1-N `students` | `CASCADE` | Xóa lớp thì xóa sinh viên thuộc lớp. |
+| `assets.category_id` | `categories.id` | `categories` 1-N `assets` | `RESTRICT` | Không cho xóa danh mục nếu còn tài sản thuộc danh mục đó. |
+| `warehouses.address_id` | `address.id` | `address` 1-N `warehouses` | `SET NULL` | Xóa địa chỉ thì kho vẫn còn, chỉ mất liên kết địa chỉ. |
+| `warehouse_user.user_id` | `users.id` | `users` 1-N `warehouse_user` | `CASCADE` | Xóa user thì xóa các dòng phân công kho của user. |
+| `warehouse_user.warehouse_id` | `warehouses.id` | `warehouses` 1-N `warehouse_user` | `CASCADE` | Xóa kho thì xóa các dòng phân công cán bộ của kho. |
+| `warehouse_asset.asset_id` | `assets.id` | `assets` 1-N `warehouse_asset` | `CASCADE` | Xóa loại tài sản thì xóa các lô tồn thuộc loại đó. |
+| `warehouse_asset.warehouse_id` | `warehouses.id` | `warehouses` 1-N `warehouse_asset` | `CASCADE` | Xóa kho thì xóa các lô tồn trong kho. |
+| `asset_transactions.warehouse_id` | `warehouses.id` | `warehouses` 1-N `asset_transactions` | `SET NULL` | Phiếu giao dịch vẫn còn nếu kho bị xóa vật lý. |
+| `asset_imports.transaction_id` | `asset_transactions.id` | `asset_transactions` 1-N `asset_imports` | `CASCADE` | Xóa phiếu thì xóa chi tiết nhập. |
+| `asset_exports.transaction_id` | `asset_transactions.id` | `asset_transactions` 1-N `asset_exports` | `CASCADE` | Xóa phiếu thì xóa chi tiết xuất. |
+| `asset_transaction_items.transaction_id` | `asset_transactions.id` | `asset_transactions` 1-N `asset_transaction_items` | `CASCADE` | Xóa phiếu thì xóa các dòng hàng. |
+| `asset_transaction_items.warehouse_asset_id` | `warehouse_asset.id` | `warehouse_asset` 1-N `asset_transaction_items` | `CASCADE` | Mỗi dòng phiếu trỏ tới một lô tồn cụ thể trong kho; từ lô này mới biết tài sản nào, kho nào. Nếu xóa vật lý lô tồn thì DB xóa các dòng phiếu đang tham chiếu lô đó. |
+| `asset_lifecycle.transaction_id` | `asset_transactions.id` | `asset_transactions` 1-N `asset_lifecycle` | `CASCADE` | Xóa phiếu thì xóa bản ghi vòng đời liên quan. |
+| `asset_lifecycle.receiver_id` | `users.id` | `users` 1-N `asset_lifecycle` | `SET NULL` | Xóa người nhận thì vẫn giữ lịch sử vòng đời, chỉ mất người nhận. |
+| `asset_maintenances.transaction_id` | `asset_transactions.id` | `asset_transactions` 1-N `asset_maintenances` | `CASCADE` | Xóa phiếu thì xóa chi tiết bảo trì. |
+| `advisor_requests.advisor_id` | `users.id` | `users` 1-N `advisor_requests` | `CASCADE` | Xóa người gửi yêu cầu thì xóa các yêu cầu của họ. |
+| `advisor_requests.class_id` | `classes.id` | `classes` 1-N `advisor_requests` | `SET NULL` | Yêu cầu vẫn còn nếu lớp bị xóa. |
+| `advisor_requests.student_id` | `students.id` | `students` 1-N `advisor_requests` | `SET NULL` | Yêu cầu vẫn còn nếu sinh viên bị xóa. |
+| `advisor_requests.asset_id` | `assets.id` | `assets` 1-N `advisor_requests` | `SET NULL` | Yêu cầu vẫn còn nếu tài sản bị xóa. |
+| `advisor_requests.processed_by_user_id` | `users.id` | `users` 1-N `advisor_requests` | `SET NULL` | Yêu cầu vẫn còn nếu người xử lý bị xóa. |
+| `advisor_requests.warehouse_id` | `warehouses.id` | `warehouses` 1-N `advisor_requests` | `SET NULL` | Yêu cầu vẫn còn nếu kho dự kiến bị xóa. |
+| `kqn_logs.action_id` | `log_actions.id` | `log_actions` 1-N `kqn_logs` | `CASCADE` | Xóa loại hành động thì xóa log thuộc hành động đó. |
+| `kqn_logs.controller_id` | `log_controllers.id` | `log_controllers` 1-N `kqn_logs` | `SET NULL` | Log vẫn còn nếu phân hệ bị xóa. |
+| `provinces.administrative_unit_id` | `administrative_units.id` | `administrative_units` 1-N `provinces` | `SET NULL` | Tỉnh vẫn còn nếu loại đơn vị hành chính bị xóa. |
+| `wards.province_code` | `provinces.code` | `provinces` 1-N `wards` | `SET NULL` | Xã/phường vẫn còn nếu tỉnh bị xóa. |
+| `wards.administrative_unit_id` | `administrative_units.id` | `administrative_units` 1-N `wards` | `SET NULL` | Xã/phường vẫn còn nếu loại đơn vị hành chính bị xóa. |
+
+### Quan hệ N-N
+
+| Quan hệ N-N | Bảng nối | Cách đọc |
+|---|---|---|
+| `roles` N-N `permissions` | `role_permission` | Một vai trò có nhiều quyền; một quyền có thể nằm trong nhiều vai trò. |
+| `users` N-N `warehouses` | `warehouse_user` | Một cán bộ có thể quản lý nhiều kho; một kho có thể có nhiều cán bộ quản lý. |
+| `assets` N-N `warehouses` | `warehouse_asset` | Một loại tài sản có thể nằm ở nhiều kho; một kho có thể chứa nhiều loại tài sản. Bảng nối này đồng thời lưu số lượng, lô, hạn dùng, trạng thái. |
+
+### Khóa ngoại audit
+
+Các bảng `users`, `roles`, `permissions`, `categories`, `assets`, `address`, `warehouses`, `warehouse_user`, `warehouse_asset`, `asset_transactions`, `asset_imports`, `asset_exports`, `asset_transaction_items`, `asset_lifecycle`, `asset_maintenances` có các FK audit:
+
+| Cột | Trỏ tới | Quan hệ | Khi xóa user |
+|---|---|---|---|
+| `created_by_user_id` | `users.id` | `users` 1-N bản ghi được tạo | `SET NULL` |
+| `modified_by_user_id` | `users.id` | `users` 1-N bản ghi được sửa | `SET NULL` |
+| `deleted_by_user_id` | `users.id` | `users` 1-N bản ghi được xóa mềm | `SET NULL` |
+
+> `advisor_requests.allocation_transaction_code` chỉ là liên kết nghiệp vụ tới `asset_transactions.code`, **không phải FK vật lý** trong migration.
 ## A. Phân quyền & Người dùng (RBAC)
 ### Cách hoạt động
 Hệ thống dùng mô hình **RBAC (Role-Based Access Control)**:
 ```
-users  →  roles  →  (role_permissions)  →  permissions
+users  →  roles  →  (role_permission)  →  permissions
 ```
 
 - Mỗi **user** được gán **một vai trò** (`role_id`).
-- Mỗi **vai trò** sở hữu **nhiều quyền** thông qua bảng nối `role_permissions`.
+- Mỗi **vai trò** sở hữu **nhiều quyền** thông qua bảng nối `role_permission`.
 - Khi user đăng nhập, hệ thống tra ra danh sách quyền của vai trò để quyết định họ được làm gì (thêm tài sản, duyệt yêu cầu, xem báo cáo…).
 Ba vai trò mặc định (seed): `admin` (Admin hệ thống), `warehouse-officer` (Cán bộ kho), `commander` (Chỉ huy / Cố vấn học tập).
 Ngoài vai trò, **user còn có thể gắn với `class_id` / `major_id`** — dùng cho vai trò *Chỉ huy/Cố vấn* để biết họ phụ trách lớp/ngành nào.
@@ -75,7 +169,7 @@ Ngoài vai trò, **user còn có thể gắn với `class_id` / `major_id`** —
 | `name` | varchar (unique) | Tên quyền. |
 | `code` | varchar (unique) | Mã quyền dùng để kiểm tra trong code (vd `ASSET_CREATE`, `REPORT_VIEW`, `COMMANDER_REQUESTS_MANAGE`). |
 | `description` | varchar | Mô tả. |
-### `role_permissions` — Bảng nối Vai trò ↔ Quyền (N–N)
+### `role_permission` — Bảng nối Vai trò ↔ Quyền (N–N)
 
 | Trường | Kiểu | Ý nghĩa |
 |---|---|---|
@@ -124,7 +218,7 @@ Một `asset` có thể có **nhiều lô** (`warehouse_asset`) ở nhiều kho 
 |---|---|---|
 | `user_id` | int | FK → `users` (CASCADE). |
 | `warehouse_id` | int | FK → `warehouses` (CASCADE). |
-> Gán một (hoặc nhiều) cán bộ quản lý một kho. **Không có cột `id`.**
+> Bảng liên kết N–N: một cán bộ có thể quản lý nhiều kho, và một kho có thể có nhiều cán bộ quản lý. **Không có cột `id`.**
 ### `warehouse_asset` — Tồn kho theo lô ⭐
 Bảng trung tâm của tồn kho.
 

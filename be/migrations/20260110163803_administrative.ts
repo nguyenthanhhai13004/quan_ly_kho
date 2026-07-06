@@ -1,6 +1,9 @@
 import type { Knex } from "knex";
 
+// Migration tao du lieu cau truc hanh chinh Viet Nam.
+// administrative_units = loai don vi; provinces = tinh/thanh; wards = xa/phuong.
 export async function up(knex: Knex): Promise<void> {
+  // Loai don vi hanh chinh: tinh, thanh pho, phuong, xa...
   await knex.schema.createTable("administrative_units", (table) => {
     table.integer("id").primary();
     table.string("full_name", 255);
@@ -19,6 +22,7 @@ export async function up(knex: Knex): Promise<void> {
     table.dateTime("deleted_at").nullable();
   });
 
+  // Danh muc tinh/thanh pho, dung code lam khoa chinh theo du lieu hanh chinh.
   await knex.schema.createTable("provinces", (table) => {
     table.string("code", 20).primary();
     table.string("name", 255).notNullable();
@@ -45,6 +49,7 @@ export async function up(knex: Knex): Promise<void> {
     table.dateTime("deleted_at").nullable();
   });
 
+  // Danh muc xa/phuong, tro ve provinces.code va administrative_units.id.
   await knex.schema.createTable("wards", (table) => {
     table.string("code", 20).primary();
     table.string("name", 255).notNullable();
@@ -82,7 +87,7 @@ export async function up(knex: Knex): Promise<void> {
 }
 
 export async function down(knex: Knex): Promise<void> {
-  // ❗ Drop theo thứ tự ngược lại
+  // Drop theo thu tu nguoc lai: wards phu thuoc provinces va administrative_units.
   await knex.schema.dropTableIfExists("wards");
   await knex.schema.dropTableIfExists("provinces");
   await knex.schema.dropTableIfExists("administrative_units");

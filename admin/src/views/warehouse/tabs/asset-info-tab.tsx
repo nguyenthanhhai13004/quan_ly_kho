@@ -29,7 +29,7 @@ export default function AssetInfoTab({ assetCode }: AssetTabProps) {
             labelType="top"
             value={asset?.name}
             disabled
-            placeholder="Súng AK"
+            placeholder="Tên tài sản"
             label="Tên"
           />
           <CustomInput
@@ -44,7 +44,7 @@ export default function AssetInfoTab({ assetCode }: AssetTabProps) {
             label="Mô tả"
             disabled
             value={asset?.description}
-            placeholder="Mô tả chi tiết tài sản ..."
+            placeholder="Mô tả chi tiết tài sản "
           />
         </div>
       </div>

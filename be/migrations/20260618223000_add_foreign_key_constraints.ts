@@ -1,5 +1,9 @@
 import type { Knex } from "knex";
+
+// Migration tong hop khoa ngoai cho schema sau khi cac bang chinh da on dinh.
+// Cac migration truoc chu yeu tao cot; file nay gan FK that va quy dinh CASCADE / SET NULL / RESTRICT.
 export async function up(knex: Knex): Promise<void> {
+  // Chuan hoa kieu unsigned/nullable truoc khi gan FK, vi MySQL can cot con khop kieu voi cot cha.
   await knex.schema.alterTable("users", (table) => {
     table.integer("role_id").unsigned().nullable().alter();
   });
@@ -42,6 +46,10 @@ export async function up(knex: Knex): Promise<void> {
   await knex.schema.alterTable("advisor_requests", (table) => {
     table.integer("class_id").unsigned().nullable().alter();
   });
+  // Nguyen tac xoa:
+  // - SET NULL: giu lai ban ghi lich su, chi bo lien ket toi ban ghi cha da bi xoa vat ly.
+  // - CASCADE: xoa bang con/bang noi vi no phu thuoc truc tiep vao ban ghi cha.
+  // - RESTRICT: chan xoa cha khi con du lieu nghiep vu dang tham chieu.
   // --- users ---
   await knex.schema.alterTable("users", (table) => {
     table.foreign("role_id").references("id").inTable("roles").onDelete("SET NULL");
@@ -75,6 +83,7 @@ export async function up(knex: Knex): Promise<void> {
 
   // --- assets ---
   await knex.schema.alterTable("assets", (table) => {
+    // Khong cho xoa category neu van con asset thuoc category do.
     table.foreign("category_id").references("id").inTable("categories").onDelete("RESTRICT");
     table.foreign("created_by_user_id").references("id").inTable("users").onDelete("SET NULL");
     table.foreign("modified_by_user_id").references("id").inTable("users").onDelete("SET NULL");
@@ -91,6 +100,7 @@ export async function up(knex: Knex): Promise<void> {
 
   // --- warehouse_user ---
   await knex.schema.alterTable("warehouse_user", (table) => {
+    // Bang noi user-kho: xoa user/kho thi xoa dong phan cong tuong ung.
     table.foreign("user_id").references("id").inTable("users").onDelete("CASCADE");
     table.foreign("warehouse_id").references("id").inTable("warehouses").onDelete("CASCADE");
     table.foreign("created_by_user_id").references("id").inTable("users").onDelete("SET NULL");
@@ -100,6 +110,7 @@ export async function up(knex: Knex): Promise<void> {
 
   // --- warehouse_asset ---
   await knex.schema.alterTable("warehouse_asset", (table) => {
+    // Lo ton phu thuoc vao ca loai tai san va kho vat ly.
     table.foreign("asset_id").references("id").inTable("assets").onDelete("CASCADE");
     table.foreign("warehouse_id").references("id").inTable("warehouses").onDelete("CASCADE");
     table.foreign("created_by_user_id").references("id").inTable("users").onDelete("SET NULL");
@@ -109,6 +120,7 @@ export async function up(knex: Knex): Promise<void> {
 
   // --- asset_transactions ---
   await knex.schema.alterTable("asset_transactions", (table) => {
+    // Giao dich la lich su, nen xoa kho chi set warehouse_id = NULL thay vi xoa phieu.
     table.foreign("warehouse_id").references("id").inTable("warehouses").onDelete("SET NULL");
     table.foreign("created_by_user_id").references("id").inTable("users").onDelete("SET NULL");
     table.foreign("modified_by_user_id").references("id").inTable("users").onDelete("SET NULL");
@@ -133,7 +145,9 @@ export async function up(knex: Knex): Promise<void> {
 
   // --- asset_transaction_items ---
   await knex.schema.alterTable("asset_transaction_items", (table) => {
+    // Dong hang phu thuoc vao phieu; xoa phieu thi xoa dong hang.
     table.foreign("transaction_id").references("id").inTable("asset_transactions").onDelete("CASCADE");
+    // Dong hang tro toi lo ton cu the, de biet tai san nao va kho nao bi tac dong.
     table.foreign("warehouse_asset_id").references("id").inTable("warehouse_asset").onDelete("CASCADE");
     table.foreign("created_by_user_id").references("id").inTable("users").onDelete("SET NULL");
     table.foreign("modified_by_user_id").references("id").inTable("users").onDelete("SET NULL");
@@ -165,6 +179,7 @@ export async function up(knex: Knex): Promise<void> {
 
   // --- advisor_requests ---
   await knex.schema.alterTable("advisor_requests", (table) => {
+    // Yeu cau phu thuoc vao nguoi gui; cac tham chieu lop/sinh vien/tai san/kho duoc SET NULL de giu lich su.
     table.foreign("advisor_id").references("id").inTable("users").onDelete("CASCADE");
     table.foreign("class_id").references("id").inTable("classes").onDelete("SET NULL");
     table.foreign("student_id").references("id").inTable("students").onDelete("SET NULL");
@@ -183,6 +198,7 @@ export async function up(knex: Knex): Promise<void> {
 
 export async function down(knex: Knex): Promise<void> {
 
+  // Rollback thao FK theo thu tu nguoc de khong vi pham rang buoc khi quay lui migration.
   // --- address ---
   await knex.schema.alterTable("address", (table) => {
     table.dropForeign(["created_by_user_id"]);

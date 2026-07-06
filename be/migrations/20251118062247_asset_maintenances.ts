@@ -1,10 +1,13 @@
 import type { Knex } from "knex";
 import { ASSET_MAINTENANCES_TABLE_NAME } from "../src/v1/cores/constants/table-name.constant";
 
+// Migration tao bang asset_maintenances.
+// Bang nay luu thong tin rieng cua phieu bao tri: ngay bao tri va trang thai xu ly.
 export async function up(knex: Knex): Promise<void> {
   await knex.schema.createTable(ASSET_MAINTENANCES_TABLE_NAME, (table) => {
     table.increments("id").primary();
 
+    // Tro ve asset_transactions.id de biet bao tri thuoc phieu nao.
     table.integer("transaction_id");
 
     table.date("maintenance_date").notNullable(); 
@@ -24,5 +27,6 @@ export async function up(knex: Knex): Promise<void> {
 }
 
 export async function down(knex: Knex): Promise<void> {
+  // Rollback xoa bang chi tiet bao tri.
   await knex.schema.dropTableIfExists(ASSET_MAINTENANCES_TABLE_NAME);
 }

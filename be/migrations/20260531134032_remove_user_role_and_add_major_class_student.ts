@@ -1,6 +1,8 @@
 import type { Knex } from "knex";
 import { MAJORS_TABLE_NAME, CLASSES_TABLE_NAME, STUDENTS_TABLE_NAME, ROLE_TABLE_NAME, ROLE_PERMISSION_TABLE_NAME } from "../src/v1/cores/constants/table-name.constant";
 
+// Migration them nhom hoc vu: majors, classes, students.
+// Dong thoi bo role "user" cu de chuyen sang mo hinh admin/can-bo-kho/commander.
 export async function up(knex: Knex): Promise<void> {
   // Remove "user" role and its permissions (if exists)
   // Assuming role id 3 is "user" based on previous seed
@@ -8,6 +10,7 @@ export async function up(knex: Knex): Promise<void> {
   await knex(ROLE_TABLE_NAME).where('id', 3).del();
 
   // Create Majors Table
+  // majors dai dien he/nganh dao tao ma commander phu trach.
   await knex.schema.createTable(MAJORS_TABLE_NAME, (table) => {
     table.increments("id").primary().unique();
     table.string("name").notNullable();
@@ -18,6 +21,7 @@ export async function up(knex: Knex): Promise<void> {
   });
 
   // Create Classes Table
+  // classes thuoc majors; xoa major thi xoa cac lop trong major do.
   await knex.schema.createTable(CLASSES_TABLE_NAME, (table) => {
     table.increments("id").primary().unique();
     table.integer("major_id").notNullable().unsigned().references("id").inTable(MAJORS_TABLE_NAME).onDelete("CASCADE");
@@ -29,6 +33,7 @@ export async function up(knex: Knex): Promise<void> {
   });
 
   // Create Students Table
+  // students thuoc classes; xoa lop thi xoa sinh vien cua lop.
   await knex.schema.createTable(STUDENTS_TABLE_NAME, (table) => {
     table.increments("id").primary().unique();
     table.integer("class_id").notNullable().unsigned().references("id").inTable(CLASSES_TABLE_NAME).onDelete("CASCADE");
@@ -44,6 +49,7 @@ export async function up(knex: Knex): Promise<void> {
 }
 
 export async function down(knex: Knex): Promise<void> {
+  // Xoa theo thu tu nguoc vi students phu thuoc classes, classes phu thuoc majors.
   await knex.schema.dropTableIfExists(STUDENTS_TABLE_NAME);
   await knex.schema.dropTableIfExists(CLASSES_TABLE_NAME);
   await knex.schema.dropTableIfExists(MAJORS_TABLE_NAME);

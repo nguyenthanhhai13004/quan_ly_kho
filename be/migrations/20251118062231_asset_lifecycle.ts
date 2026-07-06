@@ -1,9 +1,13 @@
 import type { Knex } from "knex";
 import { ASSET_LIFECYCLE_TABLE_NAME } from "../src/v1/cores/constants/table-name.constant";
 
+// Migration tao bang asset_lifecycle.
+// Bang nay luu metadata vong doi cho cap phat, thu hoi va thanh ly.
+// He thong khong co bang asset_disposals rieng; thanh ly dung disposal_date o day.
 export async function up(knex: Knex): Promise<void> {
   await knex.schema.createTable(ASSET_LIFECYCLE_TABLE_NAME, (table) => {
     table.increments("id").primary(); // id auto-increment
+    // Tro ve phieu giao dich goc.
     table.integer("transaction_id");
 
     table.timestamp("allocation_date").nullable(); // ngày cấp phát
@@ -25,5 +29,6 @@ export async function up(knex: Knex): Promise<void> {
 }
 
 export async function down(knex: Knex): Promise<void> {
+  // Rollback xoa bang vong doi cap phat/thu hoi/thanh ly.
   await knex.schema.dropTableIfExists(ASSET_LIFECYCLE_TABLE_NAME);
 }

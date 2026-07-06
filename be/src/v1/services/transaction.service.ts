@@ -1225,12 +1225,6 @@ class TransactionService {
           processedAssetIds.push(warehouseAsset.asset_id);
         }
 
-        const oldData = {
-          status: warehouseAsset.status,
-          maintenance_due: warehouseAsset.maintenance_due,
-          quantity: warehouseAsset.quantity,
-          batch_code: warehouseAsset.batch_code,
-        };
 
         const transactionItem = await trx("asset_transaction_items as ati")
           .join("warehouse_asset as wa", "ati.warehouse_asset_id", "wa.id")

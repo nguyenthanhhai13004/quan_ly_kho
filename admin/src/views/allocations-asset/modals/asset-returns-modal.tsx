@@ -8,6 +8,7 @@ import { ASSET_IN_RETURN_STATUS } from "../../../constants/asset-status.constant
 import { useDetailTransaction, useReturnAssets } from "../../../queries/transaction.query";
 import { MdAssignmentReturned } from "react-icons/md";
 import { useEffect, useState } from "react";
+import type { FormEvent } from "react";
 import { AssetStatusEnum } from "../../../common/enums/asset-status.enum";
 import { useModalProvider } from "../../../providers/modal-provider";
 
@@ -20,8 +21,6 @@ export default function AssetReturnsModal({
   open,
   transactionCode,
 }: AssetReturnsModalProps) {
-  if (!transactionCode) return null;
-
   const columns = [
     "Mã lô hàng",
     "Mã tài sản",
@@ -32,10 +31,11 @@ export default function AssetReturnsModal({
 
   const { transaction } = useDetailTransaction(transactionCode);
   const { openConfirmModal } = useModalProvider();
+  const { mutate } = useReturnAssets();
 
-  const [items, setItems] = useState<
-    { batch_code: string; status: number }[]
-  >([]);
+  const [items, setItems] = useState<{ batch_code: string; status: number }[]>(
+    [],
+  );
 
   useEffect(() => {
     if (transaction?.asset_transaction_items) {
@@ -54,29 +54,39 @@ export default function AssetReturnsModal({
       ),
     );
   };
-  const {mutate} = useReturnAssets();
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-     openConfirmModal({
+
+    if (!transactionCode) return;
+
+    openConfirmModal({
       title: "Xác nhận thu hồi",
       message: "Bạn có chắc chắn muốn thu hồi lô hàng này không?",
       confirmText: "Xác nhận",
       cancelText: "Hủy",
       onConfirm: () => {
-        mutate({
-          data:{
-            items,
-            return_date:new Date().toISOString().slice(0, 19).replace("T", " ")
+        mutate(
+          {
+            data: {
+              items,
+              return_date: new Date()
+                .toISOString()
+                .slice(0, 19)
+                .replace("T", " "),
+            },
+            transactionCode,
           },
-          transactionCode
-        },{
-          onSuccess:()=>{
-            onClose();
-          }
-        })
+          {
+            onSuccess: () => {
+              onClose();
+            },
+          },
+        );
       },
     });
   };
+
+  if (!transactionCode) return null;
 
   return (
     <CustomModal

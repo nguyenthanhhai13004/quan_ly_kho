@@ -41,6 +41,7 @@ class AssetTransactionsRepository extends BaseRepository<AssetTransactions> {
   }): Promise<ResponsePaginationDto<ResponseTransactionsDto>> {
     const offset = (page - 1) * size;
 
+    // asset_transactions chua header phieu: code, type, kho, nguoi tao, ngay tao.
     let countQuery = db(this.tableName).whereIn("type", types);
     if (warehouse_id)
       countQuery = countQuery.andWhere("warehouse_id", warehouse_id);
@@ -62,6 +63,7 @@ class AssetTransactionsRepository extends BaseRepository<AssetTransactions> {
 
     if (total === 0) return { items: [], page, size, total, totalPages };
 
+    // Lay header phieu, kem ten nguoi tao/sua va trang thai bao tri neu co.
     let txnQuery = db(`${this.tableName} as t`)
       .select(
         "t.*",
@@ -71,6 +73,7 @@ class AssetTransactionsRepository extends BaseRepository<AssetTransactions> {
       )
       .leftJoin("users as u", "t.created_by_user_id", "u.id")
       .leftJoin("users as u_mdf", "t.modified_by_user_id", "u_mdf.id")
+      // asset_maintenances chua status bao tri, chi co y nghia voi type MAINTENANCE.
       .leftJoin("asset_maintenances as am", function () {
         this.on("am.transaction_id", "=", "t.id").andOn(
           "t.type",
@@ -96,26 +99,10 @@ class AssetTransactionsRepository extends BaseRepository<AssetTransactions> {
     if (!transactions.length)
       return { items: [], page, size, total, totalPages };
 
+    // Chi lay item cua cac phieu dang nam tren trang hien tai.
     const transactionIds = transactions.map((txn) => txn.id);
 
-    // const itemsRows: (ResponseTransactionItemDto & {
-    //   transaction_id: number;
-    // })[] = await db(`${ASSET_TRANSACTION_ITEMS_TABLE_NAME} as ati`)
-    //   .select(
-    //     "ati.transaction_id",
-    //     "ati.warehouse_asset_id",
-    //     "ati.quantity",
-    //     "ati.cost",
-    //     "a.name as asset_name",
-    //     "a.code as asset_code",
-    //   )
-    //   .leftJoin(
-    //     `${WAREHOUSE_ASSET_TABLE_NAME} as wa`,
-    //     "ati.warehouse_asset_id",
-    //     "wa.id",
-    //   )
-    //   .leftJoin(`${ASSET_TABLE_NAME} as a`, "wa.asset_id", "a.id")
-    //   .whereIn("ati.transaction_id", transactionIds);
+    // asset_transaction_items chua tung dong lo: warehouse_asset_id, quantity, cost.
     let itemsQuery = db(`${ASSET_TRANSACTION_ITEMS_TABLE_NAME} as ati`)
       .select(
         "ati.transaction_id",
@@ -134,12 +121,14 @@ class AssetTransactionsRepository extends BaseRepository<AssetTransactions> {
       .whereIn("ati.transaction_id", transactionIds);
 
     if (asset_code) {
+      // assets chua ma/ten tai san, nen loc asset_code sau khi join sang assets.
       itemsQuery = itemsQuery.andWhere("a.code", "like", `%${asset_code}%`);
     }
 
     const itemsRows: (ResponseTransactionItemDto & {
       transaction_id: number;
     })[] = await itemsQuery;
+    // asset_lifecycle chua ngay cap phat, han/ngay thu hoi, ngay thanh ly.
     const allocationIds = transactions
       .filter((txn) =>
         [
@@ -162,6 +151,7 @@ class AssetTransactionsRepository extends BaseRepository<AssetTransactions> {
             .whereIn("transaction_id", allocationIds)
         : [];
 
+    // Map: transaction_id -> lifecycle cua phieu do.
     const lifecycleMap = new Map<
       number,
       {
@@ -180,6 +170,7 @@ class AssetTransactionsRepository extends BaseRepository<AssetTransactions> {
       });
     });
 
+    // Map: transaction_id -> danh sach tai san/lo trong phieu.
     const itemsMap = new Map<number, ResponseTransactionItemDto[]>();
     for (const item of itemsRows) {
       if (!itemsMap.has(item.transaction_id))
@@ -193,6 +184,7 @@ class AssetTransactionsRepository extends BaseRepository<AssetTransactions> {
       });
     }
 
+    // Moi phieu tra ve header + items + field rieng theo type.
     const items = transactions.map((txn) => ({
       ...txn,
       asset_transaction_items: itemsMap.get(txn.id) || [],
@@ -222,6 +214,7 @@ class AssetTransactionsRepository extends BaseRepository<AssetTransactions> {
   }
 
   async findTransactionImportById(id: number) {
+    // asset_imports chua received_date va sender_location cua phieu nhap.
     const txn = await db(`${this.tableName} as t`)
       .select("t.*", "imp.received_date", "imp.sender_location")
       .leftJoin("asset_imports as imp", "t.id", "imp.transaction_id")
@@ -230,6 +223,7 @@ class AssetTransactionsRepository extends BaseRepository<AssetTransactions> {
 
     if (!txn) return null;
 
+    // asset_transaction_items chua cac lo/tai san nam trong phieu nhap.
     const items = await db(`${ASSET_TRANSACTION_ITEMS_TABLE_NAME} as ati`)
       .select(
         "ati.warehouse_asset_id",
@@ -253,6 +247,7 @@ class AssetTransactionsRepository extends BaseRepository<AssetTransactions> {
   }
 
   async findTransactionExportById(id: number) {
+    // asset_exports chua nguoi nhan, sdt, dia chi va ngay xuat.
     const txn = await db(`${this.tableName} as t`)
       .select(
         "t.*",
@@ -267,6 +262,7 @@ class AssetTransactionsRepository extends BaseRepository<AssetTransactions> {
 
     if (!txn) return null;
 
+    // asset_transaction_items chua cac lo/tai san da xuat.
     const items = await db(`${ASSET_TRANSACTION_ITEMS_TABLE_NAME} as ati`)
       .select(
         "ati.warehouse_asset_id",
@@ -290,51 +286,54 @@ class AssetTransactionsRepository extends BaseRepository<AssetTransactions> {
   }
 
   async findTransactionLifecycleById(id: number) {
-  const txn = await db(`${this.tableName} as t`)
-    .select(
-      "t.*",
-      "lfc.allocation_date",
-      "lfc.return_deadline",
-      "lfc.return_date",
-      "lfc.disposal_date",
-      "u_receiver.fullname as u_fullname",
-      "u_receiver.email as u_email",
-      "wh.name as warehouse_name",
-    )
-    .leftJoin("asset_lifecycle as lfc", "t.id", "lfc.transaction_id")
-    .leftJoin("users as u_receiver", "lfc.receiver_id", "u_receiver.id")
-    .leftJoin("warehouses as wh", "t.warehouse_id", "wh.id")
-    .where("t.id", id)
-    .first();
+    // asset_lifecycle chua du lieu rieng cua cap phat/thu hoi va thanh ly.
+    const txn = await db(`${this.tableName} as t`)
+      .select(
+        "t.*",
+        "lfc.allocation_date",
+        "lfc.return_deadline",
+        "lfc.return_date",
+        "lfc.disposal_date",
+        "u_receiver.fullname as u_fullname",
+        "u_receiver.email as u_email",
+        "wh.name as warehouse_name",
+      )
+      .leftJoin("asset_lifecycle as lfc", "t.id", "lfc.transaction_id")
+      .leftJoin("users as u_receiver", "lfc.receiver_id", "u_receiver.id")
+      .leftJoin("warehouses as wh", "t.warehouse_id", "wh.id")
+      .where("t.id", id)
+      .first();
 
-  if (!txn) return null;
+    if (!txn) return null;
 
-  const items = await db(`${ASSET_TRANSACTION_ITEMS_TABLE_NAME} as ati`)
-    .select(
-      "ati.warehouse_asset_id",
-      "ati.quantity",
-      "ati.cost",
-      "ati.status",
-      "a.name as asset_name",
-      "a.code as asset_code",
-      "wa.batch_code",
-    )
-    .leftJoin(
-      `${WAREHOUSE_ASSET_TABLE_NAME} as wa`,
-      "ati.warehouse_asset_id",
-      "wa.id",
-    )
-    .leftJoin(`${ASSET_TABLE_NAME} as a`, "wa.asset_id", "a.id")
-    .where("ati.transaction_id", id);
+    // Item o day them status va batch_code de hien badge va ma lo trong modal.
+    const items = await db(`${ASSET_TRANSACTION_ITEMS_TABLE_NAME} as ati`)
+      .select(
+        "ati.warehouse_asset_id",
+        "ati.quantity",
+        "ati.cost",
+        "ati.status",
+        "a.name as asset_name",
+        "a.code as asset_code",
+        "wa.batch_code",
+      )
+      .leftJoin(
+        `${WAREHOUSE_ASSET_TABLE_NAME} as wa`,
+        "ati.warehouse_asset_id",
+        "wa.id",
+      )
+      .leftJoin(`${ASSET_TABLE_NAME} as a`, "wa.asset_id", "a.id")
+      .where("ati.transaction_id", id);
 
-  return {
-    ...txn,
-    asset_transaction_items: items,
-  };
-}
+    return {
+      ...txn,
+      asset_transaction_items: items,
+    };
+  }
 
 
   async findTransactionMaintenanceById(id: number) {
+    // asset_maintenances chua maintenance_date va maintenance_status.
     const txn = await db(`${this.tableName} as t`)
       .select("t.*", "am.maintenance_date", "am.status as maintenance_status")
       .leftJoin("asset_maintenances as am", "am.transaction_id", "t.id")
@@ -344,6 +343,7 @@ class AssetTransactionsRepository extends BaseRepository<AssetTransactions> {
 
     if (!txn) return null;
 
+    // Item bao tri co status va cost de hien ket qua tung lo.
     const items = await db(`${ASSET_TRANSACTION_ITEMS_TABLE_NAME} as ati`)
       .select(
         "ati.warehouse_asset_id",
@@ -383,16 +383,19 @@ class AssetTransactionsRepository extends BaseRepository<AssetTransactions> {
   }): Promise<ResponsePaginationDto<any>> {
     const offset = (page - 1) * size;
 
+    // Lay lich su cua mot tai san trong mot kho, di qua cac dong item.
     const query = db("asset_transactions as at")
       .join("asset_transaction_items as ati", "ati.transaction_id", "at.id")
       .join("warehouse_asset as wa", "wa.id", "ati.warehouse_asset_id")
 
+      // asset_lifecycle chua allocation/return/disposal, chi dung cho type 1 va 2.
       .leftJoin("asset_lifecycle as al", function () {
         this.on("al.transaction_id", "=", "at.id").andOn(
           db.raw("at.type IN (1, 2)"),
         );
       })
 
+      // asset_maintenances chua status va ngay bao tri cho type MAINTENANCE.
       .leftJoin("asset_maintenances as am", function () {
         this.on("am.transaction_id", "=", "at.id").andOn(
           "at.type",
@@ -416,21 +419,23 @@ class AssetTransactionsRepository extends BaseRepository<AssetTransactions> {
         "ati.status",
         "ati.cost",
 
-        // lifecycle
+        // Field rieng cua cap phat/thu hoi hoac thanh ly.
         "al.allocation_date",
         "al.return_deadline",
         "al.return_date",
         "al.disposal_date",
 
-        // maintenance
+        // Field rieng cua bao tri.
         "am.status as maintenance_status",
         "am.maintenance_date",
       )
 
+      // Giu dung tai san va dung kho dang xem.
       .where("wa.asset_id", asset_id)
       .andWhere("at.warehouse_id", warehouse_id);
 
     if (types?.length > 0) {
+      // Vi du types=[5] thi chi lay giao dich bao tri.
       query.whereIn("at.type", types);
     }
 
@@ -439,6 +444,7 @@ class AssetTransactionsRepository extends BaseRepository<AssetTransactions> {
       .limit(size)
       .offset(offset);
 
+    // Dem cung dieu kien voi query chinh de totalPages khong lech.
     const totalQuery = db("asset_transactions as at")
       .join("asset_transaction_items as ati", "ati.transaction_id", "at.id")
       .join("warehouse_asset as wa", "wa.id", "ati.warehouse_asset_id")

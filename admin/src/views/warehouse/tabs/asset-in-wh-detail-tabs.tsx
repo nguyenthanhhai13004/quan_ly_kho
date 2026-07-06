@@ -43,9 +43,6 @@ export default function AssetInWHDetailTabs({
                 batch.batch_code,
                 batch.quantity,
                 <CustomBadge {...getAssetBadgeProps(batch.status)} />,
-                // dayjs(batch.manufacture_date).format("DD/MM/YYYY"),
-                // dayjs(batch.expiration_date).format("DD/MM/YYYY"),
-                // dayjs(batch.maintenance_due).format("DD/MM/YYYY"),
                  dayjs(batch.manufacture_date).isValid()
                 ? dayjs(batch.manufacture_date).format("DD/MM/YYYY")
                 : "N/A",

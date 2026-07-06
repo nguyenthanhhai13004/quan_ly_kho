@@ -1,9 +1,12 @@
 import type { Knex } from "knex";
 
+// Migration tao bang address.
+// Bang nay luu dia chi cu the va toa do; warehouses.address_id se tro ve bang nay.
 export async function up(knex: Knex): Promise<void> {
   await knex.schema.createTable("address", (table) => {
     table.bigIncrements("id").primary();
 
+    // Ban dau co du kien luu ma tinh/huyen/xa truc tiep, nhung sau chuyen sang address_detail + toa do.
     // table.string("province_code", 20).notNullable();
     // table.string("district_code", 20).notNullable();
     // table.string("ward_code", 20).notNullable();
@@ -24,5 +27,6 @@ export async function up(knex: Knex): Promise<void> {
 }
 
 export async function down(knex: Knex): Promise<void> {
+  // Rollback xoa bang dia chi.
   await knex.schema.dropTableIfExists("address");
 }

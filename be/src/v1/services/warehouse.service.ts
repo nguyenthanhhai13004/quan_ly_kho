@@ -41,6 +41,7 @@ export const AssetStatusTextMap: Record<number, string> = {
 
 class WarehouseService {
   static generateWarehouseCode(name: string): string {
+    // Chuẩn hóa tên kho để sinh mã dễ đọc.
     const normalize = (str: string) =>
       str
         .normalize("NFD")
@@ -57,6 +58,7 @@ class WarehouseService {
     const now = new Date();
     const datePart = now.toISOString().slice(2, 10).replace(/-/g, "");
 
+    // Thêm random để tránh trùng mã.
     const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase();
 
     return `WH-${initials}-${datePart}-${randomPart}`;
@@ -82,6 +84,7 @@ class WarehouseService {
       throw new BadRequestError("kho đã tồn tại, vui lòng đặt tên khác");
     }
 
+    // Kho cần có địa chỉ trước khi tạo.
     const address = await addressRepository.create({
       address_detail,
       latitude,
@@ -145,6 +148,7 @@ class WarehouseService {
       asset_id: assetFound.id,
       warehouse_id: warehouseId,
     });
+    // Trạng thái hiển thị có thể khác status lưu trong DB.
     const batchesWithStatus = batches.map((batch) => {
       const statusEnum = resolveStatus(batch);
       return {
@@ -159,6 +163,7 @@ class WarehouseService {
   static async getAllBatchesNeedMaintenanceInWHOwn(warehouseId: number) {
     const now = new Date();
 
+    // Lấy lô đang bảo trì hoặc đã tới hạn bảo trì.
     const batches = await db("warehouse_asset as wa")
       .join("assets as a", "wa.asset_id", "a.id")
       .select(
@@ -205,6 +210,7 @@ class WarehouseService {
       }
     > = {};
 
+    // Chỉ tính tồn tốt, bỏ lô hỏng/hết hạn/cần bảo trì.
     for (const row of rows) {
       const finalStatus = resolveStatus(row);
       if (finalStatus === AssetStatusEnum.GOOD) {
@@ -239,6 +245,7 @@ class WarehouseService {
     const parsedSize = Number(size || 20);
     const offset = (parsedPage - 1) * parsedSize;
 
+    // Lấy danh sách tài sản có trong kho.
     let assetQuery = db("assets as a")
       .select(
         "a.id",
@@ -268,26 +275,12 @@ class WarehouseService {
     }
 
     if (status) {
-      /**
-       const statusMap: Record<
-    string,
-    {
-      label: string;
-      color: "success" | "warning" | "error" | "default";
-    }
-  > = {
-    1: { label: "Tốt", color: "success" },
-    3: { label: "Cần bảo trì", color: "warning" },
-    4: { label: "Hết hạn", color: "default" },
-    2: { label: "Lỗi", color: "error" },
-  };
-       */
-      // console.log("status", status)
+      // Lọc trước theo dữ liệu lô, lát nữa resolveStatus sẽ chốt trạng thái thật.
       const now = new Date();
       if (status == 1) {
         assetQuery = assetQuery.where("wa.status", AssetStatusEnum.GOOD);
       } else if (status == 3) {
-        // assetQuery = assetQuery.where("wa.status", AssetStatusEnum.MAINTENANCE);
+        // Cần bảo trì dựa vào ngày đến hạn.
         assetQuery = assetQuery
           .whereNotNull("wa.maintenance_due")
           .where("wa.maintenance_due", "<=", now);
@@ -299,6 +292,7 @@ class WarehouseService {
     }
 
     assetQuery = assetQuery
+      // Một tài sản có nhiều lô, group để không lặp dòng.
       .groupBy("a.id")
       .orderBy("a.id", "desc")
       .limit(parsedSize)
@@ -318,6 +312,7 @@ class WarehouseService {
 
     const assetIds = assets.map((a) => a.id);
 
+    // Lấy các lô của trang hiện tại để cộng số lượng.
     const statusRows = await db<WarehouseAsset>("warehouse_asset")
       .select(
         "asset_id",
@@ -328,14 +323,18 @@ class WarehouseService {
       )
       .where("warehouse_id", warehouse_id)
       .whereIn("asset_id", assetIds)
+      // Giữ ngày hạn/bảo trì để tính trạng thái thật.
       .groupBy("asset_id", "status", "expiration_date", "maintenance_due");
 
+    // asset_id -> danh sách trạng thái và số lượng.
     const statusMap = new Map<number, any[]>();
 
     for (const row of statusRows) {
+      // Có thể đổi từ Tốt sang Hết hạn/Cần bảo trì.
       const finalStatus = resolveStatus(row);
       const qty = Number(row.quantity);
 
+      // Đang lọc trạng thái nào thì chỉ giữ trạng thái đó.
       if (status && finalStatus !== Number(status)) {
         continue;
       }
@@ -346,6 +345,7 @@ class WarehouseService {
 
       const list = statusMap.get(row.asset_id)!;
 
+      // Nhiều lô có thể cùng trạng thái thật, cộng dồn lại.
       const existed = list.find((x) => x.status === finalStatus);
 
       if (existed) {
@@ -358,6 +358,7 @@ class WarehouseService {
       }
     }
 
+    // Gói lại đúng format FE đang dùng.
     const items = assets.map((a) => ({
       id: a.id,
       asset_code: a.asset_code,
@@ -369,6 +370,7 @@ class WarehouseService {
       status: statusMap.get(a.id) ?? [],
     }));
 
+    // Đếm tổng tài sản để phân trang.
     let totalQuery = db("assets as a")
       .innerJoin("warehouse_asset as wa", "wa.asset_id", "a.id")
       .where("wa.warehouse_id", warehouse_id);
@@ -394,7 +396,7 @@ class WarehouseService {
       if (status == 1) {
         totalQuery = totalQuery.where("wa.status", AssetStatusEnum.GOOD);
       } else if (status == 3) {
-        // assetQuery = assetQuery.where("wa.status", AssetStatusEnum.MAINTENANCE);
+        // Điều kiện đếm phải khớp điều kiện lọc.
         totalQuery = totalQuery
           .whereNotNull("wa.maintenance_due")
           .where("wa.maintenance_due", "<=", now);
@@ -405,12 +407,14 @@ class WarehouseService {
       }
     }
 
+    // Đếm asset không trùng, vì một asset có nhiều lô.
     const total = await totalQuery
       .countDistinct("a.id as count")
       .first()
       .then((res) => Number(res?.count || 0));
 
     return {
+      // Bỏ asset không còn status hợp lệ sau khi tính lại.
       items: items.filter((i) => i.status.length > 0),
       page: parsedPage,
       size: parsedSize,
@@ -420,6 +424,7 @@ class WarehouseService {
   }
 
   static async getStatsAssetStatus(warehouse_id: number) {
+    // Thống kê theo trạng thái thật.
     const rows = await db("warehouse_asset").where(
       "warehouse_id",
       warehouse_id,
@@ -440,6 +445,7 @@ class WarehouseService {
 
   static async getStatsAssetInWH(warehouse_id: number) {
     const today = new Date();
+    // Tổng tồn trong kho.
     const totalAssetsInWarehouse = Number(
       (
         await db("warehouse_asset")
@@ -449,6 +455,7 @@ class WarehouseService {
       )?.total || 0,
     );
 
+    // Đã cấp phát nhưng chưa thu hồi.
     const totalAllocated = Number(
       (
         await db("asset_lifecycle as al")
@@ -465,6 +472,7 @@ class WarehouseService {
       )?.total || 0,
     );
 
+    // Đến hạn bảo trì.
     const totalNeedMaintenance = Number(
       (
         await db("warehouse_asset")
@@ -481,7 +489,7 @@ class WarehouseService {
       )?.total || 0,
     );
 
-    // lấy tổng tài sản sắp hết hạn
+    // Sắp hết hạn trong 10 ngày tới.
     const next10Days = new Date();
     next10Days.setDate(today.getDate() + 10);
     const totalExpiringSoon = Number(
@@ -497,6 +505,7 @@ class WarehouseService {
     );
 
     return {
+      // Tổng quy mô = còn trong kho + đang cấp phát.
       total_assets_in_warehouse: totalAssetsInWarehouse + totalAllocated,
       total_allocated: totalAllocated,
       total_need_maintenance: totalNeedMaintenance,
@@ -505,6 +514,7 @@ class WarehouseService {
   }
 
   static async getAllocationOrdersOwn(userId: number, classId?: number) {
+    // Các đơn cấp phát chưa thu hồi.
     const query = db("asset_lifecycle as al")
       .select(
         "al.id as lifecycle_id",
@@ -548,7 +558,7 @@ class WarehouseService {
       .where("al.receiver_id", userId)
       .whereNull("al.return_date");
 
-    // Filter by class: only show allocations whose assets were requested for this class
+    // Lọc theo tài sản đã duyệt cho lớp.
     if (classId) {
       const fulfilledAssetIds = await db("advisor_requests")
         .distinct("asset_id")
@@ -563,7 +573,7 @@ class WarehouseService {
 
     const rows = await query;
 
-    // Group by transaction
+    // Gom item theo giao dịch.
     const grouped = Object.values(
       rows.reduce((acc: any, row: any) => {
         const txKey = row.transaction_id;
@@ -598,6 +608,7 @@ class WarehouseService {
   }
 
   static async getAssetsAllcationOwn(userId: number) {
+    // Tài sản từng cấp phát cho người dùng.
     const rows = await db("asset_lifecycle as al")
       .select(
         "al.id as lifecycle_id",
@@ -638,7 +649,7 @@ class WarehouseService {
       .innerJoin("warehouses as w", "at.warehouse_id", "w.id")
       .where("al.receiver_id", userId);
 
-    // ---- GOM NHÓM DỮ LIỆU ----
+    // Gom các lô vào từng tài sản.
     const grouped = Object.values(
       rows.reduce((acc: any, row: any) => {
         if (!acc[row.asset_code]) {

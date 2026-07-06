@@ -1,5 +1,7 @@
 import type { Knex } from "knex";
 
+// Migration sieu rang buoc du lieu sau khi schema da co day du bang va FK.
+// Muc tieu: them unique index cho cac ma/ten can duy nhat va them PK ghep cho warehouse_user.
 async function indexExists(
   knex: Knex,
   tableName: string,
@@ -34,6 +36,7 @@ async function addUniqueIndex(
   indexName: string,
   columns: string[],
 ): Promise<void> {
+  // Neu index da ton tai thi bo qua, giup migration an toan khi chay lai tren DB da co constraint.
   if (await indexExists(knex, tableName, indexName)) return;
 
   const escapedColumns = columns.map((column) => `\`${column}\``).join(", ");
@@ -47,12 +50,14 @@ async function dropIndexIfExists(
   tableName: string,
   indexName: string,
 ): Promise<void> {
+  // Rollback cung kiem tra truoc de tranh loi khi index da bi xoa thu cong.
   if (!(await indexExists(knex, tableName, indexName))) return;
 
   await knex.raw(`ALTER TABLE \`${tableName}\` DROP INDEX \`${indexName}\``);
 }
 
 export async function up(knex: Knex): Promise<void> {
+  // Cac cot dinh danh dang nhap/hien thi phai duy nhat de tranh trung du lieu nghiep vu.
   await addUniqueIndex(knex, "users", "uq_users_username", ["username"]);
   await addUniqueIndex(knex, "users", "uq_users_email", ["email"]);
   await addUniqueIndex(knex, "categories", "uq_categories_code", ["code"]);
@@ -73,6 +78,7 @@ export async function up(knex: Knex): Promise<void> {
     ["code"],
   );
 
+  // warehouse_user la bang noi N-N, khoa chinh ghep chan viec gan trung mot user vao cung mot kho.
   if (!(await primaryKeyExists(knex, "warehouse_user"))) {
     await knex.raw(
       "ALTER TABLE `warehouse_user` ADD PRIMARY KEY (`user_id`, `warehouse_id`)",
@@ -81,6 +87,7 @@ export async function up(knex: Knex): Promise<void> {
 }
 
 export async function down(knex: Knex): Promise<void> {
+  // Rollback bo PK ghep va cac unique index da them trong up().
   if (await primaryKeyExists(knex, "warehouse_user")) {
     await knex.raw("ALTER TABLE `warehouse_user` DROP PRIMARY KEY");
   }

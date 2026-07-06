@@ -50,13 +50,17 @@ const columns = [
 
 export default function CommanderRequestsView() {
   const { openModal } = useModalProvider();
+  // params giữ page/size và các điều kiện lọc đang áp dụng cho API.
   const { params, setParams } = usePaginationParams<PaginationDto & { keyword?: string; status?: number; type?: number }>();
+  // Gọi API lấy danh sách yêu cầu của Chỉ huy theo params hiện tại.
   const { requests, isLoading } = useMyAdvisorRequests(params);
 
+  // Khi đổi trang, giữ nguyên bộ lọc hiện tại và chỉ thay page.
   const handlePagination = (page: number) => {
     setParams({ ...params, page });
   };
 
+  // Mở modal để Chỉ huy tạo yêu cầu cấp phát/thu hồi mới.
   const handleOpenCreateModal = () => {
     openModal(CreateAdvisorRequestModal, {});
   };
@@ -65,27 +69,30 @@ export default function CommanderRequestsView() {
     return <div className="p-6 text-center text-gray-500 font-semibold">Đang tải lịch sử yêu cầu...</div>;
   }
 
-  // Group requests by: created_at, type, note, status, response_note, processed_by_user_name
+  // Gom các dòng tài sản thuộc cùng một yêu cầu ban đầu thành 1 dòng trên bảng.
   const groupedRequests = requests?.items
     ? Object.values(
         requests.items.reduce((acc: any, curr: any) => {
-          const key = `${curr.created_at}_${curr.type}_${curr.note || ""}_${curr.status}_${curr.response_note || ""}_${curr.processed_by_user_name || ""}`;
+          // Không đưa status/phản hồi/người xử lý vào key, nếu không duyệt từng tài sản sẽ bị tách đơn.
+          const key = `${curr.created_at}_${curr.type}_${curr.note || ""}`;
           if (!acc[key]) {
+            // Tạo khung dữ liệu cho một đơn yêu cầu mới trong nhóm.
             acc[key] = {
               created_at: curr.created_at,
               type: curr.type,
-              status: curr.status,
               note: curr.note,
-              response_note: curr.response_note,
-              processed_by_user_name: curr.processed_by_user_name,
               items: [],
             };
           }
+          // Mỗi item là một tài sản nằm trong cùng đơn yêu cầu.
           acc[key].items.push({
             asset_id: curr.asset_id,
             asset_code: curr.asset_code,
             asset_name: curr.asset_name,
             quantity: curr.quantity,
+            status: curr.status,
+            response_note: curr.response_note,
+            processed_by_user_name: curr.processed_by_user_name,
           });
           return acc;
         }, {})
@@ -114,6 +121,7 @@ export default function CommanderRequestsView() {
         currentPage={params.page}
         totalPages={requests?.totalPages}
         data={
+          // Mỗi mảng con tương ứng với một dòng của CustomTable.
           groupedRequests.map((r: any, index: number) => [
             index + 1,
             format(new Date(r.created_at), "dd/MM/yyyy HH:mm"),
@@ -132,11 +140,33 @@ export default function CommanderRequestsView() {
             <p className="text-sm italic max-w-[200px] truncate" title={r.note || ""} key={`note-${index}`}>
               {r.note || "---"}
             </p>,
-            getStatusBadge(r.status),
-            <p className="text-sm italic max-w-[200px] truncate" title={r.response_note || ""} key={`resp-${index}`}>
-              {r.response_note || "---"}
-            </p>,
-            r.processed_by_user_name || "---",
+            <div className="flex flex-col gap-1.5" key={`status-${index}`}>
+              {/* Hiển thị trạng thái riêng của từng tài sản trong cùng đơn. */}
+              {r.items.map((item: any, idx: number) => (
+                <div key={idx} className="min-h-7 flex items-center">
+                  {getStatusBadge(item.status)}
+                </div>
+              ))}
+            </div>,
+            <div className="flex flex-col gap-1.5" key={`resp-${index}`}>
+              {/* Phản hồi từ kho cũng đi theo từng tài sản, không phải theo cả đơn. */}
+              {r.items.map((item: any, idx: number) => (
+                <p
+                  className="min-h-7 text-sm italic max-w-[200px] truncate"
+                  title={item.response_note || ""}
+                  key={idx}
+                >
+                  {item.response_note || "---"}
+                </p>
+              ))}
+            </div>,
+            <div className="flex flex-col gap-1.5" key={`processed-${index}`}>
+              {r.items.map((item: any, idx: number) => (
+                <span key={idx} className="min-h-7 text-sm flex items-center">
+                  {item.processed_by_user_name || "---"}
+                </span>
+              ))}
+            </div>,
           ])
         }
       />

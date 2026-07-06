@@ -1,12 +1,16 @@
 import type { Knex } from "knex";
 import { ASSET_TRANSACTION_ITEMS_TABLE_NAME } from "../src/v1/cores/constants/table-name.constant";
 
+// Migration tao bang asset_transaction_items.
+// Moi dong trong bang nay la mot dong hang cua phieu: phieu nao, lo ton nao, so luong bao nhieu.
 export async function up(knex: Knex): Promise<void> {
   await knex.schema.createTable(ASSET_TRANSACTION_ITEMS_TABLE_NAME, (table) => {
     table.increments("id").primary();
 
+    // Tro ve header phieu asset_transactions.
     table.integer("transaction_id");
 
+    // Tro ve lo ton cu the trong warehouse_asset; tu lo nay moi biet asset_id va warehouse_id.
     table.integer("warehouse_asset_id");
 
     table.integer("quantity").unsigned().notNullable();
@@ -28,5 +32,6 @@ export async function up(knex: Knex): Promise<void> {
 }
 
 export async function down(knex: Knex): Promise<void> {
+  // Rollback xoa bang dong hang cua phieu giao dich.
   await knex.schema.dropTableIfExists(ASSET_TRANSACTION_ITEMS_TABLE_NAME);
 }

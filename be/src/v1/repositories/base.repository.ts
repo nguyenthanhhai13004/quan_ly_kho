@@ -85,3 +85,6 @@ export default class BaseRepository<T> {
       .first();
   }
 }
+//.orderBy("created_at", "desc");
+//.orderBy("created_at", "asc")
+//.orderBy("id", "desc")
