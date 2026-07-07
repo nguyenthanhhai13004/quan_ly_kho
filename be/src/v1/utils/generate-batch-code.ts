@@ -1,5 +1,7 @@
-export function generateBatchCode(assetCode: string): string {
-  const date = new Date();
+export function generateBatchCode(
+  assetCode: string,
+  date: Date = new Date(),
+): string {
   const datePart = date.toISOString().slice(0, 10).replace(/-/g, "");
 
   const random = Math.random().toString(36).substring(2, 8).toUpperCase();

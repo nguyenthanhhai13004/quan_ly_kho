@@ -1,5 +1,23 @@
 import { Knex } from "knex";
 import { ASSET_TABLE_NAME } from "../src/v1/cores/constants/table-name.constant";
+import { CATEGORIES_DEFAULT } from "./003_categories";
+
+const CATEGORY_CODE_BY_ID = new Map(
+  CATEGORIES_DEFAULT.map((category) => [category.id, category.code]),
+);
+const NEXT_ASSET_NUMBER_BY_CATEGORY_ID = new Map<number, number>();
+
+function generateSeedAssetCode(categoryId: number): string {
+  const prefix = CATEGORY_CODE_BY_ID.get(categoryId);
+  if (!prefix) {
+    throw new Error(`Category ${categoryId} does not have a seed code`);
+  }
+
+  const nextNumber = (NEXT_ASSET_NUMBER_BY_CATEGORY_ID.get(categoryId) ?? 0) + 1;
+  NEXT_ASSET_NUMBER_BY_CATEGORY_ID.set(categoryId, nextNumber);
+
+  return `${prefix}-${String(nextNumber).padStart(4, "0")}`;
+}
 
 export const ASSETS_DEFAULT = [
   // === Vũ khí ===
@@ -31,7 +49,10 @@ export const ASSETS_DEFAULT = [
   { id: 18, name: "Giấy in A4 80gsm", code: "VT-0002", image_url: "/assets/giay_double_a_a4_80_8423cfd51cd243f0970056daa602a143.jpg", cost: 80000, category_id: 5, description: "Giấy in Double A A4 định lượng 80gsm." },
   { id: 19, name: "Mực in LaserJet HP 12A", code: "VT-0003", image_url: "/assets/hp-12a.jpg", cost: 250000, category_id: 5, description: "Hộp mực HP 12A dùng cho máy in LaserJet." },
   { id: 20, name: "Nhiên liệu Diesel B2", code: "VT-0004", image_url: "/assets/28934234.jpg", cost: 23000, category_id: 5, description: "Nhiên liệu Diesel B2 dùng cho xe và thiết bị." },
-];
+].map((asset) => ({
+  ...asset,
+  code: generateSeedAssetCode(asset.category_id),
+}));
 export const ASSETS_DEFAULT_NO_COST = ASSETS_DEFAULT.map(({ cost, ...rest }) => rest);
 
 export async function seed(knex: Knex): Promise<void> {

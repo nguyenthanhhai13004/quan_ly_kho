@@ -146,7 +146,7 @@ export default function ExportManualForm() {
         <CustomInput
           {...register("name")}
           required
-          placeholder="Ví dụ : Đơn xuất kho cho ..."
+          placeholder="Nhập tên đơn"
           error={errors.name?.message}
           type="text"
           label="Tên đơn"
@@ -165,7 +165,7 @@ export default function ExportManualForm() {
           {...register("reason")}
           error={errors.reason?.message}
           label="Lý do"
-          placeholder="Ví dụ : Lý do ..."
+          placeholder="Nhập lý do"
           labelType="top"
         />
         <CustomTextarea
@@ -173,13 +173,13 @@ export default function ExportManualForm() {
           error={errors.note?.message}
           label="Ghi chú"
           labelType="top"
-          placeholder="Ví dụ : Ghi chú ..."
+          placeholder="Nhập ghi chú"
         />
 
         <CustomInput
           label="Tên người nhận"
           required
-          placeholder="Nguyen Van A"
+          placeholder="Nhập tên người nhận"
           labelType="top"
           {...register("receiver_name")}
           error={errors.receiver_name?.message}
@@ -187,14 +187,14 @@ export default function ExportManualForm() {
         <CustomInput
           label="Số điện thoại"
           required
-          placeholder="099999999"
+          placeholder="Nhập số điện thoại"
           labelType="top"
           {...register("receiver_phone")}
           error={errors.receiver_phone?.message}
         />
         <CustomTextarea
           required
-          placeholder="abc, TP. Hà Nội"
+          placeholder="Nhập địa chỉ người nhận"
           label="Địa chỉ"
           labelType="top"
           {...register("receiver_address")}

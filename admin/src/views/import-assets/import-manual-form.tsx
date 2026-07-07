@@ -298,7 +298,7 @@ export default function ImportManualForm({
           error={errors.name?.message}
           type="text"
           label="Tên đơn"
-          placeholder="ví dụ : Nhập kho tháng 9"
+          placeholder="Nhập tên đơn"
           labelType="top"
         />
         <CustomInput
@@ -311,7 +311,7 @@ export default function ImportManualForm({
         />
         <CustomInput
           label="Nơi gửi"
-          placeholder="ví dụ : Khi phố 5, ...."
+          placeholder="Nhập nơi gửi"
           labelType="top"
           {...register("sender_location")}
           error={errors.sender_location?.message}
@@ -321,14 +321,14 @@ export default function ImportManualForm({
           error={errors.reason?.message}
           label="Lý do"
           labelType="top"
-          placeholder="Ví dụ : Lý do ..."
+          placeholder="Nhập lý do"
         />
         <CustomTextarea
           {...register("note")}
           error={errors.note?.message}
           label="Ghi chú"
           labelType="top"
-          placeholder="Ví dụ : Ghi chú ..."
+          placeholder="Nhập ghi chú"
         />
       </div>
       <div className="grid grid-cols-2 gap-2">

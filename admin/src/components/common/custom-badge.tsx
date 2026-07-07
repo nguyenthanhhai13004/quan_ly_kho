@@ -28,7 +28,9 @@ export default function CustomBadge({
     <span
       className={`px-3 py-1 text-xs rounded-full font-semibold inline-flex items-center justify-center gap-2 ${statusClasses[status]} ${className}`}
     >
-      <div className={`w-2 h-2 rounded-full ${circleClasses[status]}`}></div>
+      <div
+        className={`h-2 w-2 shrink-0 rounded-full ${circleClasses[status]}`}
+      ></div>
       <span>{label}</span>
     </span>
   );

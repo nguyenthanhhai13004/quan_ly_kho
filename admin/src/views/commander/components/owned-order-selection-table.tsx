@@ -10,15 +10,42 @@ import { format } from "date-fns";
 import getImgSrc from "../../../utils/get-img-src";
 import { MdVisibility } from "react-icons/md";
 import { useMyAdvisorRequests } from "../../../queries/advisor-request.query";
+import FilterWrapper from "../../filter-wrapper";
+import { usePaginationParams } from "../../../hooks/use-pagination-params";
+
+type AllocationOrderFilters = {
+  keyword?: string;
+  start_date?: string;
+  end_date?: string;
+  page?: number;
+  size?: number;
+};
 
 export default function OwnedOrderSelectionTable() {
   const { classId, addSelectedAsset } = useAdvisorRequestStore();
-  const { orders, isLoading } = useAllocationOrdersOwn(classId || undefined);
   const { requests } = useMyAdvisorRequests({ page: 1, size: 200 });
-  const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+  const {
+    filters,
+    handleChange,
+    setFilters,
+    defaultValues,
+  } = usePaginationParams<AllocationOrderFilters>({
+    useUrl: false,
+    defaultValues: { page: 1, size: 5 },
+  });
+  const [params, setParams] = useState<AllocationOrderFilters>({
+    page: 1,
+    size: 5,
+  });
   const [detailOrder, setDetailOrder] = useState<any | null>(null);
-  const itemsPerPage = 5;
+  const { orders, isLoading } = useAllocationOrdersOwn({
+    class_id: classId || undefined,
+    keyword: params.keyword,
+    start_date: params.start_date,
+    end_date: params.end_date,
+    page: params.page,
+    size: params.size,
+  });
 
   const getRecallRequestStatus = (trxCode: string) => {
     if (!requests?.items) return null;
@@ -31,34 +58,14 @@ export default function OwnedOrderSelectionTable() {
     return matchingReq ? matchingReq.status : null;
   };
 
-  const filteredOrders =
-    orders?.filter(
-      (order: any) =>
-        !!order.return_deadline &&
-        (order.transaction_code
-          ?.toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        order.transaction_name
-          ?.toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        order.items?.some(
-          (item: any) =>
-            item.asset_code
-              ?.toLowerCase()
-              .includes(searchTerm.toLowerCase()) ||
-            item.asset_name?.toLowerCase().includes(searchTerm.toLowerCase())
-        ))
-    ) || [];
+  const handleSearch = () => {
+    setParams({ ...filters, page: 1, size: params.size });
+  };
 
-  const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
-  const paginatedOrders = filteredOrders.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-    setCurrentPage(1);
+  const handleReset = () => {
+    const resetValues = defaultValues as AllocationOrderFilters;
+    setFilters(resetValues);
+    setParams(resetValues);
   };
 
   const formatDate = (dateStr: string | null) => {
@@ -101,22 +108,39 @@ export default function OwnedOrderSelectionTable() {
         <CustomTable
           columns={orderColumns}
           filter={
-            <div className="p-2 flex gap-2 w-full max-w-xs">
+            <div className="p-2">
+              <FilterWrapper onSubmit={handleSearch} onReset={handleReset}>
               <CustomInput
-                placeholder="Tìm mã đơn, tên tài sản..."
-                value={searchTerm}
-                onChange={handleSearchChange}
-                className="text-xs"
+                placeholder="Tên đơn, tên tài sản"
+                value={filters.keyword}
+                onChange={(e) => handleChange("keyword", e.target.value)}
+                className="min-w-[180px] text-xs"
               />
+                <CustomInput
+                  label="Từ ngày"
+                  labelType="top"
+                  type="date"
+                  value={filters.start_date}
+                  onChange={(e) => handleChange("start_date", e.target.value)}
+                  className="text-xs"
+                />
+                <CustomInput
+                  label="Đến ngày"
+                  labelType="top"
+                  type="date"
+                  value={filters.end_date}
+                  onChange={(e) => handleChange("end_date", e.target.value)}
+                  className="text-xs"
+                />
+              </FilterWrapper>
             </div>
           }
-          title="Đơn cấp phát đang sở hữu (chưa trả)"
-          totalPages={totalPages}
-          currentPage={currentPage}
-          onPageChange={setCurrentPage}
-          data={paginatedOrders.map((order: any, index: number) => {
-            const itemIndex = (currentPage - 1) * itemsPerPage + index + 1;
-            const totalItems = order.items?.length || 0;
+          // title="Đơn cấp phát đang sở hữu (chưa trả)"
+          totalPages={orders?.totalPages}
+          currentPage={params.page}
+          onPageChange={(page) => setParams({ ...params, page })}
+          data={(orders?.items || []).map((order: any, index: number) => {
+            const itemIndex = ((params.page || 1) - 1) * (params.size || 5) + index + 1;
 
             const recallStatus = getRecallRequestStatus(order.transaction_code);
             const isRequested = recallStatus !== null;

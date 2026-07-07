@@ -107,7 +107,7 @@ export default function CommanderRequestsView() {
           <p className="text-sm text-gray-500">Xem và theo dõi trạng thái các yêu cầu đã gửi cho Cán bộ kho</p>
         </div>
         <CustomButton
-          label="+ Tạo yêu cầu mới"
+          label="Tạo yêu cầu mới"
           size="sm"
           onClick={handleOpenCreateModal}
         />

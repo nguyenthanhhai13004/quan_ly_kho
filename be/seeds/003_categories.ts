@@ -1,7 +1,7 @@
 import { Knex } from "knex";
 import { CATEGORY_TABLE_NAME } from "../src/v1/cores/constants/table-name.constant";
 
-const CATEGORIES_DEFAULT = [
+export const CATEGORIES_DEFAULT = [
   {
     id:1,
     name: "Vũ khí",

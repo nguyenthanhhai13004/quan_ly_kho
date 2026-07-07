@@ -183,7 +183,7 @@ export default function MaintenanceForm() {
           error={errors.reason?.message}
           label="Nội dung bảo trì"
           labelType="top"
-          placeholder="ví dụ : Bảo trì tài sản xxxx cho ..."
+          placeholder="Nhập nội dung bảo trì"
         />
       </div>
       <div className="grid grid-cols-2 gap-2">

@@ -189,7 +189,7 @@ export default function ImportExcelView() {
             <CustomInput
               label="Nơi gửi"
               labelType="top"
-              placeholder="Khu phố A ..."
+              placeholder="Nhập nơi gửi"
               {...register("sender_location")}
               error={formErrors.sender_location?.message}
             />

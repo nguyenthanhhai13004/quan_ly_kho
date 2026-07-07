@@ -22,7 +22,7 @@ export default function AssetSelectionTable() {
       <CustomTable
         columns={columns}
         filter={<AssetFilter onFiltersChange={setFilters} inModal={true} />}
-        title="Chọn tài sản yêu cầu"
+        // title="Chọn tài sản yêu cầu"
         totalPages={assets?.totalPages}
         currentPage={filters.page}
         onPageChange={setPageFilter}
@@ -38,7 +38,7 @@ export default function AssetSelectionTable() {
                 alt={asset?.name}
               />
             </div>,
-            asset?.category_name,
+            asset?.category?.name || asset?.category_name || "---",
             <CustomIcon
               key={`add-${index}`}
               icon={<BiPlus size={20} />}

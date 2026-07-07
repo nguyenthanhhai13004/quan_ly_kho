@@ -151,7 +151,7 @@ export default function CreateUserModal({ open, onClose }: CustomModalProps) {
               required
               {...register("username")}
               error={errors.username?.message}
-              placeholder="abcefd"
+              placeholder="Tên đăng nhập"
               label="Tên đăng nhập"
             />
           </div>
@@ -161,7 +161,7 @@ export default function CreateUserModal({ open, onClose }: CustomModalProps) {
               required
               {...register("email")}
               error={errors.email?.message}
-              placeholder="user@example.com"
+              placeholder="Email"
               label="Email"
             />
           </div>
@@ -171,7 +171,7 @@ export default function CreateUserModal({ open, onClose }: CustomModalProps) {
               required
               {...register("fullname")}
               error={errors.fullname?.message}
-              placeholder="Nguyen Van A"
+              placeholder="Họ và tên"
               label="Họ tên"
             />
           </div>
@@ -181,7 +181,7 @@ export default function CreateUserModal({ open, onClose }: CustomModalProps) {
                 labelType="top"
                 {...register("phone_number")}
                 error={errors.phone_number?.message}
-                placeholder="099999xxxx"
+                placeholder="Số điện thoại"
                 label="Số điện thoại"
               />
               <CustomSelect

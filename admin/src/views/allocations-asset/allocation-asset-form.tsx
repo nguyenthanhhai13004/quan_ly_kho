@@ -69,6 +69,16 @@ export default function AllocationAssetForm({
   const { openConfirmModal } = useModalProvider();
   const navigate = useNavigate();
 
+  const handleCancel = () => {
+    reset();
+    resetBatchState();
+    if (onClose) {
+      onClose();
+      return;
+    }
+    navigate(-1);
+  };
+
   useEffect(() => {
     if (defaultReceiverId) {
       setValue("receiver_id", defaultReceiverId);
@@ -221,7 +231,7 @@ export default function AllocationAssetForm({
         <CustomInput
           {...register("name")}
           required
-          placeholder="Ví dụ : Đơn cho ..."
+          placeholder="nhập tên đơn"
           error={errors.name?.message}
           type="text"
           label="Tên đơn"
@@ -292,10 +302,12 @@ export default function AllocationAssetForm({
       </div>
       <div className="grid grid-cols-2 gap-2">
         <CustomButton
+          type="button"
           className="w-full"
           variant="default"
           label="Hủy"
           size="md"
+          onClick={handleCancel}
         />
         <CustomButton
           className="w-full"

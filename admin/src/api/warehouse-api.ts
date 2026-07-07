@@ -1,6 +1,7 @@
 import type { ApiResponseDto } from "../common/dtos/api-response.dto";
 import type { ResponsePaginationDto } from "../common/dtos/response-pagination.dto";
 import type { PaginationAssetsDto } from "../dtos/asset/pagination-assets.dto";
+import type { PaginationDto } from "../dtos/pagination.dto";
 import api from "../libs/api";
 
 type Warehouse = {
@@ -51,10 +52,16 @@ class WarehouseApi {
     };
   }
 
-  static async getWarehouseAny(keyword:string): Promise<
+  static async getWarehouseAny(
+    paginationDto?: string | (PaginationDto & { keyword?: string }),
+  ): Promise<
     ApiResponseDto<ResponsePaginationDto<Warehouse>>
   > {
-    const response = await api.get(`/v1/warehouses/any?keyword=${keyword}`);
+    const params =
+      typeof paginationDto === "string"
+        ? { keyword: paginationDto }
+        : paginationDto;
+    const response = await api.get("/v1/warehouses/any", { params });
     return {
       data: response.data.data,
       message: response.data.message,
@@ -103,9 +110,11 @@ class WarehouseApi {
     };
   }
 
-  static async getAllocationOrdersOwn(classId?: string): Promise<ApiResponseDto<any>> {
+  static async getAllocationOrdersOwn(
+    params?: PaginationDto & { class_id?: string; start_date?: string; end_date?: string },
+  ): Promise<ApiResponseDto<ResponsePaginationDto<any>>> {
     const response = await api.get("/v1/warehouses/allocation-orders-own", {
-      params: classId ? { class_id: classId } : undefined,
+      params,
     });
     return {
       data: response.data.data,

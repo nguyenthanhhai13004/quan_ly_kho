@@ -659,7 +659,7 @@ export default function ProcessRequestModal({
               disabled={!hasEnoughStock}
             />
           </>
-        ) : (
+        ) : mode === "process" && (requestInfo?.type === 1 || requestInfo?.type === 2) ? null : (
           <>
             <CustomButton type="button" label="Quay lại" variant="default" size="sm" onClick={() => setMode("view")} />
             {mode === "reject" && (

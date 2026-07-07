@@ -513,7 +513,20 @@ class WarehouseService {
     };
   }
 
-  static async getAllocationOrdersOwn(userId: number, classId?: number) {
+  static async getAllocationOrdersOwn(
+    userId: number,
+    params: PaginationDto & {
+      class_id?: number;
+      keyword?: string;
+      start_date?: string;
+      end_date?: string;
+    },
+  ): Promise<ResponsePaginationDto<any>> {
+    const { class_id: classId, keyword, start_date, end_date, page = 1, size = 5 } = params;
+    const parsedPage = Number(page || 1);
+    const parsedSize = Number(size || 5);
+    const offset = (parsedPage - 1) * parsedSize;
+
     // Các đơn cấp phát chưa thu hồi.
     const query = db("asset_lifecycle as al")
       .select(
@@ -556,7 +569,8 @@ class WarehouseService {
       .innerJoin("asset_transactions as at", "al.transaction_id", "at.id")
       .innerJoin("warehouses as w", "at.warehouse_id", "w.id")
       .where("al.receiver_id", userId)
-      .whereNull("al.return_date");
+      .whereNull("al.return_date")
+      .whereNotNull("al.return_deadline");
 
     // Lọc theo tài sản đã duyệt cho lớp.
     if (classId) {
@@ -567,15 +581,72 @@ class WarehouseService {
       if (assetIds.length > 0) {
         query.whereIn("a.id", assetIds);
       } else {
-        return [];
+        return {
+          items: [],
+          page: parsedPage,
+          size: parsedSize,
+          total: 0,
+          totalPages: 0,
+        };
       }
     }
 
-    const rows = await query;
+    const applyFilters = (qb: any) => {
+      const search = keyword?.trim();
+      if (search) {
+        qb.andWhere((sub: any) => {
+          sub.where("at.name", "like", `%${search}%`).orWhere("a.name", "like", `%${search}%`);
+        });
+      }
+
+      if (start_date) {
+        qb.andWhere("al.allocation_date", ">=", start_date);
+      }
+
+      if (end_date) {
+        qb.andWhere("al.allocation_date", "<=", end_date);
+      }
+    };
+
+    const matchedOrdersQuery = query
+      .clone()
+      .clearSelect()
+      .select("al.transaction_id")
+      .max({ transaction_created_at: "at.created_at" })
+      .groupBy("al.transaction_id");
+    applyFilters(matchedOrdersQuery);
+
+    const totalResult = await db
+      .from(matchedOrdersQuery.clone().as("allocation_order_groups"))
+      .count<{ count: number | string }>({ count: "*" })
+      .first();
+    const total = Number(totalResult?.count || 0);
+    const totalPages = Math.ceil(total / parsedSize);
+
+    if (total === 0) {
+      return {
+        items: [],
+        page: parsedPage,
+        size: parsedSize,
+        total,
+        totalPages,
+      };
+    }
+
+    const orderGroups = await matchedOrdersQuery
+      .orderBy("transaction_created_at", "desc")
+      .limit(parsedSize)
+      .offset(offset);
+    const transactionIds = orderGroups.map((order: any) => order.transaction_id);
+
+    const rows = await query
+      .whereIn("al.transaction_id", transactionIds)
+      .orderBy("at.created_at", "desc");
 
     // Gom item theo giao dịch.
     const grouped = Object.values(
       rows.reduce((acc: any, row: any) => {
+        //acc[txKey] là đơn cấp phát đang được gom theo transaction_id.
         const txKey = row.transaction_id;
         if (!acc[txKey]) {
           acc[txKey] = {
@@ -589,6 +660,7 @@ class WarehouseService {
             items: [],
           };
         }
+        // Thêm tài sản của dòng hiện tại vào danh sách tài sản trong đơn.
         acc[txKey].items.push({
           asset_id: row.asset_id,
           asset_code: row.asset_code,
@@ -604,7 +676,13 @@ class WarehouseService {
       }, {}),
     );
 
-    return grouped;
+    return {
+      items: grouped,
+      page: parsedPage,
+      size: parsedSize,
+      total,
+      totalPages,
+    };
   }
 
   static async getAssetsAllcationOwn(userId: number) {

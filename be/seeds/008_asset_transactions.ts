@@ -1,5 +1,7 @@
 import { Knex } from "knex";
 import {
+  ASSET_EXPORTS_TABLE_NAME,
+  ASSET_IMPORTS_TABLE_NAME,
   ASSET_LIFECYCLE_TABLE_NAME,
   ASSET_TRANSACTION_ITEMS_TABLE_NAME,
   ASSET_TRANSACTIONS_TABLE_NAME,
@@ -8,10 +10,216 @@ import generateTransactionCode from "../src/v1/utils/generate-transaction-code";
 import TransactionTypeEnum from "../src/v1/cores/enums/transaction-type.enum";
 import AssetStatusEnum from "../src/v1/cores/enums/assets-status.enum";
 
+const MILITARY_SCIENCE_ACADEMY_WAREHOUSE_ID = 7;
+const SEED_CREATED_BY_USER_ID = 2;
+
+type WarehouseAssetSeedRow = {
+  id: number;
+  warehouse_id: number;
+  asset_id: number;
+  quantity: number;
+  cost: number;
+  status: number;
+  batch_code: string;
+};
+
+type AcademyTrendSeeds = {
+  transactions: Record<string, any>[];
+  items: Record<string, any>[];
+  imports: Record<string, any>[];
+  exports: Record<string, any>[];
+};
+
+const IMPORT_COUNT_BY_MONTH = [3, 5, 2, 6, 4, 7, 3, 5, 8, 4, 6, 5];
+const EXPORT_COUNT_BY_MONTH = [2, 4, 5, 3, 6, 2, 5, 7, 4, 6, 3, 8];
+
+const IMPORT_NAMES = [
+  "Nhập bổ sung quân nhu huấn luyện",
+  "Nhập trang bị phục vụ học viên",
+  "Nhập vật tư bảo đảm thường xuyên",
+  "Nhập bổ sung kho học viện",
+  "Nhập thiết bị phục vụ diễn tập",
+];
+
+const EXPORT_NAMES = [
+  "Xuất phục vụ huấn luyện",
+  "Xuất bảo đảm nhiệm vụ học viện",
+  "Xuất trang bị cho đơn vị nhận",
+  "Xuất vật tư phục vụ diễn tập",
+  "Xuất theo kế hoạch bảo đảm",
+];
+
+function getLastTwelveMonths(now: Date): Date[] {
+  return Array.from({ length: 12 }, (_, index) => {
+    const monthOffset = 11 - index;
+    return new Date(now.getFullYear(), now.getMonth() - monthOffset, 1, 8);
+  });
+}
+
+function createDateInMonth(monthStart: Date, daySeed: number, hour: number, now: Date) {
+  const isCurrentMonth =
+    monthStart.getFullYear() === now.getFullYear() &&
+    monthStart.getMonth() === now.getMonth();
+  const lastDay = isCurrentMonth
+    ? now.getDate()
+    : new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0).getDate();
+  const day = 1 + (daySeed % Math.max(lastDay, 1));
+
+  return new Date(
+    monthStart.getFullYear(),
+    monthStart.getMonth(),
+    day,
+    hour,
+    0,
+    0,
+    0,
+  );
+}
+
+function formatDatePart(date: Date): string {
+  return date.toISOString().slice(0, 10).replace(/-/g, "");
+}
+
+function createSeedTransactionCode(
+  type: TransactionTypeEnum,
+  date: Date,
+  sequence: number,
+): string {
+  const typeCode = type === TransactionTypeEnum.IMPORT ? "NK" : "XK";
+  return `KQN-${typeCode}-${formatDatePart(date)}-${String(sequence).padStart(3, "0")}`;
+}
+
+function pickWarehouseAssetRows(
+  rows: WarehouseAssetSeedRow[],
+  monthIndex: number,
+  transactionIndex: number,
+  lineCount: number,
+): WarehouseAssetSeedRow[] {
+  return Array.from({ length: lineCount }, (_, lineIndex) => {
+    const index = (monthIndex * 17 + transactionIndex * 5 + lineIndex * 9) % rows.length;
+    return rows[index];
+  });
+}
+
+function createAcademyImportExportSeeds(
+  warehouseAssets: WarehouseAssetSeedRow[],
+  now: Date,
+): AcademyTrendSeeds {
+  const seeds: AcademyTrendSeeds = {
+    transactions: [],
+    items: [],
+    imports: [],
+    exports: [],
+  };
+
+  if (warehouseAssets.length === 0) {
+    return seeds;
+  }
+
+  let transactionId = 1000;
+  let sequence = 1;
+  const months = getLastTwelveMonths(now);
+
+  months.forEach((monthStart, monthIndex) => {
+    const importCount = IMPORT_COUNT_BY_MONTH[monthIndex];
+    const exportCount = EXPORT_COUNT_BY_MONTH[monthIndex];
+
+    for (let i = 0; i < importCount; i++) {
+      const createdAt = createDateInMonth(monthStart, i * 4 + monthIndex, 9, now);
+      const type = TransactionTypeEnum.IMPORT;
+      const currentTransactionId = transactionId++;
+      const lineRows = pickWarehouseAssetRows(warehouseAssets, monthIndex, i, 1 + ((i + monthIndex) % 3));
+
+      seeds.transactions.push({
+        id: currentTransactionId,
+        name: `${IMPORT_NAMES[(i + monthIndex) % IMPORT_NAMES.length]} ${String(monthIndex + 1).padStart(2, "0")}`,
+        warehouse_id: MILITARY_SCIENCE_ACADEMY_WAREHOUSE_ID,
+        type,
+        note: "Seed demo xu hướng nhập kho trong 12 tháng",
+        reason: "Bổ sung định kỳ cho Kho Quân Nhu Học viện Khoa Học Quân Sự",
+        code: createSeedTransactionCode(type, createdAt, sequence++),
+        created_by_user_id: SEED_CREATED_BY_USER_ID,
+        created_at: createdAt,
+        updated_at: createdAt,
+      });
+
+      seeds.imports.push({
+        transaction_id: currentTransactionId,
+        received_date: createdAt,
+        sender_location: i % 2 === 0 ? "Cục Quân nhu" : "Phòng Hậu cần Học viện",
+        created_by_user_id: SEED_CREATED_BY_USER_ID,
+        created_at: createdAt,
+        updated_at: createdAt,
+      });
+
+      lineRows.forEach((row, lineIndex) => {
+        seeds.items.push({
+          transaction_id: currentTransactionId,
+          warehouse_asset_id: row.id,
+          quantity: 6 + ((monthIndex + i + lineIndex) % 18),
+          cost: row.cost,
+          status: row.status || AssetStatusEnum.GOOD,
+          created_by_user_id: SEED_CREATED_BY_USER_ID,
+          created_at: createdAt,
+          updated_at: createdAt,
+        });
+      });
+    }
+
+    for (let i = 0; i < exportCount; i++) {
+      const createdAt = createDateInMonth(monthStart, i * 3 + monthIndex + 2, 14, now);
+      const type = TransactionTypeEnum.EXPORT;
+      const currentTransactionId = transactionId++;
+      const lineRows = pickWarehouseAssetRows(warehouseAssets, monthIndex, i + 40, 1 + ((i + monthIndex) % 2));
+
+      seeds.transactions.push({
+        id: currentTransactionId,
+        name: `${EXPORT_NAMES[(i + monthIndex) % EXPORT_NAMES.length]} ${String(monthIndex + 1).padStart(2, "0")}`,
+        warehouse_id: MILITARY_SCIENCE_ACADEMY_WAREHOUSE_ID,
+        type,
+        note: "Seed demo xu hướng xuất kho trong 12 tháng",
+        reason: "Bảo đảm vật chất cho các hệ đào tạo và nhiệm vụ học viện",
+        code: createSeedTransactionCode(type, createdAt, sequence++),
+        created_by_user_id: SEED_CREATED_BY_USER_ID,
+        created_at: createdAt,
+        updated_at: createdAt,
+      });
+
+      seeds.exports.push({
+        transaction_id: currentTransactionId,
+        export_date: createdAt,
+        receiver_name: i % 3 === 0 ? "Ban Hậu cần Học viện" : "Đơn vị huấn luyện",
+        receiver_phone: `09${String(12000000 + monthIndex * 1000 + i * 37).padStart(8, "0")}`,
+        receiver_address: "Học viện Khoa Học Quân Sự",
+        created_by_user_id: SEED_CREATED_BY_USER_ID,
+        created_at: createdAt,
+        updated_at: createdAt,
+      });
+
+      lineRows.forEach((row, lineIndex) => {
+        seeds.items.push({
+          transaction_id: currentTransactionId,
+          warehouse_asset_id: row.id,
+          quantity: 1 + ((monthIndex + i + lineIndex) % 9),
+          cost: row.cost,
+          status: row.status || AssetStatusEnum.GOOD,
+          created_by_user_id: SEED_CREATED_BY_USER_ID,
+          created_at: createdAt,
+          updated_at: createdAt,
+        });
+      });
+    }
+  });
+
+  return seeds;
+}
+
 export async function seed(knex: Knex): Promise<void> {
   await knex.raw('SET FOREIGN_KEY_CHECKS = 0');
   // Deletes ALL existing entries
   await knex("asset_maintenances").del();
+  await knex(ASSET_IMPORTS_TABLE_NAME).del();
+  await knex(ASSET_EXPORTS_TABLE_NAME).del();
   await knex(ASSET_LIFECYCLE_TABLE_NAME).del();
   await knex(ASSET_TRANSACTION_ITEMS_TABLE_NAME).del();
   await knex(ASSET_TRANSACTIONS_TABLE_NAME).del();
@@ -250,5 +458,33 @@ export async function seed(knex: Knex): Promise<void> {
       created_by_user_id: 2,
     },
   ]);
+
+  const academyWarehouseAssets = await knex<WarehouseAssetSeedRow>(
+    "warehouse_asset",
+  )
+    .select(
+      "id",
+      "warehouse_id",
+      "asset_id",
+      "quantity",
+      "cost",
+      "status",
+      "batch_code",
+    )
+    .where({ warehouse_id: MILITARY_SCIENCE_ACADEMY_WAREHOUSE_ID })
+    .orderBy("id", "asc");
+
+  const academySeeds = createAcademyImportExportSeeds(
+    academyWarehouseAssets,
+    now,
+  );
+
+  if (academySeeds.transactions.length > 0) {
+    await knex(ASSET_TRANSACTIONS_TABLE_NAME).insert(academySeeds.transactions);
+    await knex(ASSET_IMPORTS_TABLE_NAME).insert(academySeeds.imports);
+    await knex(ASSET_EXPORTS_TABLE_NAME).insert(academySeeds.exports);
+    await knex(ASSET_TRANSACTION_ITEMS_TABLE_NAME).insert(academySeeds.items);
+  }
+
   await knex.raw('SET FOREIGN_KEY_CHECKS = 1');
 }

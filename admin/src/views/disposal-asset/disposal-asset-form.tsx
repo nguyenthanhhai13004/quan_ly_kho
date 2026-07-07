@@ -163,7 +163,7 @@ export default function DisposalAssetForm() {
         <CustomInput
           {...register("name")}
           required
-          placeholder="Ví dụ : Đơn cho ..."
+          placeholder="Nhập tên đơn"
           error={errors.name?.message}
           type="text"
           label="Tên đơn"

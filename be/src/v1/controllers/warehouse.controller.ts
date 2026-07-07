@@ -143,10 +143,17 @@ class WarehouseController {
     res: Response,
     next: NextFunction,
   ) => {
-    const classId = req.query.class_id ? Number(req.query.class_id) : undefined;
+    const query = {
+      class_id: req.query.class_id ? Number(req.query.class_id) : undefined,
+      keyword: req.query.keyword ? String(req.query.keyword) : undefined,
+      start_date: req.query.start_date ? String(req.query.start_date) : undefined,
+      end_date: req.query.end_date ? String(req.query.end_date) : undefined,
+      page: Number(req.query.page || 1),
+      size: Number(req.query.size || 5),
+    };
     return new OK({
       message: "Danh sách đơn cấp phát đang sở hữu (chưa trả)",
-      data: await WarehouseService.getAllocationOrdersOwn(req.user.id, classId),
+      data: await WarehouseService.getAllocationOrdersOwn(req.user.id, query),
     }).send(res);
   };
 }

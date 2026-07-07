@@ -159,7 +159,7 @@ export default function ExportExcelView() {
               <CustomInput
                 {...register("name")}
                 required
-                placeholder="Ví dụ : Đơn xuất kho cho ..."
+                placeholder="Nhập tên đơn"
                 error={formErrors.name?.message}
                 type="text"
                 label="Tên đơn"
@@ -193,7 +193,7 @@ export default function ExportExcelView() {
               <CustomInput
                 label="Tên người nhận"
                 required
-                placeholder="Nguyen Van A"
+                placeholder="Nhập tên người nhận"
                 labelType="top"
                 {...register("receiver_name")}
                 error={formErrors.receiver_name?.message}
@@ -201,14 +201,14 @@ export default function ExportExcelView() {
               <CustomInput
                 label="Số điện thoại"
                 required
-                placeholder="099999999"
+                placeholder="Nhập số điện thoại"
                 labelType="top"
                 {...register("receiver_phone")}
                 error={formErrors.receiver_phone?.message}
               />
               <CustomTextarea
                 required
-                placeholder="abc, TP. Hà Nội"
+                placeholder="Nhập địa chỉ người nhận"
                 label="Địa chỉ"
                 labelType="top"
                 {...register("receiver_address")}

@@ -10,12 +10,11 @@ import { toast } from "react-toastify";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useAllClasses } from "../../../queries/class.query";
-import { useMe } from "../../../queries/auth.query";
 
 const REQUEST_TYPE_OPTIONS = [
   { label: "Cấp phát tài sản", value: "1" },
   { label: "Thu hồi tài sản", value: "2" },
-  { label: "Khác", value: "4" },
+  // { label: "Khác", value: "4" },
 ];
 
 export default function RequestFormPanel({ onClose }: { onClose: () => void }) {
@@ -35,14 +34,13 @@ export default function RequestFormPanel({ onClose }: { onClose: () => void }) {
   const { mutate, isPending } = useCreateAdvisorRequest();
   const queryClient = useQueryClient();
   const { classes } = useAllClasses();
-  const { user } = useMe();
-  const filteredClasses = classes?.filter((c) => c.major_id === user?.major_id) || [];
+  const availableClasses = classes || [];
 
   useEffect(() => {
-    if (filteredClasses.length > 0 && !selectedClassId) {
-      setSelectedClassId(String(filteredClasses[0].id));
+    if (classes?.length && !selectedClassId) {
+      setSelectedClassId(String(classes[0].id));
     }
-  }, [filteredClasses, selectedClassId]);
+  }, [classes, selectedClassId]);
 
   const columns = ["Hành động", "Mã", "Tên", "Số lượng"];
 
@@ -151,7 +149,7 @@ export default function RequestFormPanel({ onClose }: { onClose: () => void }) {
                   type="number"
                   className="text-xs"
                   width="80px"
-                  min={1}
+                  min={0}
                 />
               ),
             ])}
@@ -166,7 +164,7 @@ export default function RequestFormPanel({ onClose }: { onClose: () => void }) {
             onChange={(e) => setSelectedClassId(e.target.value)}
             required
             labelType="top"
-            options={filteredClasses.map((c) => ({ label: c.name, value: String(c.id) }))}
+            options={availableClasses.map((c) => ({ label: c.name, value: String(c.id) }))}
           />
 
           <CustomSelect
@@ -181,7 +179,7 @@ export default function RequestFormPanel({ onClose }: { onClose: () => void }) {
 
           <div className="flex flex-col gap-2">
             <label className="text-sm font-semibold text-[#344054]">
-              Ghi chú lý do / ý kiến chỉ huy
+              Ghi chú chỉ huy
             </label>
             <textarea
               name="note"

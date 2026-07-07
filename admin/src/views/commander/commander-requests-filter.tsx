@@ -18,7 +18,7 @@ export default function CommanderRequestsFilter() {
           { label: "Cấp phát", value: "1" },
           { label: "Thu hồi", value: "2" },
           { label: "Báo lỗi", value: "3" },
-          { label: "Khác", value: "4" },
+          // { label: "Khác", value: "4" },
         ]}
         value={filters?.type || ""}
         onChange={(e) => handleChange("type", e.target.value)}
@@ -38,12 +38,12 @@ export default function CommanderRequestsFilter() {
         value={filters?.status || ""}
         onChange={(e) => handleChange("status", e.target.value)}
       />
-      <CustomInput
+      {/* <CustomInput
         className="min-w-[200px] w-full"
         placeholder="Tìm theo tên học viên, mã học viên hoặc tên tài sản..."
         value={filters?.keyword || ""}
         onChange={(e) => handleChange("keyword", e.target.value)}
-      />
+      /> */}
     </FilterWrapper>
   );
 }

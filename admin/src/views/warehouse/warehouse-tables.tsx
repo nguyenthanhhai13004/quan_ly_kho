@@ -1,16 +1,28 @@
 import CustomTable from "../../components/common/custom-table";
+import type { PaginationDto } from "../../dtos/pagination.dto";
+import { usePaginationParams } from "../../hooks/use-pagination-params";
 import { useWarehouseAny } from "../../queries/warehouse.query";
 
 export default function WarehousesTable() {
-  const { warehouses } = useWarehouseAny();
+  const { params, setParams } = usePaginationParams<PaginationDto>();
+  const { warehouses } = useWarehouseAny(params);
   const columns = ["STT", "Mã kho", "Tên kho", "Người quản lý"];
+  const currentPage = Number(params.page || 1);
+  const pageSize = Number(params.size || 10);
+  const handlePagination = (page: number) => {
+    setParams({ ...params, page });
+  };
+
   return (
     <>
       <CustomTable
+        onPageChange={handlePagination}
+        currentPage={currentPage}
+        totalPages={Number(warehouses?.totalPages || 1)}
         columns={columns}
         data={
           warehouses?.items.map((w, index: number) => [
-            index + 1,
+            (currentPage - 1) * pageSize + index + 1,
             w.code,
             w.name,
             <>

@@ -52,9 +52,11 @@ class ClassController {
   static async getAllList(req: Request, res: Response, next: NextFunction) {
     try {
       const { major_id } = req.query;
+      console.log("major_id", major_id);
       let targetMajorId = major_id ? Number(major_id) : undefined;
       if (req.user.role_id === 3) {
         targetMajorId = req.user.major_id || -1;
+        console.log("req.user.major_id",req.user.major_id);
       }
       const data = await ClassService.getAllList(targetMajorId);
       new OK({

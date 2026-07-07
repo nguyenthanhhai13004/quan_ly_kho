@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import WarehouseApi from "../api/warehouse-api";
 import type { PaginationAssetsDto } from "../dtos/asset/pagination-assets.dto";
+import type { PaginationDto } from "../dtos/pagination.dto";
 
 export function useAllAssetsInWH(paginationDto:PaginationAssetsDto) {
   const query = useQuery({
@@ -20,11 +21,13 @@ export function useAllAssetsInWH(paginationDto:PaginationAssetsDto) {
   };
 }
 
-export function useWarehouseAny(keyword?:string) {
+export function useWarehouseAny(
+  paginationDto?: string | (PaginationDto & { keyword?: string }),
+) {
   const query = useQuery({
-    queryKey: ["warehouses-any",keyword],
+    queryKey: ["warehouses-any", paginationDto],
     queryFn: async () => {
-      const res = await WarehouseApi.getWarehouseAny(keyword || "");
+      const res = await WarehouseApi.getWarehouseAny(paginationDto);
       return res.data;
     },
   });
@@ -84,18 +87,20 @@ export function useAssetsOwn() {
   };
 }
 
-export function useAllocationOrdersOwn(classId?: string) {
+export function useAllocationOrdersOwn(
+  params: PaginationDto & { class_id?: string; start_date?: string; end_date?: string },
+) {
   const query = useQuery({
-    queryKey: ["allocation-orders-own", classId],
+    queryKey: ["allocation-orders-own", params],
     queryFn: async () => {
-      const res = await WarehouseApi.getAllocationOrdersOwn(classId);
+      const res = await WarehouseApi.getAllocationOrdersOwn(params);
       return res.data;
     },
-    enabled: !!classId,
+    enabled: !!params.class_id,
   });
 
   return {
-    orders: query.data as any[] | undefined,
+    orders: query.data,
     isLoading: query.isLoading,
   };
 }
