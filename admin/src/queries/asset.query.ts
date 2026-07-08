@@ -59,10 +59,13 @@ export function useCreateAsset() {
           if (!oldData) return;
           return {
             ...oldData,
-            items: [data, ...oldData?.items],
+            items: [data, ...oldData.items],
           };
         },
       );
+      queryClient.invalidateQueries({ queryKey: ["stats-assets-by-category"] });
+      queryClient.invalidateQueries({ queryKey: ["stats-assets"] });
+      queryClient.invalidateQueries({ queryKey: ["stats-by-status"] });
     },
   });
 }
@@ -112,6 +115,9 @@ export function useUpdateAsset() {
           ),
         };
       });
+      queryClient.invalidateQueries({ queryKey: ["stats-assets-by-category"] });
+      queryClient.invalidateQueries({ queryKey: ["stats-assets"] });
+      queryClient.invalidateQueries({ queryKey: ["stats-by-status"] });
     },
     onError: (error: any) => {
       console.error(error.response?.data || error.message);
@@ -127,6 +133,9 @@ export function useDeleteAsset() {
     },
     onSuccess: ({ data }) => {
       queryClient.invalidateQueries({ queryKey: ["assets"] });
+      queryClient.invalidateQueries({ queryKey: ["stats-assets-by-category"] });
+      queryClient.invalidateQueries({ queryKey: ["stats-assets"] });
+      queryClient.invalidateQueries({ queryKey: ["stats-by-status"] });
     },
     onError: (error: any) => {
       console.error(error.response?.data || error.message);

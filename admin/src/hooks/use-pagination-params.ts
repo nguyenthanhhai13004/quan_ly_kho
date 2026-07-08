@@ -20,7 +20,8 @@ export function usePaginationParams<T extends Record<string, any> = {}>(
   size: 10,
 } as unknown as Partial<PaginationParams & T>;
 
-  const [searchParams, setSearchParams] = useUrl ? useSearchParams() : [new URLSearchParams(), () => {}];
+  // Luôn gọi hook (không gọi có điều kiện); logic `useUrl` bên dưới quyết định có dùng URL hay không.
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const params = useMemo(() => {
     const page = useUrl ? Number(searchParams.get("page") || 1) : 1;

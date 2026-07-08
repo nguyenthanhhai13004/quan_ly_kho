@@ -34,8 +34,8 @@ export default function UserFilter() {
         className="min-w-[150px] w-full rounded-2xl"
         customDropdown
         options={[
-          { label: "Active", value: "1" },
-          { label: "Inactive", value: "0" },
+          { label: "Hoạt động ", value: "1" },
+          { label: "Không hoạt động", value: "0" },
         ]}
         label="Trạng thái"
         value={filters?.active !== undefined && filters?.active !== null ? String(filters.active) : ""}

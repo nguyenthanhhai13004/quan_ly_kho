@@ -17,7 +17,7 @@ export default function LogsTable() {
     "Username",
     "Action",
     "Controller",
-    "IP",
+    // "IP",
     "url",
     "Data",
     "Hành động",
@@ -39,7 +39,7 @@ export default function LogsTable() {
             log.username,
             log.action_name?.toUpperCase(),
             log.controller_name,
-            log.ip,
+            // log.ip,
             log.url,
             <pre className="whitespace-pre-wrap break-all max-w-[300px]">
               {JSON.stringify(log.data, null, 2)}

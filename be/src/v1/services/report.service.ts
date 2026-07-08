@@ -1,4 +1,5 @@
 import TransactionTypeEnum from "../cores/enums/transaction-type.enum";
+import AssetStatusEnum from "../cores/enums/assets-status.enum";
 import db from "../databases/init.mysql-v2";
 import {
   calculateAssetStatus,
@@ -51,10 +52,15 @@ class ReportService {
       .where("wa.warehouse_id", warehouse_id);
 
     const dataWithStatusText = data.map((item) => {
-      const dynamicStatus = calculateAssetStatus(
-        item.expiration_date ? new Date(item.expiration_date) : undefined,
-        item.maintenance_due ? new Date(item.maintenance_due) : undefined,
-      );
+      const dynamicStatus =
+        item.status === AssetStatusEnum.BROKEN
+          ? AssetStatusEnum.BROKEN
+          : calculateAssetStatus(
+              item.expiration_date
+                ? new Date(item.expiration_date)
+                : undefined,
+              item.maintenance_due ? new Date(item.maintenance_due) : undefined,
+            );
 
       return {
         ...item,

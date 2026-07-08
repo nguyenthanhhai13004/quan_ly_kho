@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { BiSend, BiTrash } from "react-icons/bi";
 import CustomIcon from "../../components/common/custom-icon";
 import CustomTable from "../../components/common/custom-table";
@@ -50,6 +51,24 @@ export default function DisposalAssetForm() {
   const { openConfirmModal } = useModalProvider();
   const { mutate } = useCreateDisposalTransaction();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const formItems = getValues("items") || [];
+    const formItemsByBatchCode = new Map(
+      formItems.map((item) => [item.batch_code, item]),
+    );
+    const nextItems = selectedBatches.map((batch, index) => {
+      const existedItem =
+        formItemsByBatchCode.get(batch.batchCode) ?? formItems[index];
+      return {
+        batch_code: batch.batchCode,
+        quantity: existedItem?.quantity ?? 1,
+        cost: existedItem?.cost ?? 1,
+      };
+    });
+    setValue("items", nextItems as CreateDisposalData["items"]);
+  }, [selectedBatches, getValues, setValue]);
+
   const onSubmit = (data: CreateDisposalData) => {
     if (selectedBatches.length === 0) {
       toast.error("Danh sách lô hàng phải có ít nhất 1");
@@ -103,10 +122,11 @@ export default function DisposalAssetForm() {
       <CustomTable
         columns={columns}
         size="small"
+        rowKeys={selectedBatches.map((item) => item.batchCode)}
         data={selectedBatches.map((item, index) => [
           <>
             <CustomIcon
-              key={`trash-${index}`}
+              key={`trash-${item.batchCode}`}
               icon={<BiTrash size={16} />}
               label="Xóa"
               variant="danger"
@@ -114,7 +134,7 @@ export default function DisposalAssetForm() {
             />
           </>,
           <CustomInput
-            key={`batchCode-${index}`}
+            key={`batchCode-${item.batchCode}`}
             {...register(`items.${index}.batch_code`)}
             name={`items.${index}.batch_code`}
             className="text-xs"
@@ -125,6 +145,7 @@ export default function DisposalAssetForm() {
           />,
           item.name,
           <CustomInput
+            key={`quantity-${item.batchCode}`}
             {...register(`items.${index}.quantity`, { valueAsNumber: true })}
             defaultValue={1}
             name={`items.${index}.quantity`}
@@ -133,6 +154,7 @@ export default function DisposalAssetForm() {
             width="120px"
           />,
           <CustomInput
+            key={`cost-${item.batchCode}`}
             {...register(`items.${index}.cost`, { valueAsNumber: true })}
             defaultValue={1}
             name={`items.${index}.cost`}

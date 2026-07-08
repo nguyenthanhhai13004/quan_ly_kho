@@ -31,11 +31,11 @@ export default function OwnedOrderSelectionTable() {
     defaultValues,
   } = usePaginationParams<AllocationOrderFilters>({
     useUrl: false,
-    defaultValues: { page: 1, size: 5 },
+    defaultValues: { page: 1, size: 10 },
   });
   const [params, setParams] = useState<AllocationOrderFilters>({
     page: 1,
-    size: 5,
+    size: 10,
   });
   const [detailOrder, setDetailOrder] = useState<any | null>(null);
   const { orders, isLoading } = useAllocationOrdersOwn({
@@ -140,7 +140,7 @@ export default function OwnedOrderSelectionTable() {
           currentPage={params.page}
           onPageChange={(page) => setParams({ ...params, page })}
           data={(orders?.items || []).map((order: any, index: number) => {
-            const itemIndex = ((params.page || 1) - 1) * (params.size || 5) + index + 1;
+            const itemIndex = ((params.page || 1) - 1) * (params.size || 10) + index + 1;
 
             const recallStatus = getRecallRequestStatus(order.transaction_code);
             const isRequested = recallStatus !== null;

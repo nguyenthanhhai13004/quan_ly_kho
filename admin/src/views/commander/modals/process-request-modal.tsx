@@ -51,10 +51,9 @@ export default function ProcessRequestModal({
   const [allocationTransactions, setAllocationTransactions] = useState<any[]>([]);
   const [loadingTxns, setLoadingTxns] = useState(false);
   const [activeRecallCode, setActiveRecallCode] = useState<string | null>(null);
-  const [returnDate, setReturnDate] = useState(() => {
-    const today = new Date();
-    return today.toISOString().split("T")[0]; // YYYY-MM-DD
-  });
+  const [returnDate, setReturnDate] = useState(() =>
+    dayjs().format("YYYY-MM-DD"),
+  );
 
   const { mutate: processRequest, isPending: isProcessing } = useProcessAdvisorRequest();
   const { mutate: fulfillRecall, isPending: isFulfillingRecall } = useFulfillRecallRequest();

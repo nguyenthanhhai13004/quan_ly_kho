@@ -20,7 +20,7 @@ export default function DashboardView() {
           <StatsCard label={"Tổng tài sản"} value={assetsTotal?.total_assets_in_warehouse || 0}/>
           <StatsCard label={"Đang cấp phát"} value={assetsTotal?.total_allocated || 0}/>
           <StatsCard label={"Cần bảo trì"} value={assetsTotal?.total_need_maintenance || 0}/>
-          <StatsCard label={"Sắp hết hạn (< 10 ngày)"} value={assetsTotal?.total_expiring_soon || 0}/>
+          <StatsCard label={"Sắp hết hạn"} value={assetsTotal?.total_expiring_soon || 0}/>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -79,7 +79,7 @@ export default function DashboardView() {
             legendPosition: "middle",
           }}
           axisLeft={{
-            legend: "Số lượng",
+            legend: "Số lượng giao dịch",
             legendOffset: -40,
             legendPosition: "middle",
           }}

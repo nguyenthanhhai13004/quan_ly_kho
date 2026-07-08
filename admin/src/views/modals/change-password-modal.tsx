@@ -1,5 +1,5 @@
 import CustomButton from "../../components/common/custom-button";
-import CustomInput from "../../components/common/custom-input";
+import CustomInputPw from "../../components/common/custom-input-pw";
 import CustomModal, {
   type CustomModalProps,
 } from "../../components/common/custom-modal";
@@ -42,25 +42,31 @@ export default function ChangePasswordModal({
   };
 
   return (
-    <CustomModal  title="Thông tin tài khoản" onClose={onClose} open={open}>
+    <CustomModal title="Đổi mật khẩu" onClose={onClose} open={open}>
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="w-[400px] flex flex-col gap-2"
+        className="w-[400px] flex flex-col gap-5 pt-2"
       >
-        <CustomInput
-          placeholder="Mật khẩu cũ"
+        <CustomInputPw
+          labelType="top"
+          label="Mật khẩu cũ"
+          placeholder="Nhập mật khẩu hiện tại"
           required
           {...register("oldPassword")}
           error={errors.oldPassword?.message}
         />
-        <CustomInput
-          placeholder="Mật khẩu mới"
+        <CustomInputPw
+          labelType="top"
+          label="Mật khẩu mới"
+          placeholder="Nhập mật khẩu mới"
           required
           {...register("newPassword")}
           error={errors.newPassword?.message}
         />
-        <CustomInput
-          placeholder="Xác nhận mật khẩu mới"
+        <CustomInputPw
+          labelType="top"
+          label="Xác nhận mật khẩu mới"
+          placeholder="Nhập lại mật khẩu mới"
           required
           {...register("confirmNewPassword")}
           error={errors.confirmNewPassword?.message}

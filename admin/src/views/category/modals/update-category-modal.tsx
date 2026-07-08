@@ -25,8 +25,7 @@ export default function UpdateCategoryModal({
   onClose,
   category,
 }: UpdateCategoryModalProps) {
-  if (!category) return;
-  const [color, setColor] = useState(category.color || "#aabbcc");
+  const [color, setColor] = useState(category?.color || "#aabbcc");
   const {
     register,
     handleSubmit,
@@ -34,12 +33,14 @@ export default function UpdateCategoryModal({
     reset,
   } = useForm<UpdateCategoryData>({
     resolver: zodResolver(UpdateCategorySchema),defaultValues:{
-      color:category.color,
-      description:category.description,
-      name:category.name,
+      color:category?.color,
+      description:category?.description,
+      name:category?.name,
     }
   });
   const { mutate } = useUpdateCategory();
+
+  if (!category) return null;
   const onSubmit = async (data: UpdateCategoryData) => {
     mutate(
       {

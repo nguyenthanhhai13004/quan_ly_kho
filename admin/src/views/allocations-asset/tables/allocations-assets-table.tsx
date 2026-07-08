@@ -68,7 +68,7 @@ export default function AllocationsAssetTable({
     <>
       <CustomTable
         columns={columns}
-        filter={<TransactionFilter />}
+        filter={<TransactionFilter hideDateFilter />}
         currentPage={params.page}
         totalPages={transactions?.totalPages}
         onPageChange={setPage}

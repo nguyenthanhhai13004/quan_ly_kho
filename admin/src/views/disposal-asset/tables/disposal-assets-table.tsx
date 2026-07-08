@@ -40,7 +40,7 @@ export default function DisposalAssetTable({
       <CustomTable
         // title="D/S lịch sử thanh lý"
         columns={columns}
-        filter={<TransactionFilter />}
+        filter={<TransactionFilter hideDateFilter />}
         currentPage={params.page}
         totalPages={transactions?.totalPages}
         onPageChange={setPage}

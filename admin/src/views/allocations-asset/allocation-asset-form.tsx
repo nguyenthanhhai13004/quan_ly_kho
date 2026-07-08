@@ -86,15 +86,24 @@ export default function AllocationAssetForm({
   }, [defaultReceiverId, setValue]);
 
   useEffect(() => {
-    if (selectedBatches.length > 0) {
-      selectedBatches.forEach((batch, idx) => {
-        const currentVal = getValues(`items.${idx}.quantity`);
-        if (currentVal === undefined || currentVal === 1) {
-          setValue(`items.${idx}.quantity`, idx === 0 && selectedBatches.length === 1 ? (requestQuantity || 1) : 1);
-        }
-      });
-    }
-  }, [selectedBatches, requestQuantity, setValue, getValues]);
+    const formItems = getValues("items") || [];
+    const formItemsByBatchCode = new Map(
+      formItems.map((item) => [item.batch_code, item]),
+    );
+    const nextItems = selectedBatches.map((batch, index) => {
+      const existedItem =
+        formItemsByBatchCode.get(batch.batchCode) ?? formItems[index];
+      const defaultQuantity =
+        requestQuantity && selectedBatches.length === 1 && index === 0
+          ? requestQuantity
+          : 1;
+      return {
+        batch_code: batch.batchCode,
+        quantity: existedItem?.quantity ?? defaultQuantity,
+      };
+    });
+    setValue("items", nextItems as CreateAllocationData["items"]);
+  }, [selectedBatches, requestQuantity, getValues, setValue]);
 
   const onSubmit = (data: CreateAllocationData) => {
     if (selectedBatches.length === 0) {
@@ -168,10 +177,11 @@ export default function AllocationAssetForm({
       <CustomTable
         columns={columns}
         size="small"
+        rowKeys={selectedBatches.map((item) => item.batchCode)}
         data={selectedBatches.map((item, index) => [
           <>
             <CustomIcon
-              key={`trash-${index}`}
+              key={`trash-${item.batchCode}`}
               icon={<BiTrash size={16} />}
               label="Xóa"
               variant="danger"
@@ -179,7 +189,7 @@ export default function AllocationAssetForm({
             />
           </>,
           <CustomInput
-            key={`batchCode-${index}`}
+            key={`batchCode-${item.batchCode}`}
             {...register(`items.${index}.batch_code`)}
             name={`items.${index}.batch_code`}
             className="text-xs"
@@ -189,8 +199,9 @@ export default function AllocationAssetForm({
             disabled
           />,
           item.name,
-          <div key={`qty-container-${index}`}>
+          <div key={`qty-container-${item.batchCode}`}>
             <CustomInput
+              key={`quantity-${item.batchCode}`}
               {...register(`items.${index}.quantity`, { valueAsNumber: true })}
               defaultValue={requestQuantity && selectedBatches.length === 1 && index === 0 ? requestQuantity : 1}
               name={`items.${index}.quantity`}
@@ -200,6 +211,7 @@ export default function AllocationAssetForm({
             />
             {requestId && (
               <CustomInput
+                key={`quantity-display-${item.batchCode}`}
                 defaultValue={requestQuantity && selectedBatches.length === 1 && index === 0 ? requestQuantity : 1}
                 type="number"
                 className="text-xs"
@@ -231,7 +243,7 @@ export default function AllocationAssetForm({
         <CustomInput
           {...register("name")}
           required
-          placeholder="nhập tên đơn"
+          placeholder="Nhập tên đơn"
           error={errors.name?.message}
           type="text"
           label="Tên đơn"

@@ -4,6 +4,7 @@ import { ResponsePaginationDto } from "../cores/dtos/response-pagination.dto";
 import AssetStatusEnum from "../cores/enums/assets-status.enum";
 import MaintenanceStatusEnum from "../cores/enums/maintenance-status.enum";
 import WarehouseTransactionTypeEnum from "../cores/enums/warehouse-transaction-type.enum";
+import TransactionTypeEnum from "../cores/enums/transaction-type.enum";
 import {
   BadRequestError,
   InternalServerError,
@@ -163,7 +164,7 @@ class WarehouseService {
   static async getAllBatchesNeedMaintenanceInWHOwn(warehouseId: number) {
     const now = new Date();
 
-    // Lấy lô đang bảo trì hoặc đã tới hạn bảo trì.
+    // Lấy lô cần bảo trì: đang bảo trì, đã hỏng, hoặc đã tới/quá hạn bảo trì.
     const batches = await db("warehouse_asset as wa")
       .join("assets as a", "wa.asset_id", "a.id")
       .select(
@@ -173,15 +174,27 @@ class WarehouseService {
         "a.category_id",
       )
       .where("wa.warehouse_id", warehouseId)
+      .andWhere("wa.quantity", ">", 0)
       .andWhere((qb) => {
-        qb.where("wa.status", AssetStatusEnum.MAINTENANCE).orWhere((q2) => {
+        qb.whereNull("wa.expiration_date").orWhere(
+          "wa.expiration_date",
+          ">",
+          now,
+        );
+      })
+      .andWhere((qb) => {
+        qb.whereIn("wa.status", [
+          AssetStatusEnum.MAINTENANCE,
+          AssetStatusEnum.BROKEN,
+        ]).orWhere((q2) => {
           q2.whereNotNull("wa.maintenance_due").andWhere(
             "wa.maintenance_due",
             "<=",
             now,
           );
         });
-      });
+      })
+      .orderBy("wa.id", "desc");
 
     return batches;
   }
@@ -455,7 +468,7 @@ class WarehouseService {
       )?.total || 0,
     );
 
-    // Đã cấp phát nhưng chưa thu hồi.
+    // Đã cấp phát nhưng chưa thu hồi hoặc cấp phát không thu hồi.
     const totalAllocated = Number(
       (
         await db("asset_lifecycle as al")
@@ -466,6 +479,7 @@ class WarehouseService {
           )
           .join("asset_transactions as at", "al.transaction_id", "at.id")
           .where("at.warehouse_id", warehouse_id)
+          .where("at.type", TransactionTypeEnum.ALLOCATION_RETURN)
           .whereNull("al.return_date")
           .sum({ total: "ati.quantity" })
           .first()

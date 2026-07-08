@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import { MaintenanceStatusEnum } from "../../../common/enums/maintenance-status";
 import { TransactionTypeEnum } from "../../../common/enums/transaction-type.enums";
 import CustomBadge from "../../../components/common/custom-badge";
@@ -65,9 +66,7 @@ export default function AssetTransactionDetailModal({
               <CustomInput
                 value={
                   transaction?.export_date
-                    ? new Date(transaction.export_date)
-                        .toISOString()
-                        .split("T")[0]
+                    ? dayjs(transaction.export_date).format("YYYY-MM-DD")
                     : ""
                 }
                 disabled
@@ -101,9 +100,7 @@ export default function AssetTransactionDetailModal({
               <CustomInput
                 value={
                   transaction?.received_date
-                    ? new Date(transaction.received_date)
-                        .toISOString()
-                        .split("T")[0]
+                    ? dayjs(transaction.received_date).format("YYYY-MM-DD")
                     : ""
                 }
                 disabled
@@ -125,9 +122,7 @@ export default function AssetTransactionDetailModal({
               <CustomInput
                 value={
                   transaction?.disposal_date
-                    ? new Date(transaction.disposal_date)
-                        .toISOString()
-                        .split("T")[0]
+                    ? dayjs(transaction.disposal_date).format("YYYY-MM-DD")
                     : ""
                 }
                 disabled
@@ -143,9 +138,7 @@ export default function AssetTransactionDetailModal({
               <CustomInput
                 value={
                   transaction?.allocation_date
-                    ? new Date(transaction.allocation_date)
-                        .toISOString()
-                        .split("T")[0]
+                    ? dayjs(transaction.allocation_date).format("YYYY-MM-DD")
                     : ""
                 }
                 disabled
@@ -156,9 +149,7 @@ export default function AssetTransactionDetailModal({
               <CustomInput
                 value={
                   transaction?.return_deadline
-                    ? new Date(transaction.return_deadline)
-                        .toISOString()
-                        .split("T")[0]
+                    ? dayjs(transaction.return_deadline).format("YYYY-MM-DD")
                     : "Không thu hồi"
                 }
                 disabled
@@ -171,9 +162,7 @@ export default function AssetTransactionDetailModal({
                 <CustomInput
                   value={
                     transaction?.return_date
-                      ? new Date(transaction.return_date)
-                          .toISOString()
-                          .split("T")[0]
+                      ? dayjs(transaction.return_date).format("YYYY-MM-DD")
                       : "Chưa thu hồi"
                   }
                   disabled
@@ -197,9 +186,7 @@ export default function AssetTransactionDetailModal({
               <CustomInput
                 value={
                   transaction?.maintenance_date
-                    ? new Date(transaction.maintenance_date)
-                        .toISOString()
-                        .split("T")[0]
+                    ? dayjs(transaction.maintenance_date).format("YYYY-MM-DD")
                     : ""
                 }
                 disabled

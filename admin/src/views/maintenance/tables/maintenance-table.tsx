@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import { BsEye } from "react-icons/bs";
 import CustomIcon from "../../../components/common/custom-icon";
 import CustomTable from "../../../components/common/custom-table";
@@ -27,11 +28,11 @@ export default function MaintenanceTable({ assetCode,isInModal}: MaintenanceTabl
     "Mã đơn hàng",
     "Tài sản",
     "Người thực hiện",
-    "Ngày bảo trì",
+    "Ngày tạo",
     "Tổng chi phí",
     "Trạng thái",
   ];
-  const { params,setFilters,filters } = usePaginationParams<PaginationTransactionsDto>({
+  const { params,setPage,setFilters,filters } = usePaginationParams<PaginationTransactionsDto>({
     defaultValues: {
       asset_code: assetCode
     },
@@ -45,6 +46,9 @@ export default function MaintenanceTable({ assetCode,isInModal}: MaintenanceTabl
         // title="D/S"
         columns={columns}
         filter={<TransactionFilter onFiltersChange={isInModal ? setFilters : undefined}/>}
+        currentPage={params.page}
+        totalPages={transactions?.totalPages}
+        onPageChange={setPage}
         data={
           transactions?.items.map((t, index: number) => [
             index + 1,
@@ -78,7 +82,7 @@ export default function MaintenanceTable({ assetCode,isInModal}: MaintenanceTabl
               ))}
             </div>,
             <h5 className="text-[#2b7dbc]">{t.created_by_user}</h5>,
-            t.created_at,
+            dayjs(t.created_at).format("DD/MM/YYYY HH:mm"),
             <p className="text-gray-500">
               {calculateTotalCost(t.asset_transaction_items)}
             </p>,

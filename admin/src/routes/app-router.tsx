@@ -9,25 +9,26 @@ import AccessDeniedView from "../views/access-denied";
 import ModalProvider from "../providers/modal-provider";
 import { useSEO } from "../hooks/use-seo";
 import ResponsiveGuard from "../views/responsive-guard";
+function SEORoute({
+  Element,
+  seo,
+}: {
+  Element: React.ComponentType;
+  seo?: { title?: string; description?: string };
+}) {
+  useSEO({
+    title: seo?.title,
+  });
+  return <Element />;
+}
+
 export default function AppRouter() {
-  const renderWithSEO = (
-    Element: React.ComponentType,
-    seo?: { title?: string; description?: string },
-  ) => {
-    return () => {
-      useSEO({
-        title: seo?.title,
-      });
-      return <Element />;
-    };
-  };
   return (
     <Router>
       <ModalProvider>
         <Routes>
           {publicRoutes.map((route) => {
             const Layout = route.layout || Fragment;
-            const Element = renderWithSEO(route.element, route.seo);
             return (
               <Route
                 key={route.path}
@@ -35,7 +36,7 @@ export default function AppRouter() {
                 element={
                   <UnProtectedRoute>
                     <Layout>
-                      <Element />
+                      <SEORoute Element={route.element} seo={route.seo} />
                     </Layout>
                   </UnProtectedRoute>
                 }
@@ -45,7 +46,6 @@ export default function AppRouter() {
 
           {privateRoutes.map((route) => {
             const Layout = route.layout || Fragment;
-            let Element = renderWithSEO(route.element, route.seo);
             return (
               <Route
                 key={route.path}
@@ -57,7 +57,7 @@ export default function AppRouter() {
                         permissionsRequired={route.permissions || []}
                         uiDeny={<AccessDeniedView />}
                       >
-                        <Element />
+                        <SEORoute Element={route.element} seo={route.seo} />
                         <ResponsiveGuard />
                       </CustomWrapperPermissions>
                     </Layout>

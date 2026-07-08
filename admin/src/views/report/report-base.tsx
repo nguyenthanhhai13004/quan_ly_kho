@@ -50,7 +50,6 @@ const ReportBase: React.FC<ReportBaseProps> = ({ data, reportTitle = "Báo cáo"
         <h2 className="text-xl font-bold">{reportTitle}</h2>
         <div className="flex gap-2">
           <CustomButton variant="success" label="Xuất Excel" onClick={exportExcel} />
-          <CustomButton variant="info" label="Xuất PDF" onClick={exportPDF} />
           <CustomButton variant="warming" label="Xuất HTML" onClick={exportHTML} />
         </div>
       </div>
@@ -65,3 +64,4 @@ const ReportBase: React.FC<ReportBaseProps> = ({ data, reportTitle = "Báo cáo"
 };
 
 export default ReportBase;
+//<CustomButton variant="info" label="Xuất PDF" onClick={exportPDF} />

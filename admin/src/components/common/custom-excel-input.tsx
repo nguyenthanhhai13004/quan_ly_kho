@@ -25,6 +25,8 @@ export default function CustomExcelInput({ onFileSelect, accept = ".xlsx,.xls" }
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) handleFile(file);
+    // Reset để lần chọn tiếp theo luôn kích hoạt onChange, kể cả khi chọn lại đúng file cũ
+    e.target.value = "";
   };
 
   return (

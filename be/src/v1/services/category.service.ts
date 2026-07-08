@@ -131,7 +131,7 @@ class CategoryService {
 
     if (Number(countAssets?.total || 0) > 0) {
       throw new BadRequestError(
-        "Không thể xóa category này vì còn tài sản thuộc category",
+        "Không thể xóa danh mục này vì còn tài sản",
       );
     }
     const deleted = await categoryRepository.softDelete(categoryId);

@@ -22,7 +22,7 @@ export function useCreateUser() {
         if (!oldData) return;
         return {
           ...oldData,
-          items: [data,...oldData?.items]
+          items: [data,...oldData.items]
         };
       });
       toast.info(message, {

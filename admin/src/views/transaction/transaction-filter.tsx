@@ -7,10 +7,12 @@ import FilterWrapper from "../filter-wrapper";
 
 type TransactionFilterProps = {
   onFiltersChange?: (newFilters: PaginationTransactionsDto) => void;
+  hideDateFilter?: boolean;
 };
 
 export default function TransactionFilter({
   onFiltersChange,
+  hideDateFilter,
 }: TransactionFilterProps) {
   const { users } = useUsers({ page: 1, size: 100 });
   const {
@@ -36,20 +38,24 @@ export default function TransactionFilter({
       onReset={handleReset}
       onSubmit={onFiltersChange ? () => onFiltersChange(filters) : handleSearch}
     >
-      <CustomInput
-        onChange={(e) => handleChange("from_date", e.target.value)}
-        type="date"
-        value={filters?.from_date || ""}
-        label="Từ ngày"
-        labelType="top"
-      />
-      <CustomInput
-        onChange={(e) => handleChange("to_date", e.target.value)}
-        type="date"
-        value={filters?.to_date || ""}
-        label="Đến ngày"
-        labelType="top"
-      />
+      {!hideDateFilter && (
+        <>
+          <CustomInput
+            onChange={(e) => handleChange("from_date", e.target.value)}
+            type="date"
+            value={filters?.from_date || ""}
+            label="Từ ngày"
+            labelType="top"
+          />
+          <CustomInput
+            onChange={(e) => handleChange("to_date", e.target.value)}
+            type="date"
+            value={filters?.to_date || ""}
+            label="Đến ngày"
+            labelType="top"
+          />
+        </>
+      )}
       <CustomSelect
         labelType="top"
         placeholder="Tất cả"

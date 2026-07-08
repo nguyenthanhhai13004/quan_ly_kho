@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import { TbPhoneDone } from "react-icons/tb";
 import CustomButton from "../../../components/common/custom-button";
 import CustomModal, {
@@ -23,7 +24,6 @@ export default function UpdateMaintenanceModal({
   open,
   transactionCode,
 }: UpdateMaintenanceModalProps) {
-  if (!transactionCode) return;
   const { transaction } = useDetailTransaction(transactionCode);
   const { openConfirmModal, closeModal } = useModalProvider();
   const [items, setItems] = useState<
@@ -41,12 +41,9 @@ export default function UpdateMaintenanceModal({
   useEffect(() => {
     if (transaction?.asset_transaction_items) {
       const initItems = transaction.asset_transaction_items.map((i: any) => {
-        const today = new Date();
-        const defaultNextMaintenance = new Date(
-          today.setMonth(today.getMonth() + 3),
-        )
-          .toISOString()
-          .split("T")[0];
+        const defaultNextMaintenance = dayjs()
+          .add(3, "month")
+          .format("YYYY-MM-DD");
         return {
           batch_code: i.batch_code,
           status: AssetStatusEnum.GOOD,
@@ -74,6 +71,9 @@ export default function UpdateMaintenanceModal({
     );
   };
   const { mutate } = useUpdateMaintenance();
+
+  if (!transactionCode) return null;
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     openConfirmModal({
@@ -102,7 +102,7 @@ export default function UpdateMaintenanceModal({
   return (
     <CustomModal
       width="max-w-4xl"
-      title="Thu hồi tài sản"
+      title="Cập nhật trạng thái bảo trì"
       onClose={onClose}
       open={open}
     >
